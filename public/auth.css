@@ -155,9 +155,14 @@
 }
 
 .eye-icon {
-    font-size: 1.2rem;
+    font-size: 20px;
     user-select: none;
-    filter: grayscale(100%) brightness(2);
+    color: rgba(255, 255, 255, 0.85);
+    transition: color 0.2s ease;
+}
+
+.toggle-password:hover .eye-icon {
+    color: rgba(255, 255, 255, 1);
 }
 
 .info-text {

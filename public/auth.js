@@ -17,11 +17,11 @@ togglePasswordButtons.forEach(button => {
         
         if (input.type === 'password') {
             input.type = 'text';
-            eyeIcon.textContent = '👁️‍🗨️';
+            eyeIcon.textContent = 'visibility';
             this.setAttribute('aria-label', 'Ocultar senha');
         } else {
             input.type = 'password';
-            eyeIcon.textContent = '👁️';
+            eyeIcon.textContent = 'visibility_off';
             this.setAttribute('aria-label', 'Mostrar senha');
         }
     });
