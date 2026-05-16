@@ -57,6 +57,12 @@ main {
     flex-wrap: wrap;
 }
 
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
 .btn-logout {
     padding: 8px 16px;
     background: rgba(255, 255, 255, 0.2);
@@ -1221,8 +1227,95 @@ main {
         font-size: 1.5rem;
     }
 
+    /* Ranking mobile - esconder colunas menos importantes */
+    .ranking-table th:nth-child(3),
+    .ranking-table td:nth-child(3),
     .ranking-table th:nth-child(4),
     .ranking-table td:nth-child(4) {
+        display: none;
+    }
+    
+    /* Reduzir espaçamento da tabela em mobile */
+    .ranking-table th,
+    .ranking-table td {
+        padding: 8px 4px;
+        font-size: 0.8rem;
+    }
+    
+    .ranking-table th:first-child,
+    .ranking-table td:first-child {
+        padding-left: 8px;
+    }
+    
+    .ranking-table th:last-child,
+    .ranking-table td:last-child {
+        padding-right: 8px;
+    }
+    
+    /* Aumentar tamanho das medalhas em mobile */
+    .medal {
+        font-size: 1.2rem;
+    }
+}
+
+/* Layout de cards para ranking em telas muito pequenas */
+@media (max-width: 420px) {
+    .ranking-table {
+        display: block;
+        overflow-x: visible;
+    }
+    
+    .ranking-table thead {
+        display: none;
+    }
+    
+    .ranking-table tbody {
+        display: block;
+    }
+    
+    .ranking-table tr {
+        display: block;
+        margin-bottom: 16px;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 12px;
+        background: white;
+    }
+    
+    .ranking-table tr.usuario-logado {
+        border-left: 4px solid var(--primary-color);
+        box-shadow: 0 2px 8px rgba(139, 195, 74, 0.2);
+    }
+    
+    .ranking-table td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px solid #f5f5f5;
+        font-size: 0.875rem;
+    }
+    
+    .ranking-table td:last-child {
+        border-bottom: none;
+    }
+    
+    .ranking-table td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: var(--secondary-color);
+        flex: 0 0 45%;
+    }
+    
+    .ranking-table td:first-child {
+        font-size: 1.1rem;
+        font-weight: 600;
+        padding-bottom: 12px;
+        border-bottom: 2px solid var(--primary-color);
+        justify-content: center;
+    }
+    
+    .ranking-table td:first-child::before {
         display: none;
     }
 }

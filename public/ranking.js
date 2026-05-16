@@ -130,13 +130,13 @@ function renderizarLinhaRanking(item, posicao) {
     return `
         <tr class="${rowClass}">
             <td>${medal} ${posicao}º</td>
-            <td>${nomeDisplay}</td>
-            <td>${item.peso_inicial.toFixed(1)} kg</td>
-            <td>${item.peso_atual.toFixed(1)} kg</td>
-            <td class="${item.diferenca < 0 ? 'diferenca-positiva' : 'diferenca-negativa'}">
+            <td data-label="Nome">${nomeDisplay}</td>
+            <td data-label="Peso Inicial">${item.peso_inicial.toFixed(1)} kg</td>
+            <td data-label="Peso Atual">${item.peso_atual.toFixed(1)} kg</td>
+            <td data-label="Diferença" class="${item.diferenca < 0 ? 'diferenca-positiva' : 'diferenca-negativa'}">
                 ${item.diferenca >= 0 ? '+' : ''}${item.diferenca.toFixed(2)} kg
             </td>
-            <td>${item.total_pesagens}</td>
+            <td data-label="Pesagens">${item.total_pesagens}</td>
         </tr>
     `;
 }
