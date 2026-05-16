@@ -49,6 +49,12 @@ main {
     margin-bottom: 24px;
 }
 
+@media (max-width: 768px) {
+    .header {
+        padding: 12px 0;
+    }
+}
+
 .header-content {
     display: flex;
     align-items: center;
@@ -122,6 +128,15 @@ main {
 
 .header-text {
     text-align: center;
+}
+
+/* Títulos responsivos */
+.title-mobile {
+    display: none;
+}
+
+.title-desktop {
+    display: inline;
 }
 
 .header h1 {
@@ -1124,7 +1139,7 @@ main {
     }
 
     .subtitle {
-        font-size: 0.9rem;
+        font-size: 0.85rem;
     }
 
     .stats-section {
@@ -1173,7 +1188,27 @@ main {
     }
 
     .header h1 {
-        font-size: 1.5rem;
+        font-size: 1.1rem;
+        line-height: 1.3;
+        margin-bottom: 2px;
+    }
+    
+    /* Trocar para título curto em mobile */
+    .title-desktop {
+        display: none;
+    }
+    
+    .title-mobile {
+        display: inline;
+    }
+    
+    .subtitle {
+        font-size: 0.7rem;
+        line-height: 1.2;
+    }
+    
+    .header-text {
+        max-width: 55%;
     }
     
     /* Manter botão logout como ícone em mobile */
@@ -1330,6 +1365,26 @@ main {
     
     .ranking-table td:first-child::before {
         display: none;
+    }
+}
+
+/* Telas muito pequenas - esconder subtítulo */
+@media (max-width: 360px) {
+    .subtitle {
+        display: none;
+    }
+    
+    .header h1 {
+        font-size: 1rem;
+        margin-bottom: 0;
+    }
+    
+    .logo {
+        height: 45px;
+    }
+    
+    .header-text {
+        max-width: 50%;
     }
 }
 
