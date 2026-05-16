@@ -550,6 +550,60 @@ main {
 
 /* Responsividade */
 /* ==================== NAVIGATION MENU ==================== */
+/* ==================== NAVIGATION MENU ==================== */
+
+/* Botão Hamburguer */
+.menu-toggle {
+    display: none;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    z-index: 1001;
+}
+
+.menu-toggle span {
+    display: block;
+    width: 25px;
+    height: 3px;
+    background: var(--white);
+    margin: 5px 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 3px;
+}
+
+.menu-toggle.active span:nth-child(1) {
+    transform: rotate(45deg) translate(8px, 8px);
+}
+
+.menu-toggle.active span:nth-child(2) {
+    opacity: 0;
+}
+
+.menu-toggle.active span:nth-child(3) {
+    transform: rotate(-45deg) translate(7px, -7px);
+}
+
+/* Overlay */
+.menu-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    opacity: 0;
+    transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.menu-overlay.active {
+    display: block;
+    opacity: 1;
+}
+
+/* Menu Desktop */
 .nav-menu {
     background: var(--white);
     border-bottom: 2px solid var(--light-color);
@@ -584,6 +638,71 @@ main {
     color: var(--primary-color);
     border-bottom-color: var(--primary-color);
     background: rgba(139, 195, 74, 0.08);
+}
+
+/* ==================== MOBILE MENU ==================== */
+@media (max-width: 768px) {
+    /* Mostrar botão hamburguer */
+    .menu-toggle {
+        display: block;
+    }
+    
+    /* Esconder menu desktop */
+    .nav-menu {
+        position: fixed;
+        top: 0;
+        left: -280px;
+        width: 280px;
+        height: 100vh;
+        background: var(--white);
+        box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        z-index: 1000;
+        transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        margin-bottom: 0;
+        border-bottom: none;
+        overflow-y: auto;
+    }
+    
+    .nav-menu.active {
+        left: 0;
+    }
+    
+    .nav-menu .container {
+        padding: 0;
+    }
+    
+    /* Header da Sidebar */
+    .nav-menu::before {
+        content: '';
+        display: block;
+        height: 120px;
+        background: linear-gradient(135deg, var(--secondary-color) 0%, var(--accent-purple) 100%);
+        margin-bottom: 16px;
+    }
+    
+    /* Lista vertical */
+    .nav-list {
+        flex-direction: column;
+        gap: 0;
+    }
+    
+    .nav-link {
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--light-color);
+        border-left: 4px solid transparent;
+        font-size: 1.1rem;
+    }
+    
+    .nav-link.active {
+        border-left-color: var(--primary-color);
+        border-bottom-color: var(--light-color);
+        background: rgba(139, 195, 74, 0.1);
+    }
+    
+    .nav-link:hover {
+        background: var(--light-color);
+        padding-left: 32px;
+    }
 }
 
 /* ==================== HOME PAGE ==================== */
