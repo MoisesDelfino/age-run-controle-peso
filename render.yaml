@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: age-run-controle-peso
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /login
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: EMAIL_HOST
+        value: smtp.gmail.com
+      - key: EMAIL_PORT
+        value: 587
+      - key: EMAIL_FROM_NAME
+        value: Age Run
+      - key: EMAIL_FROM_ADDRESS
+        value: noreply@agerun.com
+      # Configure EMAIL_USER e EMAIL_PASS no painel do Render para enviar emails reais

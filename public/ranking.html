@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ranking - Age Run</title>
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="effects.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <img src="logo.png" alt="Age Run" class="logo">
+                <div class="header-text">
+                    <h1>Ranking de Perda de Peso</h1>
+                    <p class="subtitle">Confira a evolução de toda a equipe!</p>
+                </div>
+                <button id="btnLogout" class="btn-logout">Sair</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation Menu -->
+    <nav class="nav-menu">
+        <div class="container">
+            <ul class="nav-list">
+                <li><a href="/home" class="nav-link">🏠 Home</a></li>
+                <li><a href="/pesagem" class="nav-link">📝 Pesagem</a></li>
+                <li><a href="/ranking" class="nav-link active">🏆 Ranking</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container">
+        <!-- Ranking -->
+        <section class="ranking-section">
+            <div class="card">
+                <h2>🏆 Ranking de Perda de Peso</h2>
+                <div class="ranking-controls">
+                    <button id="btnAtualizar" class="btn btn-secondary">🔄 Atualizar</button>
+                </div>
+                <div id="rankingContainer" class="ranking-container">
+                    <div class="loading">Carregando ranking...</div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>🏃‍♂️ Age Run - Sistema de Controle de Peso</p>
+            <p class="footer-small">Sua Vida Transformada pela Corrida. Com Propósito, Segurança e Comunidade.</p>
+        </div>
+    </footer>
+
+    <script src="ranking.js"></script>
+</body>
+</html>

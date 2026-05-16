@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrar Pesagem - Age Run</title>
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="effects.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <img src="logo.png" alt="Age Run" class="logo">
+                <div class="header-text">
+                    <h1>Controle de Peso</h1>
+                    <p class="subtitle">Sua Vida Transformada pela Corrida. Com Propósito, Segurança e Comunidade.</p>
+                </div>
+                <button id="btnLogout" class="btn-logout">Sair</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation Menu -->
+    <nav class="nav-menu">
+        <div class="container">
+            <ul class="nav-list">
+                <li><a href="/home" class="nav-link">🏠 Home</a></li>
+                <li><a href="/pesagem" class="nav-link active">📝 Pesagem</a></li>
+                <li><a href="/ranking" class="nav-link">🏆 Ranking</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container">
+        <div class="pesagem-layout">
+            <!-- Formulário de Registro -->
+            <section class="form-section">
+                <div class="card">
+                    <h2>📝 Registrar Pesagem</h2>
+                    <div class="user-greeting">
+                        <p>Olá, <strong id="userName"></strong>! 👋</p>
+                    </div>
+                    <form id="pesagemForm">
+                        <div class="form-group">
+                            <label for="data">Data da pesagem:</label>
+                            <input type="date" id="data" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="peso">Peso atual (kg):</label>
+                            <input type="number" id="peso" step="0.1" placeholder="Ex: 75.5" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <span>Registrar Pesagem</span>
+                        </button>
+                    </form>
+                    <div id="message" class="message"></div>
+                </div>
+            </section>
+
+            <!-- Histórico Pessoal -->
+            <section class="historico-section">
+                <div class="card">
+                    <h2>📊 Seu Progresso</h2>
+                    <div id="historicoContainer" class="historico-container">
+                        <div class="loading">Carregando histórico...</div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>🏃‍♂️ Age Run - Sistema de Controle de Peso</p>
+            <p class="footer-small">Sua Vida Transformada pela Corrida. Com Propósito, Segurança e Comunidade.</p>
+        </div>
+    </footer>
+
+    <!-- Modal Editar Pesagem -->
+    <div id="modalEditar" class="modal">
+        <div class="modal-content">
+            <h3>✏️ Editar Pesagem</h3>
+            <p class="modal-subtitle">Peso atual: <strong id="pesoAtualModal"></strong></p>
+            <form id="formEditarPesagem">
+                <div class="form-group">
+                    <label for="novoPeso">Novo peso (kg):</label>
+                    <input type="number" id="novoPeso" step="0.1" required autofocus>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="fecharModalEditar()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Excluir Pesagem -->
+    <div id="modalExcluir" class="modal">
+        <div class="modal-content">
+            <h3>🗑️ Excluir Pesagem</h3>
+            <p class="modal-text">Tem certeza que deseja excluir esta pesagem?</p>
+            <p class="modal-warning"><strong>Peso:</strong> <span id="pesoExcluirModal"></span></p>
+            <p class="modal-info">Esta ação não pode ser desfeita.</p>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="fecharModalExcluir()">Cancelar</button>
+                <button type="button" class="btn btn-danger" onclick="confirmarExclusao()">Excluir</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="pesagem.js"></script>
+</body>
+</html>
