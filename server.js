@@ -10,9 +10,20 @@ const { enviarCodigoRecuperacao } = require('./emailService');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Detectar ambiente
+const isProduction = process.env.NODE_ENV === 'production';
+const productionUrl = process.env.RENDER_EXTERNAL_URL || 'https://age-run-controle-peso.onrender.com';
+
+// Confiar no proxy do Render
+if (isProduction) {
+  app.set('trust proxy', 1);
+}
+
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
+  origin: isProduction 
+    ? [productionUrl, 'https://age-run-controle-peso.onrender.com']
+    : ['http://localhost:3000', 'http://127.0.0.1:3000'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -20,14 +31,15 @@ app.use(cors({
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(session({
-  secret: 'age-run-secret-2026',
+  secret: process.env.SESSION_SECRET || 'age-run-secret-2026',
   resave: false,
   saveUninitialized: false,
+  proxy: isProduction,
   cookie: { 
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 dias
-    httpOnly: false,
-    secure: false,
-    sameSite: 'lax'
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax'
   }
 }));
 app.use(express.static('public'));
