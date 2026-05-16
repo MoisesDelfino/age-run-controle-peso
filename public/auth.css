@@ -103,6 +103,7 @@
 }
 
 .forgot-password {
+    display: none; /* Oculta temporariamente */
     text-align: right;
     margin-top: -8px;
     margin-bottom: 16px;
