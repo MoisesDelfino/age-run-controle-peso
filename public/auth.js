@@ -6,6 +6,27 @@ const API_BASE = window.location.hostname === 'localhost'
 // Elementos do DOM
 const messageDiv = document.getElementById('message');
 
+// ==================== TOGGLE MOSTRAR/OCULTAR SENHA ====================
+
+// Toggle de mostrar/ocultar senha
+const togglePasswordButtons = document.querySelectorAll('.toggle-password');
+togglePasswordButtons.forEach(button => {
+    button.addEventListener('click', function() {
+        const input = this.previousElementSibling;
+        const eyeIcon = this.querySelector('.eye-icon');
+        
+        if (input.type === 'password') {
+            input.type = 'text';
+            eyeIcon.textContent = '👁️‍🗨️';
+            this.setAttribute('aria-label', 'Ocultar senha');
+        } else {
+            input.type = 'password';
+            eyeIcon.textContent = '👁️';
+            this.setAttribute('aria-label', 'Mostrar senha');
+        }
+    });
+});
+
 // ==================== FUNÇÕES DE AUTENTICAÇÃO ====================
 
 // Login

@@ -121,6 +121,45 @@
     text-decoration: underline;
 }
 
+/* Password toggle */
+.password-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-input-wrapper input {
+    padding-right: 45px;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 12px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    border-radius: 4px;
+}
+
+.toggle-password:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.toggle-password:active {
+    transform: scale(0.95);
+}
+
+.eye-icon {
+    font-size: 1.2rem;
+    user-select: none;
+    filter: grayscale(100%) brightness(2);
+}
+
 .info-text {
     color: rgba(255, 255, 255, 0.9);
     text-align: center;
