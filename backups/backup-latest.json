@@ -1,0 +1,16 @@
+{
+  "timestamp": "2026-05-16T12:00:00.000Z",
+  "date": "16/05/2026, 09:00:00",
+  "version": "1.0",
+  "tables": {
+    "usuarios": [],
+    "pesagens": [],
+    "pesagens_completo": []
+  },
+  "stats": {
+    "total_usuarios": 0,
+    "total_pesagens": 0,
+    "total_pesagens_completo": 0
+  },
+  "note": "Este é um backup de exemplo. Os backups reais serão gerados automaticamente."
+}

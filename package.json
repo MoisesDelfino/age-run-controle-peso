@@ -8,7 +8,10 @@
     "dev": "nodemon server.js",
     "init-db": "node scripts/init-db.js",
     "importar": "node scripts/importar-planilha.js",
-    "migrar": "node scripts/migrar-autenticacao.js"
+    "migrar": "node scripts/migrar-autenticacao.js",
+    "backup": "node scripts/backup-database.js",
+    "restore": "node scripts/restore-database.js",
+    "auto-backup": "node scripts/auto-backup.js"
   },
   "keywords": [
     "peso",
