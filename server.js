@@ -14,6 +14,28 @@ const PORT = process.env.PORT || 3000;
 const isProduction = process.env.NODE_ENV === 'production';
 const productionUrl = process.env.RENDER_EXTERNAL_URL || 'https://age-run-controle-peso.onrender.com';
 
+// Configurar session store para PostgreSQL (produção)
+let sessionStore;
+if (process.env.DATABASE_URL) {
+  const pgSession = require('connect-pg-simple')(session);
+  const { Pool } = require('pg');
+  
+  const sessionPool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false }
+  });
+  
+  sessionStore = new pgSession({
+    pool: sessionPool,
+    tableName: 'session',
+    createTableIfMissing: true
+  });
+  
+  console.log('🔐 Sessões armazenadas no PostgreSQL');
+} else {
+  console.log('🔐 Sessões armazenadas em memória (desenvolvimento)');
+}
+
 // Confiar no proxy do Render
 if (isProduction) {
   app.set('trust proxy', 1);
@@ -30,7 +52,8 @@ app.use(cors({
 }));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(session({
+
+const sessionConfig = {
   secret: process.env.SESSION_SECRET || 'age-run-secret-2026',
   resave: false,
   saveUninitialized: false,
@@ -41,7 +64,14 @@ app.use(session({
     secure: isProduction,
     sameSite: isProduction ? 'none' : 'lax'
   }
-}));
+};
+
+// Adicionar store PostgreSQL se disponível
+if (sessionStore) {
+  sessionConfig.store = sessionStore;
+}
+
+app.use(session(sessionConfig));
 app.use(express.static('public'));
 
 // Middleware de autenticação
