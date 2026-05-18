@@ -53,6 +53,7 @@ jobs:
             echo "ℹ️ Nenhuma mudança para commitar (backup idêntico ao anterior)"
           else
             git commit -m "🔒 Backup automático: $(date +'%d/%m/%Y %H:%M')"
+            git pull --rebase origin main
             git push
             echo "✅ Backup commitado e enviado ao GitHub!"
           fi
