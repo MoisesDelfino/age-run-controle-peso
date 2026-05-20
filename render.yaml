@@ -6,6 +6,9 @@ services:
     buildCommand: npm install
     startCommand: npm start
     healthCheckPath: /login
+    # Preview Environments: Habilite no Dashboard do Render
+    # Settings > Preview Environments > Enable for: staging, feature/*
+    branch: main  # Branch principal para produção
     envVars:
       - key: NODE_ENV
         value: production
