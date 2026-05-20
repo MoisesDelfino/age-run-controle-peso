@@ -1,9 +1,9 @@
 // Configuração da API
-const API_BASE = window.location.hostname === 'localhost' 
-    ? 'http://localhost:3000/api' 
-    : '/api';
+var API_BASE = API_BASE || (window.location.hostname === 'localhost' 
+    ? `http://localhost:${window.location.port}/api`
+    : '/api');
 
-let usuarioLogado = null;
+var usuarioLogado = usuarioLogado || null;
 
 // Elementos DOM
 const btnLogout = document.getElementById('btnLogout');
@@ -35,7 +35,7 @@ async function verificarSessao() {
             return;
         }
         
-        usuarioLogado = data.usuario;
+        usuarioLogado = data;
         
     } catch (error) {
         console.error('Erro ao verificar sessão:', error);
@@ -102,7 +102,8 @@ function renderizarRanking(ranking) {
                     <th>Nome</th>
                     <th>Peso Inicial</th>
                     <th>Peso Atual</th>
-                    <th>Diferença</th>
+                    <th>Perda %</th>
+                    <th>Diferença (kg)</th>
                     <th>Pesagens</th>
                 </tr>
             </thead>
@@ -127,13 +128,19 @@ function renderizarLinhaRanking(item, posicao) {
     const rowClass = isUsuarioLogado ? 'usuario-logado' : '';
     const nomeDisplay = isUsuarioLogado ? `${item.nome} (Você)` : item.nome;
     
+    const percentualClass = item.percentual_perda > 0 ? 'diferenca-positiva' : item.percentual_perda < 0 ? 'diferenca-negativa' : '';
+    const diferencaClass = item.diferenca < 0 ? 'diferenca-positiva' : 'diferenca-negativa';
+    
     return `
         <tr class="${rowClass}">
             <td>${medal} ${posicao}º</td>
             <td data-label="Nome">${nomeDisplay}</td>
             <td data-label="Peso Inicial">${item.peso_inicial.toFixed(1)} kg</td>
             <td data-label="Peso Atual">${item.peso_atual.toFixed(1)} kg</td>
-            <td data-label="Diferença" class="${item.diferenca < 0 ? 'diferenca-positiva' : 'diferenca-negativa'}">
+            <td data-label="Perda %" class="${percentualClass}">
+                ${item.percentual_perda > 0 ? '-' : ''}${Math.abs(item.percentual_perda).toFixed(2)}%
+            </td>
+            <td data-label="Diferença (kg)" class="${diferencaClass}">
                 ${item.diferenca >= 0 ? '+' : ''}${item.diferenca.toFixed(2)} kg
             </td>
             <td data-label="Pesagens">${item.total_pesagens}</td>

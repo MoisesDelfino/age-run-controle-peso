@@ -1,18 +1,17 @@
 // Configuração da API
-const API_BASE = window.location.hostname === 'localhost' 
-    ? 'http://localhost:3000/api' 
-    : '/api';
+var API_BASE = API_BASE || (window.location.hostname === 'localhost' 
+    ? `http://localhost:${window.location.port}/api`
+    : '/api');
 
 // Elementos do DOM
 const pesagemForm = document.getElementById('pesagemForm');
 const pesoInput = document.getElementById('peso');
-const messageDiv = document.getElementById('message');
 const rankingContainer = document.getElementById('rankingContainer');
 const btnAtualizar = document.getElementById('btnAtualizar');
 const btnLogout = document.getElementById('btnLogout');
 const userNameSpan = document.getElementById('userName');
 
-let usuarioLogado = null;
+var usuarioLogado = usuarioLogado || null;
 
 // Event Listeners
 if (pesagemForm) pesagemForm.addEventListener('submit', handleSubmitPesagem);
@@ -53,7 +52,7 @@ async function verificarSessao() {
             return;
         }
         
-        usuarioLogado = data.usuario;
+        usuarioLogado = data;
         // Extrair apenas o primeiro nome
         const primeiroNome = usuarioLogado.nome.split(' ')[0];
         userNameSpan.textContent = primeiroNome;
@@ -243,12 +242,15 @@ function renderizarLinhaRanking(item) {
 // ==================== FUNÇÕES AUXILIARES ====================
 
 function mostrarMensagem(texto, tipo) {
-    messageDiv.textContent = texto;
-    messageDiv.className = `message ${tipo} show`;
-    
-    setTimeout(() => {
-        messageDiv.classList.remove('show');
-    }, 5000);
+    const messageDiv = document.getElementById('message');
+    if (messageDiv) {
+        messageDiv.textContent = texto;
+        messageDiv.className = `message ${tipo} show`;
+        
+        setTimeout(() => {
+            messageDiv.classList.remove('show');
+        }, 5000);
+    }
 }
 
 // Adicionar suporte para Enter no campo de peso

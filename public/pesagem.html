@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registrar Pesagem - Age Run</title>
     <link rel="icon" type="image/png" href="logo.png">
-    <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="effects.css">
+    <link rel="stylesheet" href="styles.css?v=2026052061">
+    <link rel="stylesheet" href="effects.css?v=2026052061">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
@@ -44,6 +44,7 @@
                 <li><a href="/home" class="nav-link">🏠 Home</a></li>
                 <li><a href="/pesagem" class="nav-link active">📝 Pesagem</a></li>
                 <li><a href="/ranking" class="nav-link">🏆 Ranking</a></li>
+                <li><a href="/bioimpedancia" class="nav-link">📊 Bioimpedância</a></li>
             </ul>
         </div>
     </nav>
@@ -73,13 +74,40 @@
                     </form>
                     <div id="message" class="message"></div>
                 </div>
+                
+                <!-- Campo Altura -->
+                <div class="card" style="margin-top: 20px;">
+                    <h3>📏 Altura</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="altura">Metros:</label>
+                            <input type="number" id="altura" step="0.01" placeholder="1.75" min="0.5" max="2.5">
+                        </div>
+                        <div class="form-group">
+                            <button type="button" id="btnSalvarAltura" class="btn btn-secondary">
+                                Salvar
+                            </button>
+                        </div>
+                    </div>
+                    <div id="messageAltura" class="message" style="margin-top: 6px;"></div>
+                </div>
             </section>
 
-            <!-- Histórico Pessoal -->
-            <section class="historico-section">
+            <!-- Stats do Progresso -->
+            <section class="stats-section">
                 <div class="card">
                     <h2>📊 Seu Progresso</h2>
-                    <div id="historicoContainer" class="historico-container">
+                    <div id="statsContainer" class="stats-container">
+                        <div class="loading">Carregando estatísticas...</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Lista de Pesagens -->
+            <section class="lista-section">
+                <div class="card">
+                    <h2>📋 Últimas Pesagens</h2>
+                    <div id="listaContainer" class="lista-container">
                         <div class="loading">Carregando histórico...</div>
                     </div>
                 </div>
@@ -127,7 +155,7 @@
         </div>
     </div>
 
-    <script src="menu.js"></script>
-    <script src="pesagem.js"></script>
+    <script src="menu.js?v=2026052061"></script>
+    <script src="pesagem.js?v=2026052061"></script>
 </body>
 </html>

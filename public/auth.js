@@ -1,7 +1,7 @@
 // Configuração da API
-const API_BASE = window.location.hostname === 'localhost' 
-    ? 'http://localhost:3000/api' 
-    : '/api';
+var API_BASE = API_BASE || (window.location.hostname === 'localhost' 
+    ? `http://localhost:${window.location.port}/api`
+    : '/api');
 
 // Elementos do DOM
 const messageDiv = document.getElementById('message');

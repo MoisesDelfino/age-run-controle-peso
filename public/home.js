@@ -1,9 +1,9 @@
 // Configuração da API
-const API_BASE = window.location.hostname === 'localhost' 
-    ? 'http://localhost:3000/api' 
-    : '/api';
+var API_BASE = API_BASE || (window.location.hostname === 'localhost' 
+    ? `http://localhost:${window.location.port}/api`
+    : '/api');
 
-let usuarioLogado = null;
+var usuarioLogado = usuarioLogado || null;
 
 // Elementos DOM
 const userNameSpan = document.getElementById('userName');
@@ -28,7 +28,7 @@ async function verificarSessao() {
             return;
         }
         
-        usuarioLogado = data.usuario;
+        usuarioLogado = data;
         // Extrair apenas o primeiro nome
         const primeiroNome = usuarioLogado.nome.split(' ')[0];
         userNameSpan.textContent = primeiroNome;

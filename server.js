@@ -45,7 +45,7 @@ if (isProduction) {
 app.use(cors({
   origin: isProduction 
     ? [productionUrl, 'https://age-run-controle-peso.onrender.com']
-    : ['http://localhost:3000', 'http://127.0.0.1:3000'],
+    : ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:3001', 'http://127.0.0.1:3001'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -190,13 +190,14 @@ app.get('/api/auth/session', (req, res) => {
   }
   
   db.get(
-    'SELECT id, nome, email FROM usuarios WHERE id = ?',
+    'SELECT id, nome, email, altura FROM usuarios WHERE id = ?',
     [req.session.userId],
     (err, usuario) => {
       if (err || !usuario) {
         return res.json({ authenticated: false });
       }
-      res.json({ authenticated: true, usuario });
+      // Retornar diretamente os dados do usuário + authenticated
+      res.json({ ...usuario, authenticated: true });
     }
   );
 });
@@ -327,7 +328,18 @@ app.post('/api/auth/redefinir-senha', async (req, res) => {
 
 // Registrar pesagem (requer autenticação)
 app.post('/api/pesagens', requireAuth, (req, res) => {
-  const { peso, data_pesagem } = req.body;
+  const { 
+    peso, 
+    data_pesagem,
+    gordura_percentual,
+    massa_muscular_percentual,
+    agua_percentual,
+    massa_ossea,
+    metabolismo_basal,
+    idade_metabolica,
+    gordura_visceral
+  } = req.body;
+  
   const usuario_id = req.session.userId;
   
   if (!peso) {
@@ -339,17 +351,39 @@ app.post('/api/pesagens', requireAuth, (req, res) => {
     return res.status(400).json({ error: 'Peso inválido' });
   }
 
-  // Se data_pesagem foi fornecida, usa ela; senão usa data/hora atual
-  let query, params;
+  // Construir query dinamicamente incluindo dados de bioimpedância
+  const campos = ['usuario_id', 'peso'];
+  const valores = [usuario_id, pesoNum];
+  const placeholders = ['?', '?'];
+  
   if (data_pesagem) {
-    query = 'INSERT INTO pesagens (usuario_id, peso, data_pesagem) VALUES (?, ?, ?)';
-    params = [usuario_id, pesoNum, data_pesagem];
-  } else {
-    query = 'INSERT INTO pesagens (usuario_id, peso) VALUES (?, ?)';
-    params = [usuario_id, pesoNum];
+    campos.push('data_pesagem');
+    valores.push(data_pesagem);
+    placeholders.push('?');
   }
+  
+  // Adicionar campos de bioimpedância se fornecidos
+  const camposBio = {
+    gordura_percentual,
+    massa_muscular_percentual,
+    agua_percentual,
+    massa_ossea,
+    metabolismo_basal,
+    idade_metabolica,
+    gordura_visceral
+  };
+  
+  for (const [campo, valor] of Object.entries(camposBio)) {
+    if (valor !== null && valor !== undefined && valor !== '') {
+      campos.push(campo);
+      valores.push(parseFloat(valor) || parseInt(valor));
+      placeholders.push('?');
+    }
+  }
+  
+  const query = `INSERT INTO pesagens (${campos.join(', ')}) VALUES (${placeholders.join(', ')})`;
 
-  db.run(query, params, function(err) {
+  db.run(query, valores, function(err) {
       if (err) {
         return res.status(500).json({ error: err.message });
       }
@@ -390,10 +424,19 @@ app.get('/api/ranking', (req, res) => {
     
     console.log(`✅ Ranking carregado: ${rows.length} usuários`);
     
-    const ranking = rows.map(row => ({
-      ...row,
-      diferenca: parseFloat((row.peso_atual - row.peso_inicial).toFixed(2))
-    })).sort((a, b) => a.diferenca - b.diferenca)
+    const ranking = rows.map(row => {
+      const diferenca = parseFloat((row.peso_atual - row.peso_inicial).toFixed(2));
+      const percentual_perda = row.peso_inicial > 0 
+        ? parseFloat((((row.peso_inicial - row.peso_atual) / row.peso_inicial) * 100).toFixed(2))
+        : 0;
+      
+      return {
+        ...row,
+        diferenca,
+        percentual_perda
+      };
+    })
+    .sort((a, b) => b.percentual_perda - a.percentual_perda) // Ordenar por maior percentual de perda
     .map((row, index) => ({
       ...row,
       posicao: index + 1
@@ -434,6 +477,47 @@ app.get('/api/meu-historico', requireAuth, (req, res) => {
         return res.status(500).json({ error: err.message });
       }
       res.json(rows);
+    }
+  );
+});
+
+// Atualizar altura do usuário
+app.put('/api/usuarios/altura', requireAuth, (req, res) => {
+  console.log('📏 Requisição PUT /api/usuarios/altura recebida');
+  console.log('Session ID:', req.sessionID);
+  console.log('Usuario ID:', req.session.userId);
+  console.log('Body:', req.body);
+  
+  const { altura } = req.body;
+  const usuario_id = req.session.userId;
+  
+  if (!altura) {
+    console.log('❌ Erro: Altura não fornecida');
+    return res.status(400).json({ error: 'Altura é obrigatória' });
+  }
+
+  const alturaNum = parseFloat(altura);
+  if (isNaN(alturaNum) || alturaNum <= 0 || alturaNum > 3) {
+    console.log('❌ Erro: Altura inválida:', alturaNum);
+    return res.status(400).json({ error: 'Altura inválida' });
+  }
+
+  console.log('💾 Salvando altura:', alturaNum, 'para usuário:', usuario_id);
+  
+  db.run(
+    'UPDATE usuarios SET altura = ? WHERE id = ?',
+    [alturaNum, usuario_id],
+    function(err) {
+      if (err) {
+        console.log('❌ Erro ao salvar no banco:', err.message);
+        return res.status(500).json({ error: err.message });
+      }
+      console.log('✅ Altura salva com sucesso! Linhas afetadas:', this.changes);
+      res.json({ 
+        success: true,
+        message: 'Altura atualizada com sucesso!',
+        altura: alturaNum
+      });
     }
   );
 });
@@ -622,6 +706,14 @@ app.get('/ranking', (req, res) => {
     return res.redirect('/login');
   }
   res.sendFile(path.join(__dirname, 'public', 'ranking.html'));
+});
+
+// Página de bioimpedância (requer autenticação)
+app.get('/bioimpedancia', (req, res) => {
+  if (!req.session.userId) {
+    return res.redirect('/login');
+  }
+  res.sendFile(path.join(__dirname, 'public', 'bioimpedancia.html'));
 });
 
 // Página principal (redireciona para home)

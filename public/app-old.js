@@ -1,7 +1,7 @@
 // Configuração da API
-const API_BASE = window.location.hostname === 'localhost' 
+var API_BASE = API_BASE || (window.location.hostname === 'localhost' 
     ? 'http://localhost:3000/api' 
-    : '/api';
+    : '/api');
 
 // Elementos do DOM
 const pesagemForm = document.getElementById('pesagemForm');
