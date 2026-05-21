@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-05-20T20:13:56.287Z",
-  "date": "20/05/2026, 17:13:56",
+  "timestamp": "2026-05-21T06:02:03.705Z",
+  "date": "21/05/2026, 06:02:03",
   "version": "1.0",
   "tables": {
     "usuarios": [
@@ -9,7 +9,7 @@
         "nome": "MOISES DELFINO CAMPOS",
         "email": "moisescamposdelfino@gmail.com",
         "senha": "$2b$10$lg9wc8iFZhXzUxKzANcKW.F/oz6Yey6EEPF49bCiknPdMa6Njow/y",
-        "data_cadastro": "2026-05-17T04:49:56.896Z",
+        "data_cadastro": "2026-05-17T01:49:56.896Z",
         "codigo_recuperacao": null,
         "codigo_expiracao": null
       },
@@ -18,7 +18,7 @@
         "nome": "Luiz Fernando rosa ismael",
         "email": "luizfernandoismael171@gmail.com",
         "senha": "$2b$10$apMdseQkk1zVsmT/CVDTzu6733b0nMsAsH4PJ618XeRXwd6n8n4Oy",
-        "data_cadastro": "2026-05-17T05:06:40.549Z",
+        "data_cadastro": "2026-05-17T02:06:40.549Z",
         "codigo_recuperacao": null,
         "codigo_expiracao": null
       },
@@ -27,7 +27,7 @@
         "nome": "Marcelo de Souza Alves",
         "email": "desouzaalvesmarcelo@gmail.com",
         "senha": "$2b$10$8OqA4ybM4RnH0/1JDT2ms.5sVqpRuT8Eex9DE3t9dwZ4svG/mGN6m",
-        "data_cadastro": "2026-05-17T18:25:50.029Z",
+        "data_cadastro": "2026-05-17T15:25:50.029Z",
         "codigo_recuperacao": null,
         "codigo_expiracao": null
       },
@@ -36,7 +36,7 @@
         "nome": "Lucas N",
         "email": "luccanoventa@gmail.com",
         "senha": "$2b$10$Pf5ZjiaSJcXOfEhBS1gTee.Sr4NSzb6IvujrlGQL6TYk/H33md84e",
-        "data_cadastro": "2026-05-18T01:20:03.167Z",
+        "data_cadastro": "2026-05-17T22:20:03.167Z",
         "codigo_recuperacao": null,
         "codigo_expiracao": null
       },
@@ -45,7 +45,7 @@
         "nome": "Victor dos Santos Pocomaier",
         "email": "victordossantos200425@gmail.com",
         "senha": "$2b$10$JEJJOa7MaVhQk5eljUYJmOEFKwo1QV2Ifv9eKmMJF6vvnD6dFk/RC",
-        "data_cadastro": "2026-05-19T13:07:35.931Z",
+        "data_cadastro": "2026-05-19T10:07:35.931Z",
         "codigo_recuperacao": null,
         "codigo_expiracao": null
       },
@@ -54,7 +54,7 @@
         "nome": "Cristian Dagostim",
         "email": "cdagostim69@gmail.com",
         "senha": "$2b$10$PTYxg.9vY2KKfp83APEDceXyEnIahJqK7U8grBXmyKN.Bv9Copai2",
-        "data_cadastro": "2026-05-19T18:42:47.954Z",
+        "data_cadastro": "2026-05-19T15:42:47.954Z",
         "codigo_recuperacao": null,
         "codigo_expiracao": null
       },
@@ -63,7 +63,7 @@
         "nome": "Arthur Salazar Netto",
         "email": "arthursalazarn@gmail.com",
         "senha": "$2b$10$i8fhPD4g8VEjmvEU9oXb5Oil8gUj9lEfRUoKGkcstRlHqYqpcc.lG",
-        "data_cadastro": "2026-05-19T22:01:23.081Z",
+        "data_cadastro": "2026-05-19T19:01:23.081Z",
         "codigo_recuperacao": null,
         "codigo_expiracao": null
       },
@@ -72,7 +72,7 @@
         "nome": "Leandro Lopes da Silva",
         "email": "criciuma.leandro@gmail.com",
         "senha": "$2b$10$CiSvITs2wtZguY4ZsjOf1eP2/jbp77HAxvk3.nOnhwkmqoOUQaQ9u",
-        "data_cadastro": "2026-05-19T22:43:39.002Z",
+        "data_cadastro": "2026-05-19T19:43:39.002Z",
         "codigo_recuperacao": null,
         "codigo_expiracao": null
       },
@@ -81,7 +81,7 @@
         "nome": "Guilherme Cardoso de Jesus",
         "email": "guilhermecdj@gmail.com",
         "senha": "$2b$10$Jcc3rj0iNqzf2.1pt1R5OeKuYYf1FJdYlGDYA7e.gBslx6SGrFdUq",
-        "data_cadastro": "2026-05-20T14:56:06.666Z",
+        "data_cadastro": "2026-05-20T11:56:06.666Z",
         "codigo_recuperacao": null,
         "codigo_expiracao": null
       },
@@ -90,7 +90,7 @@
         "nome": "Andrei Civiero",
         "email": "andreirolimciviero@gmail.com",
         "senha": "$2b$10$FHvcTNa75afIwU0AlkdSpehmHoFOjghPiBipAafcIwQj4reH3cbUq",
-        "data_cadastro": "2026-05-20T15:03:41.798Z",
+        "data_cadastro": "2026-05-20T12:03:41.798Z",
         "codigo_recuperacao": null,
         "codigo_expiracao": null
       },
@@ -99,7 +99,7 @@
         "nome": "Guilherme Mendonça Colombo",
         "email": "guilhermemendoncacolombo@gmail.com",
         "senha": "$2b$10$uqLnQEc/6rVjZAXtoyHm3uTDxxDid6SQyS8kmnOfbL0FujohzzRke",
-        "data_cadastro": "2026-05-20T15:04:32.000Z",
+        "data_cadastro": "2026-05-20T12:04:32.000Z",
         "codigo_recuperacao": null,
         "codigo_expiracao": null
       },
@@ -108,7 +108,7 @@
         "nome": "Gabriel de Oliveira Giassi",
         "email": "ggiassi@outlook.com",
         "senha": "$2b$10$DAQkUAtdBrhonfpWaKpAI.orvq7sG7E5YJu//EJd4xbXhy1EAWiiO",
-        "data_cadastro": "2026-05-20T15:08:01.086Z",
+        "data_cadastro": "2026-05-20T12:08:01.086Z",
         "codigo_recuperacao": null,
         "codigo_expiracao": null
       },
@@ -117,7 +117,7 @@
         "nome": "Well Santos",
         "email": "wellinton.wk@outlook.com",
         "senha": "$2b$10$RDwLY2k6chy6cBjFYMldyOBaXeE55WM4KAZvdazoIZ1KfRx/Lcspe",
-        "data_cadastro": "2026-05-20T15:19:45.816Z",
+        "data_cadastro": "2026-05-20T12:19:45.816Z",
         "codigo_recuperacao": null,
         "codigo_expiracao": null
       },
@@ -126,7 +126,7 @@
         "nome": "Fabrício lumertz Trevizani",
         "email": "fabriciotrevizani@gmail.com",
         "senha": "$2b$10$qMRf0OOIAqtB8h5frPsu5uHOLq3hiV86S6X62T4xTKcc7Ey8j/VhK",
-        "data_cadastro": "2026-05-20T18:15:57.895Z",
+        "data_cadastro": "2026-05-20T15:15:57.895Z",
         "codigo_recuperacao": null,
         "codigo_expiracao": null
       }
@@ -136,245 +136,245 @@
         "id": 25,
         "usuario_id": 3,
         "peso": 77.4,
-        "data_pesagem": "2026-05-20T03:00:00.000Z",
+        "data_pesagem": "2026-05-20T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 38,
         "usuario_id": 7,
         "peso": 93,
-        "data_pesagem": "2026-05-20T03:00:00.000Z",
+        "data_pesagem": "2026-05-20T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 35,
         "usuario_id": 15,
         "peso": 61.5,
-        "data_pesagem": "2026-05-20T03:00:00.000Z",
+        "data_pesagem": "2026-05-20T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 34,
         "usuario_id": 10,
         "peso": 69,
-        "data_pesagem": "2026-05-20T03:00:00.000Z",
+        "data_pesagem": "2026-05-20T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 29,
         "usuario_id": 11,
         "peso": 74,
-        "data_pesagem": "2026-05-20T03:00:00.000Z",
+        "data_pesagem": "2026-05-20T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 27,
         "usuario_id": 9,
         "peso": 86.7,
-        "data_pesagem": "2026-05-20T03:00:00.000Z",
+        "data_pesagem": "2026-05-20T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 20,
         "usuario_id": 6,
         "peso": 97,
-        "data_pesagem": "2026-05-19T03:00:00.000Z",
+        "data_pesagem": "2026-05-19T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 19,
         "usuario_id": 5,
         "peso": 65,
-        "data_pesagem": "2026-05-19T03:00:00.000Z",
+        "data_pesagem": "2026-05-19T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 24,
         "usuario_id": 8,
         "peso": 95.5,
-        "data_pesagem": "2026-05-18T03:00:00.000Z",
+        "data_pesagem": "2026-05-18T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 6,
         "usuario_id": 1,
         "peso": 93,
-        "data_pesagem": "2026-05-17T03:00:00.000Z",
+        "data_pesagem": "2026-05-17T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 3,
         "usuario_id": 2,
         "peso": 81.7,
-        "data_pesagem": "2026-05-17T03:00:00.000Z",
+        "data_pesagem": "2026-05-17T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 9,
         "usuario_id": 3,
         "peso": 78.1,
-        "data_pesagem": "2026-05-16T03:00:00.000Z",
+        "data_pesagem": "2026-05-16T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 37,
         "usuario_id": 16,
         "peso": 75,
-        "data_pesagem": "2026-05-15T03:00:00.000Z",
+        "data_pesagem": "2026-05-15T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 22,
         "usuario_id": 7,
         "peso": 94.7,
-        "data_pesagem": "2026-05-11T03:00:00.000Z",
+        "data_pesagem": "2026-05-11T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 33,
         "usuario_id": 12,
         "peso": 84,
-        "data_pesagem": "2026-04-27T03:00:00.000Z",
+        "data_pesagem": "2026-04-27T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 21,
         "usuario_id": 7,
         "peso": 109,
-        "data_pesagem": "2026-02-18T03:00:00.000Z",
+        "data_pesagem": "2026-02-18T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 17,
         "usuario_id": 4,
         "peso": 76.7,
-        "data_pesagem": "2026-01-19T03:00:00.000Z",
+        "data_pesagem": "2026-01-19T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 8,
         "usuario_id": 3,
         "peso": 83.1,
-        "data_pesagem": "2026-01-12T03:00:00.000Z",
+        "data_pesagem": "2026-01-12T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 28,
         "usuario_id": 11,
         "peso": 77,
-        "data_pesagem": "2026-01-01T03:00:00.000Z",
+        "data_pesagem": "2026-01-01T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 5,
         "usuario_id": 1,
         "peso": 90,
-        "data_pesagem": "2026-01-01T03:00:00.000Z",
+        "data_pesagem": "2026-01-01T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 23,
         "usuario_id": 8,
         "peso": 103,
-        "data_pesagem": "2025-12-01T03:00:00.000Z",
+        "data_pesagem": "2025-12-01T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 16,
         "usuario_id": 4,
         "peso": 71.7,
-        "data_pesagem": "2025-09-30T03:00:00.000Z",
+        "data_pesagem": "2025-09-30T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 15,
         "usuario_id": 4,
         "peso": 73.3,
-        "data_pesagem": "2025-08-14T03:00:00.000Z",
+        "data_pesagem": "2025-08-14T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 31,
         "usuario_id": 11,
         "peso": 81.5,
-        "data_pesagem": "2025-07-20T03:00:00.000Z",
+        "data_pesagem": "2025-07-20T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 32,
         "usuario_id": 12,
         "peso": 89,
-        "data_pesagem": "2025-07-10T03:00:00.000Z",
+        "data_pesagem": "2025-07-10T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 12,
         "usuario_id": 4,
         "peso": 84.5,
-        "data_pesagem": "2025-02-09T03:00:00.000Z",
+        "data_pesagem": "2025-02-09T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 18,
         "usuario_id": 5,
         "peso": 78,
-        "data_pesagem": "2025-01-19T03:00:00.000Z",
+        "data_pesagem": "2025-01-19T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 7,
         "usuario_id": 3,
         "peso": 104.7,
-        "data_pesagem": "2025-01-12T03:00:00.000Z",
+        "data_pesagem": "2025-01-12T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 4,
         "usuario_id": 1,
         "peso": 110,
-        "data_pesagem": "2025-01-01T03:00:00.000Z",
+        "data_pesagem": "2025-01-01T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 14,
         "usuario_id": 4,
         "peso": 79.5,
-        "data_pesagem": "2024-12-16T03:00:00.000Z",
+        "data_pesagem": "2024-12-16T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 13,
         "usuario_id": 4,
         "peso": 82,
-        "data_pesagem": "2024-10-07T03:00:00.000Z",
+        "data_pesagem": "2024-10-07T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 26,
         "usuario_id": 9,
         "peso": 110,
-        "data_pesagem": "2024-09-20T03:00:00.000Z",
+        "data_pesagem": "2024-09-20T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 36,
         "usuario_id": 16,
         "peso": 99,
-        "data_pesagem": "2024-08-05T03:00:00.000Z",
+        "data_pesagem": "2024-08-05T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 11,
         "usuario_id": 4,
         "peso": 88,
-        "data_pesagem": "2024-01-22T03:00:00.000Z",
+        "data_pesagem": "2024-01-22T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 10,
         "usuario_id": 4,
         "peso": 95,
-        "data_pesagem": "2024-01-01T03:00:00.000Z",
+        "data_pesagem": "2024-01-01T00:00:00.000Z",
         "excluido": 0
       }
     ],
@@ -383,266 +383,266 @@
         "id": 1,
         "usuario_id": 1,
         "peso": 100,
-        "data_pesagem": "2026-05-17T03:00:00.000Z",
+        "data_pesagem": "2026-05-17T00:00:00.000Z",
         "excluido": 1
       },
       {
         "id": 2,
         "usuario_id": 1,
         "peso": 100,
-        "data_pesagem": "2026-05-17T03:00:00.000Z",
+        "data_pesagem": "2026-05-17T00:00:00.000Z",
         "excluido": 1
       },
       {
         "id": 3,
         "usuario_id": 2,
         "peso": 81.7,
-        "data_pesagem": "2026-05-17T03:00:00.000Z",
+        "data_pesagem": "2026-05-17T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 4,
         "usuario_id": 1,
         "peso": 110,
-        "data_pesagem": "2025-01-01T03:00:00.000Z",
+        "data_pesagem": "2025-01-01T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 5,
         "usuario_id": 1,
         "peso": 90,
-        "data_pesagem": "2026-01-01T03:00:00.000Z",
+        "data_pesagem": "2026-01-01T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 6,
         "usuario_id": 1,
         "peso": 93,
-        "data_pesagem": "2026-05-17T03:00:00.000Z",
+        "data_pesagem": "2026-05-17T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 7,
         "usuario_id": 3,
         "peso": 104.7,
-        "data_pesagem": "2025-01-12T03:00:00.000Z",
+        "data_pesagem": "2025-01-12T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 8,
         "usuario_id": 3,
         "peso": 83.1,
-        "data_pesagem": "2026-01-12T03:00:00.000Z",
+        "data_pesagem": "2026-01-12T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 9,
         "usuario_id": 3,
         "peso": 78.1,
-        "data_pesagem": "2026-05-16T03:00:00.000Z",
+        "data_pesagem": "2026-05-16T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 10,
         "usuario_id": 4,
         "peso": 95,
-        "data_pesagem": "2024-01-01T03:00:00.000Z",
+        "data_pesagem": "2024-01-01T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 11,
         "usuario_id": 4,
         "peso": 88,
-        "data_pesagem": "2024-01-22T03:00:00.000Z",
+        "data_pesagem": "2024-01-22T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 12,
         "usuario_id": 4,
         "peso": 84.5,
-        "data_pesagem": "2025-02-09T03:00:00.000Z",
+        "data_pesagem": "2025-02-09T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 13,
         "usuario_id": 4,
         "peso": 82,
-        "data_pesagem": "2024-10-07T03:00:00.000Z",
+        "data_pesagem": "2024-10-07T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 14,
         "usuario_id": 4,
         "peso": 79.5,
-        "data_pesagem": "2024-12-16T03:00:00.000Z",
+        "data_pesagem": "2024-12-16T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 15,
         "usuario_id": 4,
         "peso": 73.3,
-        "data_pesagem": "2025-08-14T03:00:00.000Z",
+        "data_pesagem": "2025-08-14T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 16,
         "usuario_id": 4,
         "peso": 71.7,
-        "data_pesagem": "2025-09-30T03:00:00.000Z",
+        "data_pesagem": "2025-09-30T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 17,
         "usuario_id": 4,
         "peso": 76.7,
-        "data_pesagem": "2026-01-19T03:00:00.000Z",
+        "data_pesagem": "2026-01-19T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 18,
         "usuario_id": 5,
         "peso": 78,
-        "data_pesagem": "2025-01-19T03:00:00.000Z",
+        "data_pesagem": "2025-01-19T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 19,
         "usuario_id": 5,
         "peso": 65,
-        "data_pesagem": "2026-05-19T03:00:00.000Z",
+        "data_pesagem": "2026-05-19T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 20,
         "usuario_id": 6,
         "peso": 97,
-        "data_pesagem": "2026-05-19T03:00:00.000Z",
+        "data_pesagem": "2026-05-19T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 21,
         "usuario_id": 7,
         "peso": 109,
-        "data_pesagem": "2026-02-18T03:00:00.000Z",
+        "data_pesagem": "2026-02-18T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 22,
         "usuario_id": 7,
         "peso": 94.7,
-        "data_pesagem": "2026-05-11T03:00:00.000Z",
+        "data_pesagem": "2026-05-11T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 23,
         "usuario_id": 8,
         "peso": 103,
-        "data_pesagem": "2025-12-01T03:00:00.000Z",
+        "data_pesagem": "2025-12-01T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 24,
         "usuario_id": 8,
         "peso": 95.5,
-        "data_pesagem": "2026-05-18T03:00:00.000Z",
+        "data_pesagem": "2026-05-18T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 25,
         "usuario_id": 3,
         "peso": 77.4,
-        "data_pesagem": "2026-05-20T03:00:00.000Z",
+        "data_pesagem": "2026-05-20T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 26,
         "usuario_id": 9,
         "peso": 110,
-        "data_pesagem": "2024-09-20T03:00:00.000Z",
+        "data_pesagem": "2024-09-20T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 27,
         "usuario_id": 9,
         "peso": 86.7,
-        "data_pesagem": "2026-05-20T03:00:00.000Z",
+        "data_pesagem": "2026-05-20T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 28,
         "usuario_id": 11,
         "peso": 77,
-        "data_pesagem": "2026-01-01T03:00:00.000Z",
+        "data_pesagem": "2026-01-01T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 29,
         "usuario_id": 11,
         "peso": 74,
-        "data_pesagem": "2026-05-20T03:00:00.000Z",
+        "data_pesagem": "2026-05-20T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 30,
         "usuario_id": 10,
         "peso": 95,
-        "data_pesagem": "2026-05-15T03:00:00.000Z",
+        "data_pesagem": "2026-05-15T00:00:00.000Z",
         "excluido": 1
       },
       {
         "id": 31,
         "usuario_id": 11,
         "peso": 81.5,
-        "data_pesagem": "2025-07-20T03:00:00.000Z",
+        "data_pesagem": "2025-07-20T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 32,
         "usuario_id": 12,
         "peso": 89,
-        "data_pesagem": "2025-07-10T03:00:00.000Z",
+        "data_pesagem": "2025-07-10T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 33,
         "usuario_id": 12,
         "peso": 84,
-        "data_pesagem": "2026-04-27T03:00:00.000Z",
+        "data_pesagem": "2026-04-27T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 34,
         "usuario_id": 10,
         "peso": 69,
-        "data_pesagem": "2026-05-20T03:00:00.000Z",
+        "data_pesagem": "2026-05-20T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 35,
         "usuario_id": 15,
         "peso": 61.5,
-        "data_pesagem": "2026-05-20T03:00:00.000Z",
+        "data_pesagem": "2026-05-20T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 36,
         "usuario_id": 16,
         "peso": 99,
-        "data_pesagem": "2024-08-05T03:00:00.000Z",
+        "data_pesagem": "2024-08-05T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 37,
         "usuario_id": 16,
         "peso": 75,
-        "data_pesagem": "2026-05-15T03:00:00.000Z",
+        "data_pesagem": "2026-05-15T00:00:00.000Z",
         "excluido": 0
       },
       {
         "id": 38,
         "usuario_id": 7,
         "peso": 93,
-        "data_pesagem": "2026-05-20T03:00:00.000Z",
+        "data_pesagem": "2026-05-20T00:00:00.000Z",
         "excluido": 0
       }
     ]
