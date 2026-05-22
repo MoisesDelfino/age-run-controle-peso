@@ -203,14 +203,14 @@ app.get('/api/auth/session', (req, res) => {
   }
   
   db.get(
-    'SELECT id, nome, email, altura FROM usuarios WHERE id = ?',
+    'SELECT id, nome, email FROM usuarios WHERE id = ?',
     [req.session.userId],
     (err, usuario) => {
       if (err || !usuario) {
         return res.json({ authenticated: false });
       }
       // Retornar diretamente os dados do usuário + authenticated
-      res.json({ ...usuario, authenticated: true });
+      res.json({ ...usuario, altura: usuario.altura ?? null, authenticated: true });
     }
   );
 });
