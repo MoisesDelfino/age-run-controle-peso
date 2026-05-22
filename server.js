@@ -110,11 +110,17 @@ app.post('/api/auth/cadastro', async (req, res) => {
         // Login automático após cadastro
         req.session.userId = this.lastID;
         req.session.nome = nome.trim();
-        
-        res.json({ 
-          success: true,
-          message: 'Cadastro realizado com sucesso!',
-          usuario: { id: this.lastID, nome: nome.trim(), email }
+
+        req.session.save((sessionErr) => {
+          if (sessionErr) {
+            return res.status(500).json({ error: 'Erro ao salvar sessão' });
+          }
+
+          res.json({ 
+            success: true,
+            message: 'Cadastro realizado com sucesso!',
+            usuario: { id: this.lastID, nome: nome.trim(), email }
+          });
         });
       }
     );
@@ -153,11 +159,17 @@ app.post('/api/auth/login', (req, res) => {
         // Criar sessão
         req.session.userId = usuario.id;
         req.session.nome = usuario.nome;
-        
-        res.json({ 
-          success: true,
-          message: 'Login realizado com sucesso!',
-          usuario: { id: usuario.id, nome: usuario.nome, email: usuario.email }
+
+        req.session.save((sessionErr) => {
+          if (sessionErr) {
+            return res.status(500).json({ error: 'Erro ao salvar sessão' });
+          }
+
+          res.json({ 
+            success: true,
+            message: 'Login realizado com sucesso!',
+            usuario: { id: usuario.id, nome: usuario.nome, email: usuario.email }
+          });
         });
       } catch (error) {
         res.status(500).json({ error: 'Erro ao fazer login' });
