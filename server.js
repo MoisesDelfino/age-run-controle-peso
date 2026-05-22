@@ -9,6 +9,9 @@ const { enviarCodigoRecuperacao } = require('./emailService');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const APP_BASE_PATH = process.env.APP_BASE_PATH || '/controle';
+
+const basePath = (suffix = '') => `${APP_BASE_PATH}${suffix}`;
 
 // Detectar ambiente
 const isProduction = process.env.NODE_ENV === 'production';
@@ -74,6 +77,7 @@ if (sessionStore) {
 
 app.use(session(sessionConfig));
 app.use(express.static('public'));
+app.use(APP_BASE_PATH, express.static('public', { index: false }));
 
 // Middleware de autenticação
 function requireAuth(req, res, next) {
@@ -703,47 +707,94 @@ app.get('/api/pesagens/excluidas/:id', requireAuth, (req, res) => {
 
 // ==================== ROTAS DE PÁGINAS ====================
 
+app.get([APP_BASE_PATH, `${APP_BASE_PATH}/`], (req, res) => {
+  if (!req.session.userId) {
+    return res.redirect(basePath('/login'));
+  }
+  return res.redirect(basePath('/home'));
+});
+
 // Página de login
 app.get('/login', (req, res) => {
+  res.redirect(basePath('/login'));
+});
+
+app.get(basePath('/login'), (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
 // Página de cadastro
 app.get('/cadastro', (req, res) => {
+  res.redirect(basePath('/cadastro'));
+});
+
+app.get(basePath('/cadastro'), (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'cadastro.html'));
 });
 
 // Página de recuperação de senha
 app.get('/recuperar-senha', (req, res) => {
+  res.redirect(basePath('/recuperar-senha'));
+});
+
+app.get(basePath('/recuperar-senha'), (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'recuperar-senha.html'));
 });
 
 // Página home (requer autenticação)
 app.get('/home', (req, res) => {
+  res.redirect(basePath('/home'));
+});
+
+app.get(basePath('/home'), (req, res) => {
+  if (!req.session.userId) {
+    return res.redirect(basePath('/login'));
+  }
   res.sendFile(path.join(__dirname, 'public', 'home.html'));
 });
 
 // Página de pesagem (requer autenticação)
 app.get('/pesagem', (req, res) => {
+  res.redirect(basePath('/pesagem'));
+});
+
+app.get(basePath('/pesagem'), (req, res) => {
+  if (!req.session.userId) {
+    return res.redirect(basePath('/login'));
+  }
   res.sendFile(path.join(__dirname, 'public', 'pesagem.html'));
 });
 
 // Página de ranking (requer autenticação)
 app.get('/ranking', (req, res) => {
+  res.redirect(basePath('/ranking'));
+});
+
+app.get(basePath('/ranking'), (req, res) => {
+  if (!req.session.userId) {
+    return res.redirect(basePath('/login'));
+  }
   res.sendFile(path.join(__dirname, 'public', 'ranking.html'));
 });
 
 // Página de bioimpedância (requer autenticação)
 app.get('/bioimpedancia', (req, res) => {
+  res.redirect(basePath('/bioimpedancia'));
+});
+
+app.get(basePath('/bioimpedancia'), (req, res) => {
+  if (!req.session.userId) {
+    return res.redirect(basePath('/login'));
+  }
   res.sendFile(path.join(__dirname, 'public', 'bioimpedancia.html'));
 });
 
 // Página principal (redireciona para home)
 app.get('/', (req, res) => {
   if (!req.session.userId) {
-    return res.redirect('/login');
+    return res.redirect(basePath('/login'));
   }
-  res.redirect('/home');
+  res.redirect(basePath('/home'));
 });
 
 // Iniciar servidor
