@@ -698,33 +698,21 @@ app.get('/recuperar-senha', (req, res) => {
 
 // Página home (requer autenticação)
 app.get('/home', (req, res) => {
-  if (!req.session.userId) {
-    return res.redirect('/login');
-  }
   res.sendFile(path.join(__dirname, 'public', 'home.html'));
 });
 
 // Página de pesagem (requer autenticação)
 app.get('/pesagem', (req, res) => {
-  if (!req.session.userId) {
-    return res.redirect('/login');
-  }
   res.sendFile(path.join(__dirname, 'public', 'pesagem.html'));
 });
 
 // Página de ranking (requer autenticação)
 app.get('/ranking', (req, res) => {
-  if (!req.session.userId) {
-    return res.redirect('/login');
-  }
   res.sendFile(path.join(__dirname, 'public', 'ranking.html'));
 });
 
 // Página de bioimpedância (requer autenticação)
 app.get('/bioimpedancia', (req, res) => {
-  if (!req.session.userId) {
-    return res.redirect('/login');
-  }
   res.sendFile(path.join(__dirname, 'public', 'bioimpedancia.html'));
 });
 
