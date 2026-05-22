@@ -91,10 +91,15 @@ function requireAuth(req, res, next) {
 
 // Cadastro
 app.post('/api/auth/cadastro', async (req, res) => {
-  const { nome, email, senha } = req.body;
+  const { nome, email, senha, sexo } = req.body;
+  const sexoNormalizado = (sexo || '').toLowerCase().trim();
   
-  if (!nome || !email || !senha) {
+  if (!nome || !email || !senha || !sexoNormalizado) {
     return res.status(400).json({ error: 'Todos os campos são obrigatórios' });
+  }
+
+  if (!['masculino', 'feminino'].includes(sexoNormalizado)) {
+    return res.status(400).json({ error: 'Sexo inválido' });
   }
 
   try {
@@ -102,8 +107,8 @@ app.post('/api/auth/cadastro', async (req, res) => {
     const senhaHash = await bcrypt.hash(senha, 10);
     
     db.run(
-      'INSERT INTO usuarios (nome, email, senha) VALUES (?, ?, ?)',
-      [nome.trim(), email.toLowerCase().trim(), senhaHash],
+      'INSERT INTO usuarios (nome, email, senha, sexo) VALUES (?, ?, ?, ?)',
+      [nome.trim(), email.toLowerCase().trim(), senhaHash, sexoNormalizado],
       function(err) {
         if (err) {
           if (err.message.includes('UNIQUE')) {
@@ -115,6 +120,7 @@ app.post('/api/auth/cadastro', async (req, res) => {
         // Login automático após cadastro
         req.session.userId = this.lastID;
         req.session.nome = nome.trim();
+        req.session.sexo = sexoNormalizado;
 
         req.session.save((sessionErr) => {
           if (sessionErr) {
@@ -124,7 +130,7 @@ app.post('/api/auth/cadastro', async (req, res) => {
           res.json({ 
             success: true,
             message: 'Cadastro realizado com sucesso!',
-            usuario: { id: this.lastID, nome: nome.trim(), email }
+            usuario: { id: this.lastID, nome: nome.trim(), email, sexo: sexoNormalizado }
           });
         });
       }
@@ -164,6 +170,7 @@ app.post('/api/auth/login', (req, res) => {
         // Criar sessão
         req.session.userId = usuario.id;
         req.session.nome = usuario.nome;
+        req.session.sexo = usuario.sexo || 'masculino';
 
         req.session.save((sessionErr) => {
           if (sessionErr) {
@@ -173,7 +180,7 @@ app.post('/api/auth/login', (req, res) => {
           res.json({ 
             success: true,
             message: 'Login realizado com sucesso!',
-            usuario: { id: usuario.id, nome: usuario.nome, email: usuario.email }
+            usuario: { id: usuario.id, nome: usuario.nome, email: usuario.email, sexo: usuario.sexo || 'masculino' }
           });
         });
       } catch (error) {
@@ -207,14 +214,15 @@ app.get('/api/auth/session', (req, res) => {
   }
 
   db.get(
-    'SELECT id, nome, email, altura FROM usuarios WHERE id = ?',
+    'SELECT id, nome, email, altura, sexo FROM usuarios WHERE id = ?',
     [req.session.userId],
     (err, usuario) => {
       if (err) {
         const message = err.message || '';
         const semColunaAltura = message.includes('column') && message.includes('altura');
+        const semColunaSexo = message.includes('column') && message.includes('sexo');
 
-        if (semColunaAltura) {
+        if (semColunaAltura || semColunaSexo) {
           return db.get(
             'SELECT id, nome, email FROM usuarios WHERE id = ?',
             [req.session.userId],
@@ -222,7 +230,7 @@ app.get('/api/auth/session', (req, res) => {
               if (fallbackErr || !fallbackUsuario) {
                 return res.json({ authenticated: false });
               }
-              return res.json({ ...fallbackUsuario, altura: null, authenticated: true });
+              return res.json({ ...fallbackUsuario, altura: null, sexo: 'masculino', authenticated: true });
             }
           );
         }
@@ -235,7 +243,7 @@ app.get('/api/auth/session', (req, res) => {
       }
 
       // Retornar diretamente os dados do usuário + authenticated
-      res.json({ ...usuario, altura: usuario.altura ?? null, authenticated: true });
+      res.json({ ...usuario, altura: usuario.altura ?? null, sexo: usuario.sexo || 'masculino', authenticated: true });
     }
   );
 });
@@ -436,52 +444,69 @@ app.post('/api/pesagens', requireAuth, (req, res) => {
 });
 
 // Obter ranking de perda de peso
-app.get('/api/ranking', (req, res) => {
+app.get('/api/ranking', requireAuth, (req, res) => {
   console.log('🏆 Requisição de ranking recebida');
   console.log('Session ID:', req.sessionID);
   console.log('Authenticated:', req.session?.userId ? 'Sim' : 'Não');
+
+  db.get(
+    'SELECT sexo FROM usuarios WHERE id = ?',
+    [req.session.userId],
+    (sexoErr, usuario) => {
+      if (sexoErr || !usuario) {
+        return res.status(500).json({ error: 'Erro ao validar perfil de acesso' });
+      }
+
+      if ((usuario.sexo || '').toLowerCase() === 'feminino') {
+        return res.status(403).json({
+          error: 'Ranking geral indisponível para este perfil',
+          code: 'RANKING_RESTRITO'
+        });
+      }
   
-  const query = `
-    SELECT 
-      u.id as usuario_id,
-      u.nome,
-      (SELECT peso FROM pesagens WHERE usuario_id = u.id AND excluido = 0 ORDER BY data_pesagem ASC LIMIT 1) as peso_inicial,
-      (SELECT peso FROM pesagens WHERE usuario_id = u.id AND excluido = 0 ORDER BY data_pesagem DESC LIMIT 1) as peso_atual,
-      COUNT(p.id) as total_pesagens
-    FROM usuarios u
-    LEFT JOIN pesagens p ON u.id = p.usuario_id AND p.excluido = 0
-    GROUP BY u.id
-    HAVING COUNT(p.id) > 0
-  `;
-  
-  db.all(query, [], (err, rows) => {
-    if (err) {
-      console.error('❌ Erro ao buscar ranking:', err);
-      return res.status(500).json({ error: err.message });
-    }
-    
-    console.log(`✅ Ranking carregado: ${rows.length} usuários`);
-    
-    const ranking = rows.map(row => {
-      const diferenca = parseFloat((row.peso_atual - row.peso_inicial).toFixed(2));
-      const percentual_perda = row.peso_inicial > 0 
-        ? parseFloat((((row.peso_inicial - row.peso_atual) / row.peso_inicial) * 100).toFixed(2))
-        : 0;
+      const query = `
+        SELECT 
+          u.id as usuario_id,
+          u.nome,
+          (SELECT peso FROM pesagens WHERE usuario_id = u.id AND excluido = 0 ORDER BY data_pesagem ASC LIMIT 1) as peso_inicial,
+          (SELECT peso FROM pesagens WHERE usuario_id = u.id AND excluido = 0 ORDER BY data_pesagem DESC LIMIT 1) as peso_atual,
+          COUNT(p.id) as total_pesagens
+        FROM usuarios u
+        LEFT JOIN pesagens p ON u.id = p.usuario_id AND p.excluido = 0
+        GROUP BY u.id
+        HAVING COUNT(p.id) > 0
+      `;
       
-      return {
-        ...row,
-        diferenca,
-        percentual_perda
-      };
-    })
-    .sort((a, b) => b.percentual_perda - a.percentual_perda) // Ordenar por maior percentual de perda
-    .map((row, index) => ({
-      ...row,
-      posicao: index + 1
-    }));
-    
-    res.json({ ranking });
-  });
+      db.all(query, [], (err, rows) => {
+        if (err) {
+          console.error('❌ Erro ao buscar ranking:', err);
+          return res.status(500).json({ error: err.message });
+        }
+        
+        console.log(`✅ Ranking carregado: ${rows.length} usuários`);
+        
+        const ranking = rows.map(row => {
+          const diferenca = parseFloat((row.peso_atual - row.peso_inicial).toFixed(2));
+          const percentual_perda = row.peso_inicial > 0 
+            ? parseFloat((((row.peso_inicial - row.peso_atual) / row.peso_inicial) * 100).toFixed(2))
+            : 0;
+          
+          return {
+            ...row,
+            diferenca,
+            percentual_perda
+          };
+        })
+        .sort((a, b) => b.percentual_perda - a.percentual_perda) // Ordenar por maior percentual de perda
+        .map((row, index) => ({
+          ...row,
+          posicao: index + 1
+        }));
+        
+        res.json({ ranking });
+      });
+    }
+  );
 });
 
 // Obter pesagens de um usuário específico

@@ -13,11 +13,11 @@ const rankingContainer = document.getElementById('rankingContainer');
 // Inicialização
 document.addEventListener('DOMContentLoaded', async () => {
     await verificarSessao();
-    await carregarRanking();
+    await carregarVisaoRanking();
     
     // Atualizar a cada 30 segundos
     setInterval(() => {
-        carregarRanking();
+        carregarVisaoRanking();
     }, 30000);
 });
 
@@ -36,11 +36,20 @@ async function verificarSessao() {
         }
         
         usuarioLogado = data;
+
+        if (isMulher()) {
+            window.location.href = '/pesagem';
+            return;
+        }
         
     } catch (error) {
         console.error('Erro ao verificar sessão:', error);
         window.location.href = '/login';
     }
+}
+
+function isMulher() {
+    return (usuarioLogado?.sexo || '').toLowerCase() === 'feminino';
 }
 
 async function handleLogout() {
@@ -61,6 +70,15 @@ async function handleLogout() {
 }
 
 // ==================== RANKING ====================
+
+async function carregarVisaoRanking() {
+    if (isMulher()) {
+        await carregarEvolucaoPessoal();
+        return;
+    }
+
+    await carregarRanking();
+}
 
 async function carregarRanking() {
     try {
@@ -83,6 +101,47 @@ async function carregarRanking() {
     } catch (error) {
         console.error('Erro ao carregar ranking:', error);
         rankingContainer.innerHTML = '<p class="error-message">Erro ao carregar ranking</p>';
+    }
+}
+
+async function carregarEvolucaoPessoal() {
+    try {
+        const response = await fetch(`${API_BASE}/meu-historico`, {
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            rankingContainer.innerHTML = '<p class="error-message">Erro ao carregar sua evolução</p>';
+            return;
+        }
+
+        const historico = await response.json();
+        const pesagensAtivas = (historico || []).filter(item => !item.excluido || item.excluido === 0);
+
+        if (!pesagensAtivas.length) {
+            rankingContainer.innerHTML = '<p class="empty-message">Registre pesagens para acompanhar sua evolução.</p>';
+            return;
+        }
+
+        const pesoAtual = Number(pesagensAtivas[0].peso);
+        const pesoInicial = Number(pesagensAtivas[pesagensAtivas.length - 1].peso);
+        const diferenca = Number((pesoAtual - pesoInicial).toFixed(2));
+        const percentual = pesoInicial > 0
+            ? Number((((pesoInicial - pesoAtual) / pesoInicial) * 100).toFixed(2))
+            : 0;
+
+        rankingContainer.innerHTML = `
+            <div class="stats-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;">
+                <div class="stat-card"><h4>Peso inicial</h4><p>${pesoInicial.toFixed(1)} kg</p></div>
+                <div class="stat-card"><h4>Peso atual</h4><p>${pesoAtual.toFixed(1)} kg</p></div>
+                <div class="stat-card"><h4>Diferença</h4><p>${diferenca >= 0 ? '+' : ''}${diferenca.toFixed(2)} kg</p></div>
+                <div class="stat-card"><h4>Evolução</h4><p>${percentual.toFixed(2)}%</p></div>
+                <div class="stat-card"><h4>Total de pesagens</h4><p>${pesagensAtivas.length}</p></div>
+            </div>
+        `;
+    } catch (error) {
+        console.error('Erro ao carregar evolução pessoal:', error);
+        rankingContainer.innerHTML = '<p class="error-message">Erro ao carregar sua evolução</p>';
     }
 }
 
@@ -159,6 +218,6 @@ if (btnLogout) {
 
 if (btnAtualizar) {
     btnAtualizar.addEventListener('click', async () => {
-        await carregarRanking();
+        await carregarVisaoRanking();
     });
 }

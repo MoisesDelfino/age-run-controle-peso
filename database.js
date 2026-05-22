@@ -110,6 +110,7 @@ function initDatabase() {
         nome TEXT NOT NULL,
         email TEXT NOT NULL UNIQUE,
         senha TEXT NOT NULL,
+        sexo TEXT DEFAULT 'masculino',
         altura REAL,
         data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         codigo_recuperacao TEXT,
@@ -121,6 +122,7 @@ function initDatabase() {
         nome TEXT NOT NULL,
         email TEXT NOT NULL UNIQUE,
         senha TEXT NOT NULL,
+        sexo TEXT DEFAULT 'masculino',
         altura REAL,
         data_cadastro DATETIME DEFAULT CURRENT_TIMESTAMP,
         codigo_recuperacao TEXT,
@@ -143,6 +145,32 @@ function initDatabase() {
         if (!alreadyExists) {
           console.error('Erro ao garantir coluna altura:', err);
         }
+      }
+    });
+
+    const ensureSexoColumn = usePostgres
+      ? "ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS sexo TEXT DEFAULT 'masculino'"
+      : "ALTER TABLE usuarios ADD COLUMN sexo TEXT DEFAULT 'masculino'";
+
+    db.run(ensureSexoColumn, (err) => {
+      if (err) {
+        const message = err.message || '';
+        const alreadyExists = message.includes('duplicate column name') || message.includes('already exists');
+        if (!alreadyExists) {
+          console.error('Erro ao garantir coluna sexo:', err);
+        }
+      }
+    });
+
+    const backfillSexoSql = "UPDATE usuarios SET sexo = 'masculino' WHERE sexo IS NULL OR TRIM(sexo) = ''";
+    db.run(backfillSexoSql, function(err) {
+      if (err) {
+        console.error('Erro ao atualizar sexo dos usuários antigos:', err);
+        return;
+      }
+
+      if (this.changes > 0) {
+        console.log(`👥 Usuários antigos atualizados para sexo masculino: ${this.changes}`);
       }
     });
 

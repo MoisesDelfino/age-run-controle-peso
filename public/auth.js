@@ -80,6 +80,7 @@ if (document.getElementById('cadastroForm')) {
     const cadastroForm = document.getElementById('cadastroForm');
     const nomeInput = document.getElementById('nome');
     const emailInput = document.getElementById('email');
+    const sexoInput = document.getElementById('sexo');
     const senhaInput = document.getElementById('senha');
     const confirmarSenhaInput = document.getElementById('confirmarSenha');
 
@@ -88,10 +89,11 @@ if (document.getElementById('cadastroForm')) {
         
         const nome = nomeInput.value.trim();
         const email = emailInput.value.trim();
+        const sexo = sexoInput.value;
         const senha = senhaInput.value;
         const confirmarSenha = confirmarSenhaInput.value;
         
-        if (!nome || !email || !senha || !confirmarSenha) {
+        if (!nome || !email || !sexo || !senha || !confirmarSenha) {
             mostrarMensagem('Por favor, preencha todos os campos', 'error');
             return;
         }
@@ -113,7 +115,7 @@ if (document.getElementById('cadastroForm')) {
                     'Content-Type': 'application/json'
                 },
                 credentials: 'include',
-                body: JSON.stringify({ nome, email, senha })
+                body: JSON.stringify({ nome, email, sexo, senha })
             });
             
             const data = await response.json();

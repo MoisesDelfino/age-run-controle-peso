@@ -1,5 +1,36 @@
 // ==================== CONTROLE DO MENU MOBILE ====================
 
+var API_BASE = API_BASE || (window.location.hostname === 'localhost'
+    ? `http://localhost:${window.location.port}/api`
+    : '/api');
+
+async function aplicarPermissoesMenu() {
+    try {
+        const response = await fetch(`${API_BASE}/auth/session`, {
+            credentials: 'include'
+        });
+
+        if (!response.ok) return;
+
+        const data = await response.json();
+        const isMulher = (data?.sexo || '').toLowerCase() === 'feminino';
+
+        if (!isMulher) return;
+
+        const rankingLinks = document.querySelectorAll('.nav-link[href="/ranking"], .nav-link[href$="/ranking"]');
+        rankingLinks.forEach((link) => {
+            const parent = link.closest('li');
+            if (parent) {
+                parent.style.display = 'none';
+                return;
+            }
+            link.style.display = 'none';
+        });
+    } catch (error) {
+        console.error('Erro ao aplicar permissões do menu:', error);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const menuToggle = document.querySelector('.menu-toggle');
     const menuOverlay = document.querySelector('.menu-overlay');
@@ -55,4 +86,6 @@ document.addEventListener('DOMContentLoaded', function() {
             closeMenu();
         }
     });
+
+    aplicarPermissoesMenu();
 });
