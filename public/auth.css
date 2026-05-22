@@ -9,6 +9,10 @@
     background: #ffffff;
 }
 
+body.dark-mode .auth-container {
+    background: #111111;
+}
+
 .auth-box {
     background: linear-gradient(135deg, var(--secondary-color) 0%, var(--accent-purple) 100%);
     border-radius: 8px;
@@ -17,6 +21,11 @@
     width: 100%;
     max-width: 400px;
     animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+body.dark-mode .auth-box {
+    background: linear-gradient(135deg, #2b1642 0%, #1f102f 100%);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.55), 0 4px 10px rgba(0, 0, 0, 0.35);
 }
 
 @keyframes slideUp {
@@ -83,6 +92,12 @@
     color: var(--white);
 }
 
+body.dark-mode .auth-form .form-group input,
+body.dark-mode .auth-form .form-group select {
+    background: rgba(0, 0, 0, 0.3);
+    border-color: rgba(255, 255, 255, 0.35);
+}
+
 .auth-form .form-group input::placeholder {
     color: rgba(255, 255, 255, 0.6);
 }
@@ -97,12 +112,23 @@
     background: rgba(255, 255, 255, 0.2);
 }
 
+body.dark-mode .auth-form .form-group input:hover,
+body.dark-mode .auth-form .form-group select:hover {
+    background: rgba(0, 0, 0, 0.4);
+}
+
 .auth-form .form-group input:focus,
 .auth-form .form-group select:focus {
     outline: none;
     border-color: var(--white);
     background: rgba(255, 255, 255, 0.25);
     box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .auth-form .form-group input:focus,
+body.dark-mode .auth-form .form-group select:focus {
+    box-shadow: 0 0 0 2px rgba(139, 195, 74, 0.25);
+    border-color: rgba(139, 195, 74, 0.9);
 }
 
 .auth-form .btn {
@@ -156,6 +182,10 @@
 
 .toggle-password:hover {
     background: rgba(255, 255, 255, 0.15);
+}
+
+body.dark-mode .toggle-password:hover {
+    background: rgba(139, 195, 74, 0.2);
 }
 
 .toggle-password:active {

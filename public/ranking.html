@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ranking - Age Run</title>
     <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="stylesheet" href="styles.css?v=2026052045">
+    <link rel="stylesheet" href="styles.css?v=2026052203">
     <link rel="stylesheet" href="effects.css?v=2026052045">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -27,9 +27,14 @@
                     <h1><span class="title-desktop">Ranking de Perda de Peso</span><span class="title-mobile">Ranking</span></h1>
                     <p class="subtitle">Confira a evolução de toda a equipe!</p>
                 </div>
-                <button id="btnLogout" class="btn-logout" aria-label="Sair">
-                    <span class="material-icons">logout</span>
-                </button>
+                <div class="header-actions">
+                    <button class="btn-dark-mode" data-theme-toggle aria-label="Ativar modo escuro" title="Alternar modo escuro">
+                        <span class="material-icons">dark_mode</span>
+                    </button>
+                    <button id="btnLogout" class="btn-logout" aria-label="Sair">
+                        <span class="material-icons">logout</span>
+                    </button>
+                </div>
             </div>
         </div>
     </header>
@@ -73,6 +78,7 @@
         </div>
     </footer>
 
+    <script src="theme.js?v=2026052203"></script>
     <script src="menu.js?v=2026052045"></script>
     <script src="ranking.js?v=2026052045"></script>
 </body>
