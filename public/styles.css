@@ -3798,3 +3798,100 @@ body.dark-mode .menu-overlay {
         grid-template-columns: 1fr;
     }
 }
+
+/* ==================== AJUSTES FINAIS DARK MODE ==================== */
+body.dark-mode .subtitle-medium,
+body.dark-mode .progress-label,
+body.dark-mode .bio-date,
+body.dark-mode .bio-item span,
+body.dark-mode .bio-historico-data,
+body.dark-mode .dado-label,
+body.dark-mode .confidence-score,
+body.dark-mode .imc-tip p {
+    color: #b8c0cc;
+}
+
+body.dark-mode .analysis-tabs {
+    border-bottom-color: #3a3a3a;
+}
+
+body.dark-mode .tab-btn {
+    color: #b8c0cc;
+}
+
+body.dark-mode .tab-btn:hover {
+    background: rgba(139, 195, 74, 0.1);
+}
+
+body.dark-mode .tab-btn.active {
+    background: rgba(139, 195, 74, 0.18);
+}
+
+body.dark-mode .imc-stats,
+body.dark-mode .imc-details,
+body.dark-mode .imc-progress-section,
+body.dark-mode .imc-detail-item,
+body.dark-mode .imc-tip,
+body.dark-mode .menu-opcoes,
+body.dark-mode .bio-card,
+body.dark-mode .bio-preview-full,
+body.dark-mode .dado-item,
+body.dark-mode .bio-historico-card {
+    background: #20252b;
+    border-color: #313841;
+    color: #e6eaf0;
+}
+
+body.dark-mode .imc-header,
+body.dark-mode .bio-header,
+body.dark-mode .bio-historico-header {
+    border-bottom-color: #313841;
+}
+
+body.dark-mode .imc-detail-value,
+body.dark-mode .dado-valor,
+body.dark-mode .bio-item strong,
+body.dark-mode .bio-detail strong,
+body.dark-mode .loading-text {
+    color: #e6eaf0;
+}
+
+body.dark-mode .form-bioimpedancia {
+    background: #1b1f24;
+    border: 1px solid #2e353e;
+}
+
+body.dark-mode .form-bioimpedancia label {
+    color: #d5dce7;
+}
+
+body.dark-mode .form-bioimpedancia input[type="number"] {
+    background: #232931;
+    border-color: #38424d;
+    color: #eef2f8;
+}
+
+body.dark-mode .form-bioimpedancia input[type="number"]:focus {
+    border-color: #8bc34a;
+    box-shadow: 0 0 0 3px rgba(139, 195, 74, 0.2);
+}
+
+body.dark-mode .form-info {
+    background: rgba(33, 150, 243, 0.14);
+    border-left-color: #42a5f5;
+}
+
+body.dark-mode .form-info p,
+body.dark-mode .form-info .material-icons {
+    color: #8ecbff;
+}
+
+body.dark-mode .form-actions .btn-secondary {
+    background: #2c323a;
+    color: #d8dee8;
+    border: 1px solid #3a424c;
+}
+
+body.dark-mode .form-actions .btn-secondary:hover {
+    background: #363d47;
+}
