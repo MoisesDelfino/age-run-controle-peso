@@ -152,6 +152,13 @@ function initDatabase() {
         id SERIAL PRIMARY KEY,
         usuario_id INTEGER NOT NULL,
         peso REAL NOT NULL,
+        gordura_percentual REAL,
+        massa_muscular_percentual REAL,
+        agua_percentual REAL,
+        massa_ossea REAL,
+        metabolismo_basal INTEGER,
+        idade_metabolica INTEGER,
+        gordura_visceral INTEGER,
         data_pesagem TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         excluido INTEGER DEFAULT 0,
         FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
@@ -161,6 +168,13 @@ function initDatabase() {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         usuario_id INTEGER NOT NULL,
         peso REAL NOT NULL,
+        gordura_percentual REAL,
+        massa_muscular_percentual REAL,
+        agua_percentual REAL,
+        massa_ossea REAL,
+        metabolismo_basal INTEGER,
+        idade_metabolica INTEGER,
+        gordura_visceral INTEGER,
         data_pesagem DATETIME DEFAULT CURRENT_TIMESTAMP,
         excluido INTEGER DEFAULT 0,
         FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
@@ -169,6 +183,33 @@ function initDatabase() {
 
     db.run(createWeighingsTable, (err) => {
       if (err) console.error('Erro ao criar tabela pesagens:', err);
+    });
+
+    const bioColumns = [
+      'gordura_percentual REAL',
+      'massa_muscular_percentual REAL',
+      'agua_percentual REAL',
+      'massa_ossea REAL',
+      'metabolismo_basal INTEGER',
+      'idade_metabolica INTEGER',
+      'gordura_visceral INTEGER'
+    ];
+
+    bioColumns.forEach((columnDef) => {
+      const columnName = columnDef.split(' ')[0];
+      const ensureColumnSql = usePostgres
+        ? `ALTER TABLE pesagens ADD COLUMN IF NOT EXISTS ${columnDef}`
+        : `ALTER TABLE pesagens ADD COLUMN ${columnDef}`;
+
+      db.run(ensureColumnSql, (err) => {
+        if (err) {
+          const message = err.message || '';
+          const alreadyExists = message.includes('duplicate column name') || message.includes('already exists');
+          if (!alreadyExists) {
+            console.error(`Erro ao garantir coluna ${columnName}:`, err);
+          }
+        }
+      });
     });
 
     console.log('📊 Tabelas criadas/verificadas com sucesso');
