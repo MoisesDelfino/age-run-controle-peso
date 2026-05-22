@@ -38,7 +38,7 @@ if (process.env.DATABASE_URL) {
 
 // Confiar no proxy do Render
 if (isProduction) {
-  app.set('trust proxy', 1);
+  app.set('trust proxy', true);
 }
 
 // Middleware
@@ -58,11 +58,12 @@ const sessionConfig = {
   resave: false,
   saveUninitialized: false,
   proxy: isProduction,
+  name: 'age_run.sid',
   cookie: { 
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 dias
     httpOnly: true,
-    secure: isProduction,
-    sameSite: isProduction ? 'none' : 'lax'
+    secure: isProduction ? 'auto' : false,
+    sameSite: 'lax'
   }
 };
 
