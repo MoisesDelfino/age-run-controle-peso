@@ -201,14 +201,35 @@ app.get('/api/auth/session', (req, res) => {
   if (!req.session.userId) {
     return res.json({ authenticated: false });
   }
-  
+
   db.get(
-    'SELECT id, nome, email FROM usuarios WHERE id = ?',
+    'SELECT id, nome, email, altura FROM usuarios WHERE id = ?',
     [req.session.userId],
     (err, usuario) => {
-      if (err || !usuario) {
+      if (err) {
+        const message = err.message || '';
+        const semColunaAltura = message.includes('column') && message.includes('altura');
+
+        if (semColunaAltura) {
+          return db.get(
+            'SELECT id, nome, email FROM usuarios WHERE id = ?',
+            [req.session.userId],
+            (fallbackErr, fallbackUsuario) => {
+              if (fallbackErr || !fallbackUsuario) {
+                return res.json({ authenticated: false });
+              }
+              return res.json({ ...fallbackUsuario, altura: null, authenticated: true });
+            }
+          );
+        }
+
         return res.json({ authenticated: false });
       }
+
+      if (!usuario) {
+        return res.json({ authenticated: false });
+      }
+
       // Retornar diretamente os dados do usuário + authenticated
       res.json({ ...usuario, altura: usuario.altura ?? null, authenticated: true });
     }
