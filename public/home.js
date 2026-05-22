@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // ==================== AUTENTICAÇÃO ====================
 
-async function verificarSessao() {
+async function verificarSessao(tentativas = 3) {
     try {
         const response = await fetch(`${API_BASE}/auth/session`, {
             credentials: 'include'
@@ -24,17 +24,29 @@ async function verificarSessao() {
         const data = await response.json();
         
         if (!data.authenticated) {
+            if (tentativas > 0) {
+                await new Promise(resolve => setTimeout(resolve, 400));
+                return verificarSessao(tentativas - 1);
+            }
+
             window.location.href = '/login';
             return;
         }
         
         usuarioLogado = data;
         // Extrair apenas o primeiro nome
-        const primeiroNome = usuarioLogado.nome.split(' ')[0];
-        userNameSpan.textContent = primeiroNome;
+        const primeiroNome = usuarioLogado.nome?.split(' ')[0] || '';
+        if (userNameSpan) {
+            userNameSpan.textContent = primeiroNome;
+        }
         
     } catch (error) {
         console.error('Erro ao verificar sessão:', error);
+        if (tentativas > 0) {
+            await new Promise(resolve => setTimeout(resolve, 400));
+            return verificarSessao(tentativas - 1);
+        }
+
         window.location.href = '/login';
     }
 }
