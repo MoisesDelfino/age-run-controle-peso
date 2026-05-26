@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel do Treinador - Age Run</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="stylesheet" href="styles.css?v=2026052206">
+    <link rel="stylesheet" href="effects.css?v=2026052045">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="header-left">
+                    <button class="menu-toggle" aria-label="Menu">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
+                    <img src="logo.png" alt="Age Run" class="logo">
+                </div>
+                <div class="header-text">
+                    <h1><span class="title-desktop">Painel do Treinador</span><span class="title-mobile">Treinador</span></h1>
+                    <p class="subtitle">Visualize IMC, bioimpedância e aprove ou reprove RP dos alunos.</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn-dark-mode" data-theme-toggle aria-label="Ativar modo escuro" title="Alternar modo escuro">
+                        <span class="material-icons">dark_mode</span>
+                    </button>
+                    <button id="btnLogout" class="btn-logout" aria-label="Sair">
+                        <span class="material-icons">logout</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="menu-overlay"></div>
+
+    <nav class="nav-menu">
+        <div class="container">
+            <ul class="nav-list">
+                <li><a href="/controle/home" class="nav-link">🏠 Home</a></li>
+                <li><a href="/controle/pesagem" class="nav-link">📝 Pesagem</a></li>
+                <li><a href="/controle/ranking" class="nav-link">🏆 Ranking</a></li>
+                <li><a href="/controle/grupos-treino" class="nav-link">🤝 Grupos de Treino</a></li>
+                <li><a href="/controle/bioimpedancia" class="nav-link">📊 Bioimpedância</a></li>
+                <li class="trainer-only"><a href="/controle/treinador" class="nav-link active">🧑‍🏫 Treinador</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container home-content">
+        <section class="coach-panel-section">
+            <div class="card">
+                <h2>🧑‍🏫 Aprovação de RPs e Monitoramento</h2>
+                <p class="welcome-text">Dashboard do treinador com foco em aprovação de RP e monitoramento de saúde.</p>
+
+                <div class="coach-kpi-grid">
+                    <button type="button" class="coach-kpi-card active" data-kpi-filter="ativos" aria-pressed="true">
+                        <span class="coach-kpi-label">Usuários ativos</span>
+                        <strong id="kpiTotalUsuarios" class="coach-kpi-value">0</strong>
+                    </button>
+                    <button type="button" class="coach-kpi-card" data-kpi-filter="pendentes" aria-pressed="false">
+                        <span class="coach-kpi-label">RPs pendentes</span>
+                        <strong id="kpiPendentes" class="coach-kpi-value">0</strong>
+                    </button>
+                    <button type="button" class="coach-kpi-card" data-kpi-filter="combio" aria-pressed="false">
+                        <span class="coach-kpi-label">Com bioimpedância</span>
+                        <strong id="kpiComBio" class="coach-kpi-value">0</strong>
+                    </button>
+                    <button type="button" class="coach-kpi-card" data-kpi-filter="semrp" aria-pressed="false">
+                        <span class="coach-kpi-label">Sem RP cadastrado</span>
+                        <strong id="kpiSemRp" class="coach-kpi-value">0</strong>
+                    </button>
+                </div>
+
+                <div class="coach-toolbar">
+                    <div class="form-group coach-search-group dashboard-search-group">
+                        <label for="coachSearchInput">Pesquisar usuário</label>
+                        <input type="text" id="coachSearchInput" placeholder="Digite nome ou e-mail e filtre em tempo real">
+                    </div>
+                </div>
+
+                <div class="coach-main-layout">
+                    <div class="coach-main-column">
+                        <div id="coachPanelMessage" class="groups-notice"></div>
+                        <div id="coachUsersContainer" class="coach-users-list"></div>
+                    </div>
+
+                    <aside class="coach-side-column">
+                        <section class="coach-groups-section" aria-label="Resumo de grupos de treino">
+                            <h3>🤝 Resumo dos grupos de treino</h3>
+                            <p class="group-meta">Usuários com ritmo médio compatível para treinar juntos.</p>
+                            <div id="coachGroupsSummary" class="coach-groups-grid"></div>
+                        </section>
+                    </aside>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>🏃‍♂️ Age Run - Transformando vidas através da corrida com propósito</p>
+            <p class="footer-small">Sua Vida Transformada pela Corrida. Com Propósito, Segurança e Comunidade.</p>
+        </div>
+    </footer>
+
+    <script src="theme.js?v=2026052203"></script>
+    <script src="menu.js?v=2026052601"></script>
+    <script src="treinador.js?v=2026052601"></script>
+</body>
+</html>
