@@ -10,6 +10,7 @@ const { enviarCodigoRecuperacao } = require('./emailService');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const APP_BASE_PATH = process.env.APP_BASE_PATH || '/controle';
+const CONTROL_COMPAT_BASE = '/controle';
 
 const basePath = (suffix = '') => `${APP_BASE_PATH}${suffix}`;
 
@@ -1288,6 +1289,34 @@ app.get('/api/pesagens/excluidas/:id', requireAuth, (req, res) => {
 });
 
 // ==================== ROTAS DE PÁGINAS ====================
+
+if (APP_BASE_PATH !== CONTROL_COMPAT_BASE) {
+  app.get([CONTROL_COMPAT_BASE, `${CONTROL_COMPAT_BASE}/`], (req, res) => {
+    if (!req.session.userId) {
+      return res.redirect(basePath('/login'));
+    }
+    return res.redirect(basePath('/home'));
+  });
+
+  const compatRoutes = [
+    '/login',
+    '/cadastro',
+    '/recuperar-senha',
+    '/home',
+    '/pesagem',
+    '/ranking',
+    '/grupos-treino',
+    '/parceiros',
+    '/bioimpedancia',
+    '/treinador'
+  ];
+
+  compatRoutes.forEach((route) => {
+    app.get(`${CONTROL_COMPAT_BASE}${route}`, (req, res) => {
+      return res.redirect(basePath(route));
+    });
+  });
+}
 
 app.get([APP_BASE_PATH, `${APP_BASE_PATH}/`], (req, res) => {
   if (!req.session.userId) {
