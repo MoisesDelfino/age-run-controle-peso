@@ -65,7 +65,7 @@ if (document.getElementById('loginForm')) {
             mostrarMensagem('✅ Login realizado! Redirecionando...', 'success');
             
             setTimeout(() => {
-                window.location.href = '/home';
+                window.location.href = '/controle/home';
             }, 1000);
             
         } catch (error) {
@@ -127,7 +127,7 @@ if (document.getElementById('cadastroForm')) {
             mostrarMensagem('✅ Conta criada! Redirecionando...', 'success');
             
             setTimeout(() => {
-                window.location.href = '/home';
+                window.location.href = '/controle/home';
             }, 1000);
             
         } catch (error) {

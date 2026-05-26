@@ -112,7 +112,7 @@ async function verificarSessao() {
         
         if (!data.authenticated) {
             console.log('❌ Usuário não autenticado, redirecionando...');
-            window.location.href = '/login';
+            window.location.href = '/controle/login';
             return false;
         }
         
@@ -134,7 +134,7 @@ async function verificarSessao() {
         
     } catch (error) {
         console.error('❌ Erro ao verificar sessão:', error);
-        window.location.href = '/login';
+        window.location.href = '/controle/login';
         return false;
     }
 }
@@ -253,7 +253,7 @@ async function handleLogout() {
         
         if (response.ok) {
             setTimeout(() => {
-                window.location.href = '/login';
+                window.location.href = '/controle/login';
             }, 100);
         }
     } catch (error) {

@@ -48,7 +48,7 @@ async function verificarSessao() {
         const data = await response.json();
         
         if (!data.authenticated) {
-            window.location.href = '/login';
+            window.location.href = '/controle/login';
             return;
         }
         
@@ -59,7 +59,7 @@ async function verificarSessao() {
         
     } catch (error) {
         console.error('Erro ao verificar sessão:', error);
-        window.location.href = '/login';
+        window.location.href = '/controle/login';
     }
 }
 
@@ -83,13 +83,13 @@ async function handleLogout() {
         // Sempre redirecionar, independente da resposta
         console.log('Redirecionando para /login');
         setTimeout(() => {
-            window.location.href = '/login';
+            window.location.href = '/controle/login';
         }, 100);
         
     } catch (error) {
         console.error('Erro ao fazer logout:', error);
         // Mesmo com erro, redirecionar para login
-        window.location.href = '/login';
+        window.location.href = '/controle/login';
     }
 }
 

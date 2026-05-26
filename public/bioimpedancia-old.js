@@ -750,7 +750,7 @@ async function salvarBioimpedancia() {
     
     // Redirecionar para página de pesagem com dados salvos
     sessionStorage.setItem('dadosBioimpedancia', JSON.stringify(dadosBioimpedancia));
-    window.location.href = '/pesagem';
+    window.location.href = '/controle/pesagem';
 }
 
 // Carregar histórico de bioimpedância

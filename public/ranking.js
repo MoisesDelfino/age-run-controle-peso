@@ -31,20 +31,20 @@ async function verificarSessao() {
         const data = await response.json();
         
         if (!data.authenticated) {
-            window.location.href = '/login';
+            window.location.href = '/controle/login';
             return;
         }
         
         usuarioLogado = data;
 
         if (isMulher()) {
-            window.location.href = '/pesagem';
+            window.location.href = '/controle/pesagem';
             return;
         }
         
     } catch (error) {
         console.error('Erro ao verificar sessão:', error);
-        window.location.href = '/login';
+        window.location.href = '/controle/login';
     }
 }
 
@@ -61,7 +61,7 @@ async function handleLogout() {
         
         if (response.ok) {
             setTimeout(() => {
-                window.location.href = '/login';
+                window.location.href = '/controle/login';
             }, 100);
         }
     } catch (error) {

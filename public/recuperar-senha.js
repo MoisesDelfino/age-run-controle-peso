@@ -109,7 +109,7 @@ redefinirSenhaForm.addEventListener('submit', async (e) => {
             showMessage(message2, '✅ Senha redefinida com sucesso!', 'success');
             
             setTimeout(() => {
-                window.location.href = '/login';
+                window.location.href = '/controle/login';
             }, 2000);
         } else {
             showMessage(message2, data.error || 'Erro ao redefinir senha', 'error');

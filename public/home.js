@@ -29,7 +29,7 @@ async function verificarSessao(tentativas = 3) {
                 return verificarSessao(tentativas - 1);
             }
 
-            window.location.href = '/login';
+            window.location.href = '/controle/login';
             return false;
         }
         
@@ -49,7 +49,7 @@ async function verificarSessao(tentativas = 3) {
             return verificarSessao(tentativas - 1);
         }
 
-        window.location.href = '/login';
+        window.location.href = '/controle/login';
         return false;
     }
 }
@@ -70,7 +70,7 @@ async function handleLogout() {
             console.log('Logout bem-sucedido, redirecionando...');
             setTimeout(() => {
                 console.log('Redirecionando para /login');
-                window.location.href = '/login';
+                window.location.href = '/controle/login';
             }, 100);
         } else {
             console.error('Erro no logout:', response.status);
