@@ -56,6 +56,19 @@ const RACE_DISTANCES = [
     'rp_21k' => 21.0975,
     'rp_42k' => 42.195,
 ];
+const TRAINER_OVERRIDE_EMAILS = [
+    'moisescamposdelfino@gmail.com',
+];
+
+function isTrainerOverrideEmail(?string $email): bool
+{
+    $normalized = strtolower(trim((string) $email));
+    if ($normalized === '') {
+        return false;
+    }
+
+    return in_array($normalized, TRAINER_OVERRIDE_EMAILS, true);
+}
 
 function dbColumnExists(string $table, string $column): bool
 {
@@ -263,9 +276,13 @@ function requireTrainerAuth(): int
 
     ensureUsuariosCompatibilityColumns();
     try {
-        $perfil = dbFetchOne('SELECT perfil FROM usuarios WHERE id = :id LIMIT 1', [':id' => $userId]);
+        $perfil = dbFetchOne('SELECT perfil, email FROM usuarios WHERE id = :id LIMIT 1', [':id' => $userId]);
     } catch (Throwable $e) {
         jsonResponse(['error' => 'Erro ao validar perfil de acesso'], 500);
+    }
+
+    if (isTrainerOverrideEmail((string) ($perfil['email'] ?? ''))) {
+        return $userId;
     }
 
     $perfilNormalizado = strtolower(trim((string) ($perfil['perfil'] ?? 'aluno')));
@@ -400,6 +417,9 @@ if ($method === 'GET' && $path === '/api/auth/session') {
     $usuario['altura'] = $usuario['altura'] ?? null;
     $usuario['sexo'] = $usuario['sexo'] ?? 'masculino';
     $usuario['perfil'] = $usuario['perfil'] ?? 'aluno';
+    if (isTrainerOverrideEmail((string) ($usuario['email'] ?? ''))) {
+        $usuario['perfil'] = 'treinador';
+    }
     $usuario['authenticated'] = true;
     jsonResponse($usuario);
 }
