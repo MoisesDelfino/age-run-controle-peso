@@ -1,7 +1,7 @@
 // Configuração da API
 var API_BASE = API_BASE || (window.location.hostname === 'localhost' 
     ? `http://localhost:${window.location.port}/api`
-    : '/api');
+    : (window.location.pathname.startsWith('/controle') ? '/controle/api' : '/api'));
 
 var usuarioLogado = usuarioLogado || null;
 
