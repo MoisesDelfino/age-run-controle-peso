@@ -4,6 +4,44 @@ var API_BASE = API_BASE || (window.location.hostname === 'localhost'
     ? `http://localhost:${window.location.port}/api`
     : (window.location.pathname.startsWith('/controle') ? '/controle/api' : '/api'));
 
+const API_BASE_CANDIDATES = window.location.hostname === 'localhost'
+    ? [API_BASE]
+    : (window.location.pathname.startsWith('/controle')
+        ? ['/controle/api', '/api']
+        : ['/api', '/controle/api']);
+
+async function fetchJsonFromApi(path, options = {}) {
+    const normalizedPath = String(path || '').startsWith('/') ? String(path) : `/${String(path || '')}`;
+    let lastError = null;
+
+    for (const base of API_BASE_CANDIDATES) {
+        try {
+            const response = await fetch(`${base}${normalizedPath}`, {
+                credentials: 'include',
+                ...options
+            });
+
+            const text = await response.text();
+            let data = null;
+            try {
+                data = text ? JSON.parse(text) : null;
+            } catch (_jsonError) {
+                data = null;
+            }
+
+            if (response.status === 404 && base !== API_BASE_CANDIDATES[API_BASE_CANDIDATES.length - 1]) {
+                continue;
+            }
+
+            return { response, data };
+        } catch (error) {
+            lastError = error;
+        }
+    }
+
+    throw lastError || new Error('Falha ao conectar na API');
+}
+
 // Inicialização
 document.addEventListener('DOMContentLoaded', async () => {
     // Carregar nome do usuário e IMC
@@ -54,13 +92,11 @@ function setupEventListeners() {
 async function carregarNomeUsuario() {
     console.log('🔍 Carregando dados do usuário...');
     try {
-        const response = await fetch(`${API_BASE}/auth/session`, {
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include'
+        const { response, data: usuario } = await fetchJsonFromApi('/auth/session', {
+            headers: { 'Content-Type': 'application/json' }
         });
-        
-        if (response.ok) {
-            const usuario = await response.json();
+
+        if (response.ok && usuario) {
             console.log('✅ Usuário carregado:', usuario);
             
             // Extrair primeiro nome
@@ -78,9 +114,16 @@ async function carregarNomeUsuario() {
                     imcContainer.innerHTML = '<p class="info-message">⚠️ Cadastre sua altura na aba Pesagem para visualizar o IMC</p>';
                 }
             }
+        } else if (response.status === 401 || (usuario && usuario.authenticated === false)) {
+            window.location.href = '/controle/login';
+            return;
         }
     } catch (error) {
         console.error('❌ Erro ao carregar dados do usuário:', error);
+        const imcContainer = document.getElementById('imcContainer');
+        if (imcContainer) {
+            imcContainer.innerHTML = '<p class="info-message">❌ Não foi possível carregar os dados da bioimpedância.</p>';
+        }
     }
 }
 
@@ -88,19 +131,26 @@ async function carregarNomeUsuario() {
 async function calcularIMC(altura) {
     console.log('🧮 Iniciando cálculo IMC com altura:', altura);
     try {
-        const response = await fetch(`${API_BASE}/meu-historico`, {
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include'
+        const { response, data } = await fetchJsonFromApi('/meu-historico', {
+            headers: { 'Content-Type': 'application/json' }
         });
         
         console.log('📊 Resposta do /api/meu-historico:', response.status);
         
         if (!response.ok) {
             console.error('❌ Erro ao buscar pesagens:', response.status);
+            if (response.status === 401) {
+                window.location.href = '/controle/login';
+                return;
+            }
+            const imcContainer = document.getElementById('imcContainer');
+            if (imcContainer) {
+                imcContainer.innerHTML = '<p class="info-message">❌ Não foi possível carregar o histórico para calcular IMC.</p>';
+            }
             return;
         }
-        
-        const pesagens = await response.json();
+
+        const pesagens = Array.isArray(data) ? data : [];
         console.log('📊 Pesagens recebidas:', pesagens);
         
         // Filtrar apenas pesagens não excluídas
@@ -575,10 +625,9 @@ async function salvarBioimpedancia(e) {
     const dataFormatada = hoje.toISOString().split('T')[0];
     
     try {
-        const response = await fetch(`${API_BASE}/pesagens`, {
+        const { response, data: payload } = await fetchJsonFromApi('/pesagens', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
             body: JSON.stringify({
                 data_pesagem: dataFormatada,
                 peso: dadosBio.peso,
@@ -598,8 +647,11 @@ async function salvarBioimpedancia(e) {
             await carregarHistoricoBio();
             await carregarNomeUsuario(); // Atualizar IMC
         } else {
-            const error = await response.json();
-            mostrarNotificacao('❌ Erro ao salvar: ' + (error.error || 'Erro desconhecido'), 'error');
+            if (response.status === 401) {
+                window.location.href = '/controle/login';
+                return;
+            }
+            mostrarNotificacao('❌ Erro ao salvar: ' + ((payload && payload.error) || 'Erro desconhecido'), 'error');
         }
     } catch (error) {
         console.error('❌ Erro ao salvar bioimpedância:', error);
@@ -616,17 +668,20 @@ function limparFormulario() {
 async function carregarHistoricoBio() {
     console.log('📊 Carregando histórico de bioimpedância...');
     try {
-        const response = await fetch(`${API_BASE}/meu-historico`, {
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include'
+        const { response, data } = await fetchJsonFromApi('/meu-historico', {
+            headers: { 'Content-Type': 'application/json' }
         });
         
         if (!response.ok) {
             console.error('❌ Erro ao carregar histórico:', response.status);
+            if (response.status === 401) {
+                window.location.href = '/controle/login';
+                return;
+            }
             return;
         }
-        
-        const pesagens = await response.json();
+
+        const pesagens = Array.isArray(data) ? data : [];
         console.log('📊 Pesagens recebidas:', pesagens);
         
         // Filtrar apenas pesagens com dados de bioimpedância
