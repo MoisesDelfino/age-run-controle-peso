@@ -49,6 +49,39 @@ function normalizarLinksMenu() {
     });
 }
 
+function ativarFallbackRotasNovas(closeMenu) {
+    const fallbackRoute = withBasePath('/bioimpedancia');
+    const candidatos = document.querySelectorAll('.nav-link[href$="/grupos-treino"], .nav-link[href$="/treinador"]');
+
+    candidatos.forEach((link) => {
+        link.addEventListener('click', async (event) => {
+            const target = link.getAttribute('href');
+            if (!target) return;
+
+            event.preventDefault();
+            if (typeof closeMenu === 'function') {
+                closeMenu();
+            }
+
+            try {
+                const probe = await fetch(target, {
+                    method: 'HEAD',
+                    credentials: 'include'
+                });
+
+                if (probe.ok || (probe.status >= 300 && probe.status < 400)) {
+                    window.location.href = target;
+                    return;
+                }
+            } catch (error) {
+                console.warn('Rota ainda indisponivel, redirecionando para fallback:', error);
+            }
+
+            window.location.href = fallbackRoute;
+        });
+    });
+}
+
 async function aplicarPermissoesMenu() {
     try {
         const response = await fetch(`${API_BASE}/auth/session`, {
@@ -131,6 +164,8 @@ document.addEventListener('DOMContentLoaded', function() {
     navLinks.forEach(link => {
         link.addEventListener('click', closeMenu);
     });
+
+    ativarFallbackRotasNovas(closeMenu);
     
     // Fechar menu ao pressionar ESC
     document.addEventListener('keydown', function(e) {
