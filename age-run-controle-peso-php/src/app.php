@@ -71,6 +71,17 @@ function isTrainerOverrideEmail(?string $email): bool
     return in_array($normalized, TRAINER_OVERRIDE_EMAILS, true);
 }
 
+function isHiddenFromRankingEmail(?string $email): bool
+{
+    $normalized = strtolower(trim((string) $email));
+    if ($normalized === '') {
+        return false;
+    }
+
+    // Contas de teste com este domínio não aparecem no ranking.
+    return str_ends_with($normalized, '@teste.local');
+}
+
 function dbColumnExists(string $table, string $column): bool
 {
     $driver = strtolower((string) (appConfig()['db']['driver'] ?? 'mysql'));
@@ -589,12 +600,13 @@ if ($method === 'GET' && $path === '/api/ranking') {
             'SELECT
                 u.id AS usuario_id,
                 u.nome,
+                u.email,
                 (SELECT peso FROM pesagens WHERE usuario_id = u.id AND (excluido IS NULL OR excluido = 0) ORDER BY data_pesagem ASC LIMIT 1) AS peso_inicial,
                 (SELECT peso FROM pesagens WHERE usuario_id = u.id AND (excluido IS NULL OR excluido = 0) ORDER BY data_pesagem DESC LIMIT 1) AS peso_atual,
                 COUNT(p.id) AS total_pesagens
              FROM usuarios u
-             LEFT JOIN pesagens p ON u.id = p.usuario_id AND (p.excluido IS NULL OR p.excluido = 0)
-             GROUP BY u.id, u.nome
+             LEFT JOIN pesagens p ON u.id = p.usuario_id AND (p.excluido IS NULL OR excluido = 0)
+             GROUP BY u.id, u.nome, u.email
              HAVING COUNT(p.id) > 0'
         );
     } catch (Throwable $e) {
@@ -603,6 +615,10 @@ if ($method === 'GET' && $path === '/api/ranking') {
 
     $ranking = [];
     foreach ($rows as $row) {
+        if (isHiddenFromRankingEmail((string) ($row['email'] ?? ''))) {
+            continue;
+        }
+
         $pesoInicial = (float) $row['peso_inicial'];
         $pesoAtual = (float) $row['peso_atual'];
         $diferenca = round($pesoAtual - $pesoInicial, 2);
