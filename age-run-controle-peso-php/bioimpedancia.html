@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bioimpedância - Age Run</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="stylesheet" href="styles.css?v=2026052206">
+    <link rel="stylesheet" href="effects.css?v=2026052065">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="header-left">
+                    <button class="menu-toggle" aria-label="Menu">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
+                    <img src="logo.png" alt="Age Run" class="logo">
+                </div>
+                <div class="header-text">
+                    <h1>Controle de Peso</h1>
+                    <p class="subtitle">Sua Vida Transformada pela Corrida. Com Propósito, Segurança e Comunidade.</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn-dark-mode" data-theme-toggle aria-label="Ativar modo escuro" title="Alternar modo escuro">
+                        <span class="material-icons">dark_mode</span>
+                    </button>
+                    <button id="btnLogout" class="btn-logout" aria-label="Sair">
+                        <span class="material-icons">logout</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Menu Overlay -->
+    <div class="menu-overlay"></div>
+
+    <!-- Navigation Menu -->
+    <nav class="nav-menu">
+        <div class="container">
+            <ul class="nav-list">
+                <li><a href="/controle/home" class="nav-link">🏠 Home</a></li>
+                <li><a href="/controle/pesagem" class="nav-link">📝 Pesagem</a></li>
+                <li><a href="/controle/ranking" class="nav-link">🏆 Ranking</a></li>
+                <li><a href="/controle/bioimpedancia" class="nav-link active">📊 Bioimpedância</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <div class="welcome-message">
+                <h2>Olá, <span id="userName">...</span>! 👋</h2>
+            </div>
+
+            <div class="bioimpedancia-page">                <!-- Seção IMC -->
+                <section class="card imc-section-full">
+                    <h2>📏 Informações de Saúde (IMC)</h2>
+                    <div id="imcContainer" class="imc-container">
+                        <div class="loading">Carregando informações...</div>
+                    </div>
+                </section>
+                <!-- Seção Bioimpedância -->
+                <section class="card bioimpedancia-section-full">
+                    <h2>📊 Registrar Bioimpedância</h2>
+                    <p class="subtitle-medium">Preencha os dados da sua bioimpedância</p>
+                    
+                    <form id="formBioimpedancia" class="form-bioimpedancia">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="bioPeso">
+                                    <span class="material-icons">monitor_weight</span>
+                                    Peso (kg) *
+                                </label>
+                                <input type="number" id="bioPeso" step="0.1" min="30" max="300" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="bioGordura">
+                                    <span class="material-icons">water_drop</span>
+                                    Gordura (%)
+                                </label>
+                                <input type="number" id="bioGordura" step="0.1" min="3" max="60">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="bioMassaMuscular">
+                                    <span class="material-icons">fitness_center</span>
+                                    Massa Muscular (%)
+                                </label>
+                                <input type="number" id="bioMassaMuscular" step="0.1" min="15" max="75">
+                            </div>
+                            <div class="form-group">
+                                <label for="bioAgua">
+                                    <span class="material-icons">opacity</span>
+                                    Água (%)
+                                </label>
+                                <input type="number" id="bioAgua" step="0.1" min="30" max="80">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="bioMassaOssea">
+                                    <span class="material-icons">accessibility</span>
+                                    Massa Óssea (kg)
+                                </label>
+                                <input type="number" id="bioMassaOssea" step="0.1" min="0.5" max="10">
+                            </div>
+                            <div class="form-group">
+                                <label for="bioMetabolismoBasal">
+                                    <span class="material-icons">local_fire_department</span>
+                                    Metabolismo Basal (kcal)
+                                </label>
+                                <input type="number" id="bioMetabolismoBasal" step="1" min="800" max="4000">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="bioIdadeMetabolica">
+                                    <span class="material-icons">cake</span>
+                                    Idade Metabólica (anos)
+                                </label>
+                                <input type="number" id="bioIdadeMetabolica" step="1" min="10" max="120">
+                            </div>
+                            <div class="form-group">
+                                <label for="bioGorduraVisceral">
+                                    <span class="material-icons">healing</span>
+                                    Gordura Visceral (nível)
+                                </label>
+                                <input type="number" id="bioGorduraVisceral" step="1" min="1" max="30">
+                            </div>
+                        </div>
+                        
+                        <div class="form-info">
+                            <span class="material-icons">info</span>
+                            <p>* Apenas o peso é obrigatório. Preencha os outros campos se disponíveis.</p>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" id="btnLimparForm">
+                                <span class="material-icons">clear</span>
+                                <span>Limpar</span>
+                            </button>
+                            <button type="submit" class="btn btn-primary btn-large">
+                                <span class="material-icons">save</span>
+                                <span>Salvar Bioimpedância</span>
+                            </button>
+                        </div>
+                    </form>
+                </section>
+
+                <!-- Histórico de Bioimpedância -->
+                <section class="card historico-bio-section">
+                    <h2>📈 Histórico de Bioimpedância</h2>
+                    <div id="historicoBioContainer" class="historico-bio-container">
+                        <div class="loading">Nenhum registro de bioimpedância ainda</div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <script src="theme.js?v=2026052203"></script>
+    <script src="menu.js?v=2026052065"></script>
+    <script src="bioimpedancia.js?v=2026052065"></script>
+</body>
+</html>
