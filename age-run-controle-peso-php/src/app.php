@@ -58,6 +58,7 @@ const RACE_DISTANCES = [
 ];
 const TRAINER_OVERRIDE_EMAILS = [
     'moisescamposdelfino@gmail.com',
+    'filipe.sul@gmail.com',
 ];
 
 function isTrainerOverrideEmail(?string $email): bool
