@@ -1,0 +1,247 @@
+# 📸 Preview do Sistema
+
+## 🏠 Tela Principal
+
+```
+╔═══════════════════════════════════════════════════════════╗
+║                                                           ║
+║         🏃‍♂️ Controle de Peso Age Run                      ║
+║    Acompanhe sua evolução e conquiste seus objetivos!    ║
+║                                                           ║
+╚═══════════════════════════════════════════════════════════╝
+
+┌──────────────┬──────────────┬──────────────┐
+│     👥       │     📊       │     🔥       │
+│      23      │      46      │   222.45 kg  │
+│ Participantes│   Pesagens   │ Perda Total  │
+└──────────────┴──────────────┴──────────────┘
+
+╔═══════════════════════════════════════════════════════════╗
+║  📝 Registrar Pesagem                                     ║
+║                                                           ║
+║  Nome:                                                    ║
+║  ┌─────────────────────────────────────────────────────┐ ║
+║  │ Digite seu nome                                     │ ║
+║  └─────────────────────────────────────────────────────┘ ║
+║                                                           ║
+║  Peso (kg):                                               ║
+║  ┌─────────────────────────────────────────────────────┐ ║
+║  │ Ex: 75.5                                            │ ║
+║  └─────────────────────────────────────────────────────┘ ║
+║                                                           ║
+║  ┌─────────────────────────────────────────────────────┐ ║
+║  │           ✓ Registrar Pesagem                       │ ║
+║  └─────────────────────────────────────────────────────┘ ║
+║                                                           ║
+║  ✅ Pesagem registrada com sucesso! Moises: 92.5 kg      ║
+║                                                           ║
+╚═══════════════════════════════════════════════════════════╝
+
+╔═══════════════════════════════════════════════════════════╗
+║  🏆 Ranking de Perda de Peso          [🔄 Atualizar]     ║
+║                                                           ║
+║  ┌───┬──────────────┬──────┬────────┬──────────┬─────┐  ║
+║  │ # │ Nome         │Inic. │ Atual  │Diferença │Ação │  ║
+║  ├───┼──────────────┼──────┼────────┼──────────┼─────┤  ║
+║  │🥇1│Luiz Freitas  │126.4 │ 104.1  │-22.30 kg │ 📊 │  ║
+║  │🥈2│Ederson       │ 88.0 │  67.5  │-20.55 kg │ 📊 │  ║
+║  │🥉3│Moises        │110.0 │  92.5  │-17.50 kg │ 📊 │  ║
+║  │ 4│Marcelo Souza │ 99.8 │  84.3  │-15.50 kg │ 📊 │  ║
+║  │ 5│Gian          │ 79.8 │  69.1  │-10.70 kg │ 📊 │  ║
+║  │...│              │      │        │          │     │  ║
+║  └───┴──────────────┴──────┴────────┴──────────┴─────┘  ║
+║                                                           ║
+╚═══════════════════════════════════════════════════════════╝
+
+╔═══════════════════════════════════════════════════════════╗
+║              💪 Age Run - Sistema de Controle de Peso     ║
+║        Desenvolvido para acompanhar a evolução do grupo   ║
+╚═══════════════════════════════════════════════════════════╝
+```
+
+---
+
+## 📱 Visão Mobile
+
+```
+┌──────────────────────┐
+│  🏃‍♂️ Age Run         │
+│  Controle de Peso    │
+├──────────────────────┤
+│                      │
+│  👥        📊    🔥  │
+│  23        46   222  │
+│  Part.   Pes.   kg   │
+│                      │
+├──────────────────────┤
+│ 📝 Registrar Pesagem │
+│                      │
+│ Nome:                │
+│ ┌──────────────────┐ │
+│ │                  │ │
+│ └──────────────────┘ │
+│                      │
+│ Peso (kg):           │
+│ ┌──────────────────┐ │
+│ │                  │ │
+│ └──────────────────┘ │
+│                      │
+│ ┌──────────────────┐ │
+│ │ ✓ Registrar      │ │
+│ └──────────────────┘ │
+├──────────────────────┤
+│ 🏆 Ranking           │
+│                      │
+│ 🥇 Luiz F. -22.3kg  │
+│ 🥈 Ederson -20.5kg  │
+│ 🥉 Moises -17.5kg   │
+│ 4º Marcelo -15.5kg  │
+│ ...                  │
+└──────────────────────┘
+```
+
+---
+
+## 📊 Modal de Histórico
+
+```
+┌─────────────────────────────────────────┐
+│ 📊 Histórico de Moises             [×] │
+├─────────────────────────────────────────┤
+│                                         │
+│  ┌─────────────────────────────────┐   │
+│  │ 16/05/2026 às 08:00             │   │
+│  │ 92.5 kg                         │   │
+│  └─────────────────────────────────┘   │
+│                                         │
+│  ┌─────────────────────────────────┐   │
+│  │ 01/01/2025 às 08:00             │   │
+│  │ 110.0 kg                        │   │
+│  └─────────────────────────────────┘   │
+│                                         │
+└─────────────────────────────────────────┘
+```
+
+---
+
+## 🎨 Cores e Design
+
+### Paleta de Cores:
+- **Primária**: Verde (#4CAF50) - Sucesso, botões principais
+- **Secundária**: Azul (#2196F3) - Links, ações secundárias
+- **Gradiente**: Roxo/Azul (fundo)
+- **Perda de Peso**: Verde (positivo)
+- **Ganho de Peso**: Vermelho (negativo)
+
+### Tipografia:
+- **Fonte**: Poppins (Google Fonts)
+- **Pesos**: 300, 400, 500, 600, 700
+
+### Animações:
+- ✨ Cards flutuam ao passar o mouse
+- 🎭 Mensagens deslizam suavemente
+- 🔄 Transições suaves em todas as interações
+
+---
+
+## ⚡ Interações
+
+### Ao Registrar Pesagem:
+1. Formulário valida dados
+2. Mensagem de sucesso aparece
+3. Estatísticas atualizam
+4. Ranking reordena automaticamente
+5. Campo de peso limpa (nome mantém)
+
+### No Ranking:
+- Hover nas linhas: fundo cinza claro
+- Top 3: medalhas animadas 🥇🥈🥉
+- Clique em "Ver Histórico": modal abre com animação
+
+### Responsividade:
+- Desktop: 3 colunas de stats
+- Tablet: 2 colunas
+- Mobile: 1 coluna
+- Tabelas adaptam em telas pequenas
+
+---
+
+## 🌟 Destaques Visuais
+
+### Cards de Estatísticas:
+- Ícones grandes e coloridos
+- Números em destaque
+- Efeito de elevação no hover
+- Gradiente sutil no ícone
+
+### Formulário:
+- Inputs com bordas arredondadas
+- Focus destaca em verde
+- Botão com gradiente
+- Mensagens coloridas (verde/vermelho)
+
+### Ranking:
+- Header com gradiente verde
+- Linhas zebradas alternadas
+- Diferença colorida por valor
+- Botões compactos e claros
+
+---
+
+## 📐 Medidas Responsivas
+
+### Desktop (> 768px):
+- Container: 1200px máx
+- Stats: 3 colunas
+- Tabela completa
+
+### Tablet (768px - 480px):
+- Stats: 2 colunas
+- Tabela compacta
+- Fontes reduzidas
+
+### Mobile (< 480px):
+- Stats: 1 coluna
+- Cards menores
+- Tabela oculta coluna "Total Pesagens"
+- Botões full-width
+
+---
+
+## ✨ Experiência do Usuário
+
+### Facilidade:
+- ⏱️ Registrar peso: < 10 segundos
+- 👀 Ver ranking: sempre visível
+- 📊 Histórico: 1 clique
+
+### Feedback:
+- ✅ Mensagens claras de sucesso/erro
+- 🔄 Indicadores de carregamento
+- 🎯 Validação em tempo real
+
+### Performance:
+- ⚡ Carregamento instantâneo
+- 🔄 Auto-refresh a cada 30s
+- 💾 Dados persistem no servidor
+
+---
+
+## 🎯 Fluxo de Uso Típico
+
+1. **Usuário acessa**: Homepage carrega instantaneamente
+2. **Vê ranking**: Imediatamente vê quem está na frente
+3. **Registra peso**: Nome + peso + enter (10s)
+4. **Confirma**: Mensagem verde de sucesso
+5. **Verifica posição**: Ranking atualiza automaticamente
+6. **Explora histórico**: Clica para ver evolução
+
+**Tempo total**: < 30 segundos! ⚡
+
+---
+
+## 🚀 Pronto para Uso!
+
+O design é **moderno**, **intuitivo** e **profissional**.
+
+Qualquer pessoa consegue usar sem instruções complexas! 💪
