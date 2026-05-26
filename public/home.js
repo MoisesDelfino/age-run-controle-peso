@@ -30,7 +30,7 @@ async function verificarSessao(tentativas = 3) {
             }
 
             window.location.href = '/login';
-            return;
+            return false;
         }
         
         usuarioLogado = data;
@@ -39,6 +39,8 @@ async function verificarSessao(tentativas = 3) {
         if (userNameSpan) {
             userNameSpan.textContent = primeiroNome;
         }
+
+        return true;
         
     } catch (error) {
         console.error('Erro ao verificar sessão:', error);
@@ -48,6 +50,7 @@ async function verificarSessao(tentativas = 3) {
         }
 
         window.location.href = '/login';
+        return false;
     }
 }
 

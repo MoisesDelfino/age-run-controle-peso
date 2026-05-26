@@ -162,6 +162,68 @@ function initDatabase() {
       }
     });
 
+    const ensurePerfilColumn = usePostgres
+      ? "ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS perfil TEXT DEFAULT 'aluno'"
+      : "ALTER TABLE usuarios ADD COLUMN perfil TEXT DEFAULT 'aluno'";
+
+    db.run(ensurePerfilColumn, (err) => {
+      if (err) {
+        const message = err.message || '';
+        const alreadyExists = message.includes('duplicate column name') || message.includes('already exists');
+        if (!alreadyExists) {
+          console.error('Erro ao garantir coluna perfil:', err);
+        }
+      }
+    });
+
+    const rpColumns = [
+      'rp_5k INTEGER',
+      'rp_10k INTEGER',
+      'rp_21k INTEGER',
+      'rp_42k INTEGER'
+    ];
+
+    rpColumns.forEach((columnDef) => {
+      const columnName = columnDef.split(' ')[0];
+      const ensureColumnSql = usePostgres
+        ? `ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS ${columnDef}`
+        : `ALTER TABLE usuarios ADD COLUMN ${columnDef}`;
+
+      db.run(ensureColumnSql, (err) => {
+        if (err) {
+          const message = err.message || '';
+          const alreadyExists = message.includes('duplicate column name') || message.includes('already exists');
+          if (!alreadyExists) {
+            console.error(`Erro ao garantir coluna ${columnName}:`, err);
+          }
+        }
+      });
+    });
+
+    const rpStatusColumns = [
+      'rp_5k_status TEXT',
+      'rp_10k_status TEXT',
+      'rp_21k_status TEXT',
+      'rp_42k_status TEXT'
+    ];
+
+    rpStatusColumns.forEach((columnDef) => {
+      const columnName = columnDef.split(' ')[0];
+      const ensureColumnSql = usePostgres
+        ? `ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS ${columnDef}`
+        : `ALTER TABLE usuarios ADD COLUMN ${columnDef}`;
+
+      db.run(ensureColumnSql, (err) => {
+        if (err) {
+          const message = err.message || '';
+          const alreadyExists = message.includes('duplicate column name') || message.includes('already exists');
+          if (!alreadyExists) {
+            console.error(`Erro ao garantir coluna ${columnName}:`, err);
+          }
+        }
+      });
+    });
+
     const backfillSexoSql = "UPDATE usuarios SET sexo = 'masculino' WHERE sexo IS NULL OR TRIM(sexo) = ''";
     db.run(backfillSexoSql, function(err) {
       if (err) {
@@ -171,6 +233,18 @@ function initDatabase() {
 
       if (this.changes > 0) {
         console.log(`👥 Usuários antigos atualizados para sexo masculino: ${this.changes}`);
+      }
+    });
+
+    const backfillPerfilSql = "UPDATE usuarios SET perfil = 'aluno' WHERE perfil IS NULL OR TRIM(perfil) = ''";
+    db.run(backfillPerfilSql, function(err) {
+      if (err) {
+        console.error('Erro ao atualizar perfil dos usuários antigos:', err);
+        return;
+      }
+
+      if (this.changes > 0) {
+        console.log(`🧭 Usuários antigos atualizados para perfil aluno: ${this.changes}`);
       }
     });
 

@@ -14,6 +14,18 @@ async function aplicarPermissoesMenu() {
 
         const data = await response.json();
         const isMulher = (data?.sexo || '').toLowerCase() === 'feminino';
+        const isTreinador = (data?.perfil || '').toLowerCase() === 'treinador';
+
+        if (isTreinador) {
+            document.body.classList.add('is-trainer');
+        } else {
+            document.body.classList.remove('is-trainer');
+        }
+
+        const trainerItems = document.querySelectorAll('.trainer-only');
+        trainerItems.forEach((item) => {
+            item.style.display = isTreinador ? '' : 'none';
+        });
 
         if (!isMulher) return;
 

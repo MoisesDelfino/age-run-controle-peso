@@ -87,6 +87,207 @@ function requireAuth(req, res, next) {
   next();
 }
 
+function normalizePerfil(perfil) {
+  const raw = String(perfil || '').trim().toLowerCase();
+  return raw || 'aluno';
+}
+
+function requireTrainer(req, res, next) {
+  if (!req.session.userId) {
+    return res.status(401).json({ error: 'Não autenticado' });
+  }
+
+  const sessionPerfil = normalizePerfil(req.session.perfil);
+  if (sessionPerfil === 'treinador') {
+    return next();
+  }
+
+  db.get(
+    'SELECT perfil FROM usuarios WHERE id = ?',
+    [req.session.userId],
+    (err, usuario) => {
+      if (err || !usuario) {
+        return res.status(500).json({ error: 'Erro ao validar perfil de acesso' });
+      }
+
+      const perfil = normalizePerfil(usuario.perfil);
+      req.session.perfil = perfil;
+
+      if (perfil !== 'treinador') {
+        return res.status(403).json({ error: 'Acesso permitido apenas para treinador' });
+      }
+
+      return next();
+    }
+  );
+}
+
+function requireTrainerPage(req, res, next) {
+  if (!req.session.userId) {
+    return res.redirect(basePath('/login'));
+  }
+
+  const sessionPerfil = normalizePerfil(req.session.perfil);
+  if (sessionPerfil === 'treinador') {
+    return next();
+  }
+
+  db.get(
+    'SELECT perfil FROM usuarios WHERE id = ?',
+    [req.session.userId],
+    (err, usuario) => {
+      if (err || !usuario) {
+        return res.redirect(basePath('/home'));
+      }
+
+      const perfil = normalizePerfil(usuario.perfil);
+      req.session.perfil = perfil;
+
+      if (perfil !== 'treinador') {
+        return res.redirect(basePath('/home'));
+      }
+
+      return next();
+    }
+  );
+}
+
+const RACE_COLUMNS = ['rp_5k', 'rp_10k', 'rp_21k', 'rp_42k'];
+const RP_STATUS_COLUMNS = {
+  rp_5k: 'rp_5k_status',
+  rp_10k: 'rp_10k_status',
+  rp_21k: 'rp_21k_status',
+  rp_42k: 'rp_42k_status'
+};
+const RP_APPROVAL_STATUSES = ['pendente', 'aprovado', 'reprovado'];
+const RACE_DISTANCES = {
+  rp_5k: 5,
+  rp_10k: 10,
+  rp_21k: 21.0975,
+  rp_42k: 42.195
+};
+
+function parseRaceTimeToSeconds(value) {
+  if (value === null || value === undefined || value === '') {
+    return null;
+  }
+
+  if (typeof value === 'number') {
+    const parsed = Math.round(value);
+    return parsed > 0 ? parsed : null;
+  }
+
+  const raw = String(value).trim();
+  if (!raw) {
+    return null;
+  }
+
+  if (raw.includes(':')) {
+    const parts = raw.split(':').map((part) => parseInt(part, 10));
+    if (parts.some((part) => Number.isNaN(part) || part < 0)) {
+      return NaN;
+    }
+
+    if (parts.length === 2) {
+      const [minutes, seconds] = parts;
+      if (seconds >= 60) {
+        return NaN;
+      }
+      return (minutes * 60) + seconds;
+    }
+
+    if (parts.length === 3) {
+      const [hours, minutes, seconds] = parts;
+      if (minutes >= 60 || seconds >= 60) {
+        return NaN;
+      }
+      return (hours * 3600) + (minutes * 60) + seconds;
+    }
+
+    return NaN;
+  }
+
+  const parsed = parseInt(raw, 10);
+  if (Number.isNaN(parsed) || parsed <= 0) {
+    return NaN;
+  }
+
+  return parsed;
+}
+
+function formatSecondsToRaceTime(seconds) {
+  if (seconds === null || seconds === undefined || Number.isNaN(seconds)) {
+    return null;
+  }
+
+  const total = Math.max(0, Math.round(Number(seconds)));
+  const hours = Math.floor(total / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+  const remainingSeconds = total % 60;
+
+  if (hours > 0) {
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
+  }
+
+  return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
+}
+
+function formatPace(secondsPerKm) {
+  if (!secondsPerKm || Number.isNaN(secondsPerKm) || secondsPerKm <= 0) {
+    return null;
+  }
+
+  const rounded = Math.round(secondsPerKm);
+  const minutes = Math.floor(rounded / 60);
+  const seconds = rounded % 60;
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')} /km`;
+}
+
+function calculatePerformanceScore(user) {
+  let weightedPaceSum = 0;
+  let weightTotal = 0;
+
+  Object.entries(RACE_DISTANCES).forEach(([column, distanceKm]) => {
+    const value = Number(user[column]);
+    if (!value || Number.isNaN(value) || value <= 0) {
+      return;
+    }
+
+    const pace = value / distanceKm;
+    weightedPaceSum += pace * distanceKm;
+    weightTotal += distanceKm;
+  });
+
+  if (!weightTotal) {
+    return null;
+  }
+
+  return weightedPaceSum / weightTotal;
+}
+
+function mapRunnerForGroup(user, myScore) {
+  const score = calculatePerformanceScore(user);
+  const deltaPercent = myScore > 0 && score !== null
+    ? Number((((score - myScore) / myScore) * 100).toFixed(2))
+    : 0;
+
+  return {
+    usuario_id: user.id,
+    nome: user.nome,
+    rp_5k: user.rp_5k ?? null,
+    rp_10k: user.rp_10k ?? null,
+    rp_21k: user.rp_21k ?? null,
+    rp_42k: user.rp_42k ?? null,
+    rp_5k_formatado: formatSecondsToRaceTime(user.rp_5k),
+    rp_10k_formatado: formatSecondsToRaceTime(user.rp_10k),
+    rp_21k_formatado: formatSecondsToRaceTime(user.rp_21k),
+    rp_42k_formatado: formatSecondsToRaceTime(user.rp_42k),
+    ritmo_medio_seg_km: score,
+    ritmo_medio_formatado: formatPace(score),
+    diferenca_percentual: deltaPercent
+  };
+}
+
 // ==================== ROTAS DE AUTENTICAÇÃO ====================
 
 // Cadastro
@@ -121,6 +322,7 @@ app.post('/api/auth/cadastro', async (req, res) => {
         req.session.userId = this.lastID;
         req.session.nome = nome.trim();
         req.session.sexo = sexoNormalizado;
+        req.session.perfil = 'aluno';
 
         req.session.save((sessionErr) => {
           if (sessionErr) {
@@ -130,7 +332,7 @@ app.post('/api/auth/cadastro', async (req, res) => {
           res.json({ 
             success: true,
             message: 'Cadastro realizado com sucesso!',
-            usuario: { id: this.lastID, nome: nome.trim(), email, sexo: sexoNormalizado }
+            usuario: { id: this.lastID, nome: nome.trim(), email, sexo: sexoNormalizado, perfil: 'aluno' }
           });
         });
       }
@@ -171,6 +373,7 @@ app.post('/api/auth/login', (req, res) => {
         req.session.userId = usuario.id;
         req.session.nome = usuario.nome;
         req.session.sexo = usuario.sexo || 'masculino';
+        req.session.perfil = normalizePerfil(usuario.perfil);
 
         req.session.save((sessionErr) => {
           if (sessionErr) {
@@ -180,7 +383,13 @@ app.post('/api/auth/login', (req, res) => {
           res.json({ 
             success: true,
             message: 'Login realizado com sucesso!',
-            usuario: { id: usuario.id, nome: usuario.nome, email: usuario.email, sexo: usuario.sexo || 'masculino' }
+            usuario: {
+              id: usuario.id,
+              nome: usuario.nome,
+              email: usuario.email,
+              sexo: usuario.sexo || 'masculino',
+              perfil: normalizePerfil(usuario.perfil)
+            }
           });
         });
       } catch (error) {
@@ -214,15 +423,16 @@ app.get('/api/auth/session', (req, res) => {
   }
 
   db.get(
-    'SELECT id, nome, email, altura, sexo FROM usuarios WHERE id = ?',
+    'SELECT id, nome, email, altura, sexo, perfil FROM usuarios WHERE id = ?',
     [req.session.userId],
     (err, usuario) => {
       if (err) {
         const message = err.message || '';
         const semColunaAltura = message.includes('column') && message.includes('altura');
         const semColunaSexo = message.includes('column') && message.includes('sexo');
+        const semColunaPerfil = message.includes('column') && message.includes('perfil');
 
-        if (semColunaAltura || semColunaSexo) {
+        if (semColunaAltura || semColunaSexo || semColunaPerfil) {
           return db.get(
             'SELECT id, nome, email FROM usuarios WHERE id = ?',
             [req.session.userId],
@@ -230,7 +440,7 @@ app.get('/api/auth/session', (req, res) => {
               if (fallbackErr || !fallbackUsuario) {
                 return res.json({ authenticated: false });
               }
-              return res.json({ ...fallbackUsuario, altura: null, sexo: 'masculino', authenticated: true });
+              return res.json({ ...fallbackUsuario, altura: null, sexo: 'masculino', perfil: 'aluno', authenticated: true });
             }
           );
         }
@@ -242,8 +452,16 @@ app.get('/api/auth/session', (req, res) => {
         return res.json({ authenticated: false });
       }
 
+      req.session.perfil = normalizePerfil(usuario.perfil);
+
       // Retornar diretamente os dados do usuário + authenticated
-      res.json({ ...usuario, altura: usuario.altura ?? null, sexo: usuario.sexo || 'masculino', authenticated: true });
+      res.json({
+        ...usuario,
+        altura: usuario.altura ?? null,
+        sexo: usuario.sexo || 'masculino',
+        perfil: normalizePerfil(usuario.perfil),
+        authenticated: true
+      });
     }
   );
 });
@@ -585,6 +803,345 @@ app.put('/api/usuarios/altura', requireAuth, (req, res) => {
   );
 });
 
+// ==================== ROTAS DE PERFORMANCE (RPs) ====================
+
+app.get('/api/performance/rps', requireAuth, (req, res) => {
+  db.get(
+    'SELECT id, rp_5k, rp_10k, rp_21k, rp_42k, rp_5k_status, rp_10k_status, rp_21k_status, rp_42k_status FROM usuarios WHERE id = ?',
+    [req.session.userId],
+    (err, usuario) => {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+
+      if (!usuario) {
+        return res.status(404).json({ error: 'Usuário não encontrado' });
+      }
+
+      const score = calculatePerformanceScore(usuario);
+      return res.json({
+        rp_5k: usuario.rp_5k ?? null,
+        rp_10k: usuario.rp_10k ?? null,
+        rp_21k: usuario.rp_21k ?? null,
+        rp_42k: usuario.rp_42k ?? null,
+        rp_5k_status: usuario.rp_5k_status || null,
+        rp_10k_status: usuario.rp_10k_status || null,
+        rp_21k_status: usuario.rp_21k_status || null,
+        rp_42k_status: usuario.rp_42k_status || null,
+        rp_5k_formatado: formatSecondsToRaceTime(usuario.rp_5k),
+        rp_10k_formatado: formatSecondsToRaceTime(usuario.rp_10k),
+        rp_21k_formatado: formatSecondsToRaceTime(usuario.rp_21k),
+        rp_42k_formatado: formatSecondsToRaceTime(usuario.rp_42k),
+        ritmo_medio_seg_km: score,
+        ritmo_medio_formatado: formatPace(score)
+      });
+    }
+  );
+});
+
+app.put('/api/performance/rps', requireAuth, (req, res) => {
+  const payload = req.body || {};
+  const parsed = {};
+
+  for (const column of RACE_COLUMNS) {
+    const seconds = parseRaceTimeToSeconds(payload[column]);
+
+    if (Number.isNaN(seconds)) {
+      return res.status(400).json({ error: `Valor inválido para ${column}. Use mm:ss ou hh:mm:ss` });
+    }
+
+    if (seconds !== null && (seconds < 300 || seconds > 21600)) {
+      return res.status(400).json({ error: `Valor fora da faixa para ${column}` });
+    }
+
+    parsed[column] = seconds;
+  }
+
+  db.get(
+    'SELECT rp_5k, rp_10k, rp_21k, rp_42k, rp_5k_status, rp_10k_status, rp_21k_status, rp_42k_status FROM usuarios WHERE id = ?',
+    [req.session.userId],
+    (selectErr, usuarioAtual) => {
+      if (selectErr) {
+        return res.status(500).json({ error: selectErr.message });
+      }
+
+      if (!usuarioAtual) {
+        return res.status(404).json({ error: 'Usuário não encontrado' });
+      }
+
+      const nextStatuses = {};
+      for (const column of RACE_COLUMNS) {
+        const statusColumn = RP_STATUS_COLUMNS[column];
+        const novoValor = parsed[column];
+        const valorAtual = usuarioAtual[column] === null || usuarioAtual[column] === undefined
+          ? null
+          : Number(usuarioAtual[column]);
+        const statusAtual = usuarioAtual[statusColumn] || null;
+
+        if (novoValor === null) {
+          nextStatuses[statusColumn] = null;
+          continue;
+        }
+
+        if (valorAtual === novoValor && statusAtual) {
+          nextStatuses[statusColumn] = statusAtual;
+          continue;
+        }
+
+        nextStatuses[statusColumn] = 'pendente';
+      }
+
+      db.run(
+        `UPDATE usuarios
+         SET rp_5k = ?, rp_10k = ?, rp_21k = ?, rp_42k = ?,
+             rp_5k_status = ?, rp_10k_status = ?, rp_21k_status = ?, rp_42k_status = ?
+         WHERE id = ?`,
+        [
+          parsed.rp_5k,
+          parsed.rp_10k,
+          parsed.rp_21k,
+          parsed.rp_42k,
+          nextStatuses.rp_5k_status,
+          nextStatuses.rp_10k_status,
+          nextStatuses.rp_21k_status,
+          nextStatuses.rp_42k_status,
+          req.session.userId
+        ],
+        function(err) {
+          if (err) {
+            return res.status(500).json({ error: err.message });
+          }
+
+          return res.json({
+            success: true,
+            message: 'Recordes pessoais atualizados com sucesso!',
+            rps: {
+              rp_5k: parsed.rp_5k,
+              rp_10k: parsed.rp_10k,
+              rp_21k: parsed.rp_21k,
+              rp_42k: parsed.rp_42k,
+              rp_5k_status: nextStatuses.rp_5k_status,
+              rp_10k_status: nextStatuses.rp_10k_status,
+              rp_21k_status: nextStatuses.rp_21k_status,
+              rp_42k_status: nextStatuses.rp_42k_status,
+              rp_5k_formatado: formatSecondsToRaceTime(parsed.rp_5k),
+              rp_10k_formatado: formatSecondsToRaceTime(parsed.rp_10k),
+              rp_21k_formatado: formatSecondsToRaceTime(parsed.rp_21k),
+              rp_42k_formatado: formatSecondsToRaceTime(parsed.rp_42k)
+            }
+          });
+        }
+      );
+    }
+  );
+});
+
+app.get('/api/performance/grupos', requireAuth, (req, res) => {
+  db.all(
+    'SELECT id, nome, rp_5k, rp_10k, rp_21k, rp_42k FROM usuarios',
+    [],
+    (err, rows) => {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+
+      const usuarioLogado = rows.find((row) => row.id === req.session.userId);
+      if (!usuarioLogado) {
+        return res.status(404).json({ error: 'Usuário não encontrado' });
+      }
+
+      const meuScore = calculatePerformanceScore(usuarioLogado);
+      if (meuScore === null) {
+        return res.json({
+          meu_nivel: null,
+          grupos: {
+            mesmo_nivel: [],
+            nivel_mais_alto: [],
+            nivel_mais_baixo: []
+          },
+          aviso: 'Cadastre ao menos um RP para gerar seus grupos de treino.'
+        });
+      }
+
+      const candidatos = rows
+        .filter((row) => row.id !== req.session.userId)
+        .map((row) => ({ row, score: calculatePerformanceScore(row) }))
+        .filter((item) => item.score !== null)
+        .map((item) => mapRunnerForGroup(item.row, meuScore));
+
+      const sameThreshold = 6;
+      const mesmoNivel = candidatos
+        .filter((item) => Math.abs(item.diferenca_percentual) <= sameThreshold)
+        .sort((a, b) => Math.abs(a.diferenca_percentual) - Math.abs(b.diferenca_percentual));
+
+      const nivelMaisAlto = candidatos
+        .filter((item) => item.diferenca_percentual < -sameThreshold)
+        .sort((a, b) => a.ritmo_medio_seg_km - b.ritmo_medio_seg_km);
+
+      const nivelMaisBaixo = candidatos
+        .filter((item) => item.diferenca_percentual > sameThreshold)
+        .sort((a, b) => a.diferenca_percentual - b.diferenca_percentual);
+
+      return res.json({
+        meu_nivel: {
+          ritmo_medio_seg_km: meuScore,
+          ritmo_medio_formatado: formatPace(meuScore)
+        },
+        grupos: {
+          mesmo_nivel: mesmoNivel,
+          nivel_mais_alto: nivelMaisAlto,
+          nivel_mais_baixo: nivelMaisBaixo
+        }
+      });
+    }
+  );
+});
+
+app.get('/api/treinador/usuarios-ativos', requireAuth, requireTrainer, (req, res) => {
+  const query = `
+    SELECT
+      u.id,
+      u.nome,
+      u.email,
+      u.altura,
+      u.rp_5k,
+      u.rp_10k,
+      u.rp_21k,
+      u.rp_42k,
+      u.rp_5k_status,
+      u.rp_10k_status,
+      u.rp_21k_status,
+      u.rp_42k_status,
+      p.peso AS peso_atual,
+      p.data_pesagem,
+      p.gordura_percentual,
+      p.massa_muscular_percentual,
+      p.agua_percentual,
+      p.massa_ossea,
+      p.metabolismo_basal,
+      p.idade_metabolica,
+      p.gordura_visceral
+    FROM usuarios u
+    LEFT JOIN pesagens p ON p.id = (
+      SELECT p2.id
+      FROM pesagens p2
+      WHERE p2.usuario_id = u.id AND p2.excluido = 0
+      ORDER BY p2.data_pesagem DESC, p2.id DESC
+      LIMIT 1
+    )
+    WHERE EXISTS (
+      SELECT 1
+      FROM pesagens p3
+      WHERE p3.usuario_id = u.id AND p3.excluido = 0
+    )
+    ORDER BY u.nome ASC
+  `;
+
+  db.all(query, [], (err, rows) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+
+    const usuarios = (rows || []).map((row) => {
+      const altura = row.altura === null || row.altura === undefined ? null : Number(row.altura);
+      const pesoAtual = row.peso_atual === null || row.peso_atual === undefined ? null : Number(row.peso_atual);
+      const imc = altura && pesoAtual && altura > 0
+        ? Number((pesoAtual / (altura * altura)).toFixed(2))
+        : null;
+
+      return {
+        usuario_id: row.id,
+        nome: row.nome,
+        email: row.email,
+        altura,
+        peso_atual: pesoAtual,
+        imc,
+        data_pesagem: row.data_pesagem || null,
+        bioimpedancia: {
+          gordura_percentual: row.gordura_percentual ?? null,
+          massa_muscular_percentual: row.massa_muscular_percentual ?? null,
+          agua_percentual: row.agua_percentual ?? null,
+          massa_ossea: row.massa_ossea ?? null,
+          metabolismo_basal: row.metabolismo_basal ?? null,
+          idade_metabolica: row.idade_metabolica ?? null,
+          gordura_visceral: row.gordura_visceral ?? null
+        },
+        rps: {
+          rp_5k: row.rp_5k ?? null,
+          rp_10k: row.rp_10k ?? null,
+          rp_21k: row.rp_21k ?? null,
+          rp_42k: row.rp_42k ?? null,
+          rp_5k_formatado: formatSecondsToRaceTime(row.rp_5k),
+          rp_10k_formatado: formatSecondsToRaceTime(row.rp_10k),
+          rp_21k_formatado: formatSecondsToRaceTime(row.rp_21k),
+          rp_42k_formatado: formatSecondsToRaceTime(row.rp_42k),
+          rp_5k_status: row.rp_5k_status || null,
+          rp_10k_status: row.rp_10k_status || null,
+          rp_21k_status: row.rp_21k_status || null,
+          rp_42k_status: row.rp_42k_status || null
+        }
+      };
+    });
+
+    return res.json({ usuarios });
+  });
+});
+
+app.put('/api/treinador/rps/:usuarioId/aprovacao', requireAuth, requireTrainer, (req, res) => {
+  const usuarioId = parseInt(req.params.usuarioId, 10);
+  const { prova, status } = req.body || {};
+
+  if (!usuarioId || Number.isNaN(usuarioId)) {
+    return res.status(400).json({ error: 'Usuário inválido' });
+  }
+
+  if (!RACE_COLUMNS.includes(prova)) {
+    return res.status(400).json({ error: 'Prova de RP inválida' });
+  }
+
+  if (!RP_APPROVAL_STATUSES.includes(status)) {
+    return res.status(400).json({ error: 'Status inválido. Use pendente, aprovado ou reprovado' });
+  }
+
+  const statusColumn = RP_STATUS_COLUMNS[prova];
+
+  db.get(
+    `SELECT id, ${prova} AS valor_rp FROM usuarios WHERE id = ?`,
+    [usuarioId],
+    (selectErr, usuario) => {
+      if (selectErr) {
+        return res.status(500).json({ error: selectErr.message });
+      }
+
+      if (!usuario) {
+        return res.status(404).json({ error: 'Usuário não encontrado' });
+      }
+
+      if (usuario.valor_rp === null || usuario.valor_rp === undefined) {
+        return res.status(400).json({ error: 'Este usuário não possui RP cadastrado para a prova selecionada' });
+      }
+
+      db.run(
+        `UPDATE usuarios SET ${statusColumn} = ? WHERE id = ?`,
+        [status, usuarioId],
+        function(updateErr) {
+          if (updateErr) {
+            return res.status(500).json({ error: updateErr.message });
+          }
+
+          return res.json({
+            success: true,
+            message: `RP ${prova} atualizado para ${status}`,
+            usuario_id: usuarioId,
+            prova,
+            status
+          });
+        }
+      );
+    }
+  );
+});
+
 // Obter estatísticas gerais
 app.get('/api/estatisticas', (req, res) => {
   const query = `
@@ -802,6 +1359,27 @@ app.get(basePath('/ranking'), (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'ranking.html'));
 });
 
+// Página de grupos de treino (requer autenticação)
+app.get('/grupos-treino', (req, res) => {
+  res.redirect(basePath('/grupos-treino'));
+});
+
+app.get(basePath('/grupos-treino'), (req, res) => {
+  if (!req.session.userId) {
+    return res.redirect(basePath('/login'));
+  }
+  res.sendFile(path.join(__dirname, 'public', 'grupos-treino.html'));
+});
+
+// Compatibilidade com links antigos
+app.get('/parceiros', (req, res) => {
+  res.redirect(basePath('/grupos-treino'));
+});
+
+app.get(basePath('/parceiros'), (req, res) => {
+  res.redirect(basePath('/grupos-treino'));
+});
+
 // Página de bioimpedância (requer autenticação)
 app.get('/bioimpedancia', (req, res) => {
   res.redirect(basePath('/bioimpedancia'));
@@ -812,6 +1390,15 @@ app.get(basePath('/bioimpedancia'), (req, res) => {
     return res.redirect(basePath('/login'));
   }
   res.sendFile(path.join(__dirname, 'public', 'bioimpedancia.html'));
+});
+
+// Página do treinador (exclusiva)
+app.get('/treinador', (req, res) => {
+  res.redirect(basePath('/treinador'));
+});
+
+app.get(basePath('/treinador'), requireTrainerPage, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'treinador.html'));
 });
 
 // Página principal (redireciona para home)
