@@ -103,6 +103,10 @@ function ensureUsuariosCompatibilityColumns(): void
     $missing = [];
     $targetColumns = [
         'perfil' => "VARCHAR(20) DEFAULT 'aluno'",
+        'rp_5k' => 'INTEGER DEFAULT NULL',
+        'rp_10k' => 'INTEGER DEFAULT NULL',
+        'rp_21k' => 'INTEGER DEFAULT NULL',
+        'rp_42k' => 'INTEGER DEFAULT NULL',
         'rp_5k_status' => "VARCHAR(20) DEFAULT NULL",
         'rp_10k_status' => "VARCHAR(20) DEFAULT NULL",
         'rp_21k_status' => "VARCHAR(20) DEFAULT NULL",
