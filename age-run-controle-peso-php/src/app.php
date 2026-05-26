@@ -262,9 +262,38 @@ function calculatePerformanceScore(array $user): ?float
     return $weightedPaceSum / $weightTotal;
 }
 
-function mapRunnerForGroup(array $user, float $myScore): array
+function calculateApprovedPerformanceScore(array $user): ?float
 {
-    $score = calculatePerformanceScore($user);
+    $weightedPaceSum = 0.0;
+    $weightTotal = 0.0;
+
+    foreach (RACE_DISTANCES as $column => $distanceKm) {
+        $statusColumn = RP_STATUS_COLUMNS[$column] ?? null;
+        $status = $statusColumn ? ($user[$statusColumn] ?? null) : null;
+        if ($status !== 'aprovado') {
+            continue;
+        }
+
+        $value = isset($user[$column]) && is_numeric($user[$column]) ? (float) $user[$column] : 0.0;
+        if ($value <= 0) {
+            continue;
+        }
+
+        $pace = $value / $distanceKm;
+        $weightedPaceSum += $pace * $distanceKm;
+        $weightTotal += $distanceKm;
+    }
+
+    if ($weightTotal <= 0) {
+        return null;
+    }
+
+    return $weightedPaceSum / $weightTotal;
+}
+
+function mapRunnerForGroup(array $user, float $myScore, ?float $scoreOverride = null): array
+{
+    $score = $scoreOverride ?? calculatePerformanceScore($user);
     $deltaPercent = ($myScore > 0 && $score !== null)
         ? round((($score - $myScore) / $myScore) * 100, 2)
         : 0.0;
@@ -814,7 +843,7 @@ if ($method === 'PUT' && $path === '/api/performance/rps') {
 
 if ($method === 'GET' && $path === '/api/performance/grupos') {
     $usuarioId = requireAuth();
-    $rows = dbFetchAll('SELECT id, nome, rp_5k, rp_10k, rp_21k, rp_42k FROM usuarios');
+    $rows = dbFetchAll('SELECT id, nome, rp_5k, rp_10k, rp_21k, rp_42k, rp_5k_status, rp_10k_status, rp_21k_status, rp_42k_status FROM usuarios');
 
     $usuarioLogado = null;
     foreach ($rows as $row) {
@@ -828,7 +857,7 @@ if ($method === 'GET' && $path === '/api/performance/grupos') {
         jsonResponse(['error' => 'Usuário não encontrado'], 404);
     }
 
-    $meuScore = calculatePerformanceScore($usuarioLogado);
+    $meuScore = calculateApprovedPerformanceScore($usuarioLogado);
     if ($meuScore === null) {
         jsonResponse([
             'meu_nivel' => null,
@@ -837,7 +866,7 @@ if ($method === 'GET' && $path === '/api/performance/grupos') {
                 'nivel_mais_alto' => [],
                 'nivel_mais_baixo' => [],
             ],
-            'aviso' => 'Cadastre ao menos um RP para gerar seus grupos de treino.',
+            'aviso' => 'Seus grupos de treino serão exibidos após o treinador aprovar ao menos um RP.',
         ]);
     }
 
@@ -846,11 +875,11 @@ if ($method === 'GET' && $path === '/api/performance/grupos') {
         if ((int) ($row['id'] ?? 0) === $usuarioId) {
             continue;
         }
-        $score = calculatePerformanceScore($row);
+        $score = calculateApprovedPerformanceScore($row);
         if ($score === null) {
             continue;
         }
-        $candidatos[] = mapRunnerForGroup($row, $meuScore);
+        $candidatos[] = mapRunnerForGroup($row, $meuScore, $score);
     }
 
     $sameThreshold = 6.0;
