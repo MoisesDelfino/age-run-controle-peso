@@ -1,8 +1,6 @@
 // ==================== CONTROLE DO MENU MOBILE ====================
 
-var API_BASE = API_BASE || (window.location.hostname === 'localhost'
-    ? `http://localhost:${window.location.port}/api`
-    : (window.location.pathname.startsWith('/controle') ? '/controle/api' : '/api'));
+var API_BASE = API_BASE || (window.location.pathname.startsWith('/controle') ? '/controle/api' : '/api');
 
 function getAppBasePath() {
     if (window.location.pathname === '/controle' || window.location.pathname.startsWith('/controle/')) {
