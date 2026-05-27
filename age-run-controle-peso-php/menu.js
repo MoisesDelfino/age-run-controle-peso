@@ -1,8 +1,84 @@
 // ==================== CONTROLE DO MENU MOBILE ====================
 
-var API_BASE = API_BASE || (window.location.hostname === 'localhost'
-    ? `http://localhost:${window.location.port}/api`
-    : '/controle/api');
+var API_BASE = API_BASE || (window.location.pathname.startsWith('/controle') ? '/controle/api' : '/api');
+
+function getAppBasePath() {
+    if (window.location.pathname === '/controle' || window.location.pathname.startsWith('/controle/')) {
+        return '/controle';
+    }
+    return '';
+}
+
+function withBasePath(path) {
+    const normalizedPath = String(path || '').startsWith('/') ? String(path) : `/${String(path || '')}`;
+    const base = getAppBasePath();
+    return base ? `${base}${normalizedPath}` : normalizedPath;
+}
+
+function normalizarLinksMenu() {
+    const rotasAplicacao = new Set([
+        '/home',
+        '/pesagem',
+        '/ranking',
+        '/grupos-treino',
+        '/bioimpedancia',
+        '/treinador',
+        '/login',
+        '/cadastro',
+        '/recuperar-senha'
+    ]);
+
+    const links = document.querySelectorAll('a[href]');
+    links.forEach((link) => {
+        const href = link.getAttribute('href');
+        if (!href || href.startsWith('http') || href.startsWith('#')) {
+            return;
+        }
+
+        const semControle = href.startsWith('/controle/')
+            ? href.replace(/^\/controle/, '')
+            : href;
+
+        if (!rotasAplicacao.has(semControle)) {
+            return;
+        }
+
+        link.setAttribute('href', withBasePath(semControle));
+    });
+}
+
+function ativarFallbackRotasNovas(closeMenu) {
+    const fallbackRoute = withBasePath('/bioimpedancia');
+    const candidatos = document.querySelectorAll('.nav-link[href$="/grupos-treino"], .nav-link[href$="/treinador"]');
+
+    candidatos.forEach((link) => {
+        link.addEventListener('click', async (event) => {
+            const target = link.getAttribute('href');
+            if (!target) return;
+
+            event.preventDefault();
+            if (typeof closeMenu === 'function') {
+                closeMenu();
+            }
+
+            try {
+                const probe = await fetch(target, {
+                    method: 'HEAD',
+                    credentials: 'include'
+                });
+
+                if (probe.ok || (probe.status >= 300 && probe.status < 400)) {
+                    window.location.href = target;
+                    return;
+                }
+            } catch (error) {
+                console.warn('Rota ainda indisponivel, redirecionando para fallback:', error);
+            }
+
+            window.location.href = fallbackRoute;
+        });
+    });
+}
 
 async function aplicarPermissoesMenu() {
     try {
@@ -14,10 +90,22 @@ async function aplicarPermissoesMenu() {
 
         const data = await response.json();
         const isMulher = (data?.sexo || '').toLowerCase() === 'feminino';
+        const isTreinador = (data?.perfil || '').toLowerCase() === 'treinador';
+
+        if (isTreinador) {
+            document.body.classList.add('is-trainer');
+        } else {
+            document.body.classList.remove('is-trainer');
+        }
+
+        const trainerItems = document.querySelectorAll('.trainer-only');
+        trainerItems.forEach((item) => {
+            item.style.display = isTreinador ? '' : 'none';
+        });
 
         if (!isMulher) return;
 
-        const rankingLinks = document.querySelectorAll('.nav-link[href="/controle/ranking"], .nav-link[href$="/ranking"]');
+        const rankingLinks = document.querySelectorAll('.nav-link[href="/ranking"], .nav-link[href="/controle/ranking"], .nav-link[href$="/ranking"]');
         rankingLinks.forEach((link) => {
             const parent = link.closest('li');
             if (parent) {
@@ -32,6 +120,8 @@ async function aplicarPermissoesMenu() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    normalizarLinksMenu();
+
     const menuToggle = document.querySelector('.menu-toggle');
     const menuOverlay = document.querySelector('.menu-overlay');
     const navMenu = document.querySelector('.nav-menu');
@@ -72,6 +162,8 @@ document.addEventListener('DOMContentLoaded', function() {
     navLinks.forEach(link => {
         link.addEventListener('click', closeMenu);
     });
+
+    ativarFallbackRotasNovas(closeMenu);
     
     // Fechar menu ao pressionar ESC
     document.addEventListener('keydown', function(e) {
