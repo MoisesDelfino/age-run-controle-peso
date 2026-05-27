@@ -1,10 +1,21 @@
 // Configuração da API
-var API_BASE = API_BASE || (window.location.hostname === 'localhost' 
-    ? `http://localhost:${window.location.port}/api`
-    : '/controle/api');
+var API_BASE = API_BASE || (window.location.pathname.startsWith('/controle') ? '/controle/api' : '/api');
 
 // Elementos do DOM
 const messageDiv = document.getElementById('message');
+
+async function parseApiResponse(response) {
+    const raw = await response.text();
+    if (!raw || !raw.trim()) {
+        return {};
+    }
+
+    try {
+        return JSON.parse(raw);
+    } catch (error) {
+        return { error: `Resposta inválida do servidor (HTTP ${response.status})` };
+    }
+}
 
 // ==================== TOGGLE MOSTRAR/OCULTAR SENHA ====================
 
@@ -55,11 +66,11 @@ if (document.getElementById('loginForm')) {
                 credentials: 'include',
                 body: JSON.stringify({ email, senha })
             });
-            
-            const data = await response.json();
+
+            const data = await parseApiResponse(response);
             
             if (!response.ok) {
-                throw new Error(data.error || 'Erro ao fazer login');
+                throw new Error(data.error || `Erro ao fazer login (HTTP ${response.status})`);
             }
             
             mostrarMensagem('✅ Login realizado! Redirecionando...', 'success');
@@ -117,11 +128,11 @@ if (document.getElementById('cadastroForm')) {
                 credentials: 'include',
                 body: JSON.stringify({ nome, email, sexo, senha })
             });
-            
-            const data = await response.json();
+
+            const data = await parseApiResponse(response);
             
             if (!response.ok) {
-                throw new Error(data.error || 'Erro ao criar conta');
+                throw new Error(data.error || `Erro ao criar conta (HTTP ${response.status})`);
             }
             
             mostrarMensagem('✅ Conta criada! Redirecionando...', 'success');

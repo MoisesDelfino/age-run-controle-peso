@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grupos de Treino - Age Run</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="stylesheet" href="styles.css?v=2026052206">
+    <link rel="stylesheet" href="effects.css?v=2026052045">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="header-left">
+                    <button class="menu-toggle" aria-label="Menu">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
+                    <img src="logo.png" alt="Age Run" class="logo">
+                </div>
+                <div class="header-text">
+                    <h1><span class="title-desktop">Grupos de Treino</span><span class="title-mobile">Grupos</span></h1>
+                    <p class="subtitle">Encontre pessoas no mesmo nível, acima ou abaixo do seu ritmo.</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn-dark-mode" data-theme-toggle aria-label="Ativar modo escuro" title="Alternar modo escuro">
+                        <span class="material-icons">dark_mode</span>
+                    </button>
+                    <button id="btnLogout" class="btn-logout" aria-label="Sair">
+                        <span class="material-icons">logout</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="menu-overlay"></div>
+
+    <nav class="nav-menu">
+        <div class="container">
+            <ul class="nav-list">
+                <li><a href="/controle/home" class="nav-link">🏠 Home</a></li>
+                <li><a href="/controle/pesagem" class="nav-link">📝 Pesagem</a></li>
+                <li><a href="/controle/ranking" class="nav-link">🏆 Ranking</a></li>
+                <li><a href="/controle/grupos-treino" class="nav-link active">🤝 Grupos de Treino</a></li>
+                <li><a href="/controle/bioimpedancia" class="nav-link">📊 Bioimpedância</a></li>
+                <li class="trainer-only"><a href="/controle/treinador" class="nav-link">🧑‍🏫 Treinador</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container home-content">
+        <section class="welcome-section">
+            <div class="card">
+                <h2>Olá, <strong id="userName"></strong>! 👋</h2>
+                <p class="welcome-text">Cadastre seus recordes pessoais para montar seus grupos de treino.</p>
+            </div>
+        </section>
+
+        <section class="rp-section">
+            <div class="card">
+                <h2>⏱️ Seus Recordes Pessoais (RP)</h2>
+                <p class="welcome-text">Use mm:ss ou hh:mm:ss. Exemplo: 22:30, 01:47:15</p>
+
+                <form id="rpForm" class="rp-form">
+                    <div class="rp-grid">
+                        <div class="form-group">
+                            <label for="rp5k">5 km <span id="statusRp5k" class="rp-status-badge status-sem-rp">Sem RP</span></label>
+                            <input type="text" id="rp5k" placeholder="mm:ss ou hh:mm:ss">
+                        </div>
+                        <div class="form-group">
+                            <label for="rp10k">10 km <span id="statusRp10k" class="rp-status-badge status-sem-rp">Sem RP</span></label>
+                            <input type="text" id="rp10k" placeholder="mm:ss ou hh:mm:ss">
+                        </div>
+                        <div class="form-group">
+                            <label for="rp21k">Meia Maratona (21k) <span id="statusRp21k" class="rp-status-badge status-sem-rp">Sem RP</span></label>
+                            <input type="text" id="rp21k" placeholder="mm:ss ou hh:mm:ss">
+                        </div>
+                        <div class="form-group">
+                            <label for="rp42k">Maratona (42k) <span id="statusRp42k" class="rp-status-badge status-sem-rp">Sem RP</span></label>
+                            <input type="text" id="rp42k" placeholder="mm:ss ou hh:mm:ss">
+                        </div>
+                    </div>
+
+                    <div class="rp-actions">
+                        <button type="submit" class="btn btn-primary">Salvar RPs</button>
+                        <span id="rpPaceSummary" class="rp-pace-summary"></span>
+                    </div>
+                    <div id="rpMessage" class="message"></div>
+                </form>
+            </div>
+        </section>
+
+        <section class="grupos-section">
+            <div class="card">
+                <h2>🤝 Grupos de Treino Sugeridos</h2>
+                <div id="groupsNotice" class="groups-notice"></div>
+
+                <div class="groups-grid">
+                    <div class="group-column">
+                        <h3>Mesmo nível</h3>
+                        <p class="group-subtitle">Com quem posso treinar do mesmo nível que eu</p>
+                        <div id="groupSameLevel" class="group-list"></div>
+                    </div>
+                    <div class="group-column">
+                        <h3>Nível mais alto</h3>
+                        <p class="group-subtitle">Com quem posso treinar com nível mais alto para me ajudar</p>
+                        <div id="groupHigherLevel" class="group-list"></div>
+                    </div>
+                    <div class="group-column">
+                        <h3>Nível mais baixo</h3>
+                        <p class="group-subtitle">Com quem posso treinar com nível mais baixo para eu ajudar</p>
+                        <div id="groupLowerLevel" class="group-list"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>🏃‍♂️ Age Run - Transformando vidas através da corrida com propósito</p>
+            <p class="footer-small">Sua Vida Transformada pela Corrida. Com Propósito, Segurança e Comunidade.</p>
+        </div>
+    </footer>
+
+    <script src="theme.js?v=2026052203"></script>
+    <script src="menu.js?v=2026052612"></script>
+    <script src="grupos-treino.js?v=2026052612"></script>
+</body>
+</html>
