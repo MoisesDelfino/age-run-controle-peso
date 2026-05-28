@@ -2161,89 +2161,100 @@ if ($method === 'PUT' && preg_match('#^/api/treinador/usuarios/(\d+)/testes/(\d+
         jsonResponse(['error' => 'Distância do teste inválida'], 400);
     }
 
-    try {
-        $teste = dbFetchOne(
-            'SELECT id, usuario_id FROM rp_testes_historico WHERE id = :id LIMIT 1',
-            [':id' => $testeId]
-        );
-
-        if (!$teste || (int) ($teste['usuario_id'] ?? 0) !== $alvoUsuarioId) {
-            jsonResponse(['error' => 'Teste não encontrado para este usuário'], 404);
-        }
-    } catch (Throwable $e) {
-        // Compatibilidade com schema legado sem coluna usuario_id.
-        $teste = dbFetchOne(
-            'SELECT id FROM rp_testes_historico WHERE id = :id LIMIT 1',
-            [':id' => $testeId]
-        );
-
-        if (!$teste) {
-            jsonResponse(['error' => 'Teste não encontrado para este usuário'], 404);
-        }
-    }
-
     $paceSegundosKm = $tempoSegundos / $distanciaKm;
 
-    $hasProva = safeDbColumnExists('rp_testes_historico', 'prova');
-    $hasDistancia = safeDbColumnExists('rp_testes_historico', 'distancia_km');
-    $hasPace = safeDbColumnExists('rp_testes_historico', 'pace_segundos_km');
-
-    $setParts = ['tempo_segundos = :tempo_segundos'];
-    $params = [
-        ':tempo_segundos' => $tempoSegundos,
-        ':id' => $testeId,
-    ];
-
-    if ($hasProva) {
-        $setParts[] = 'prova = :prova';
-        $params[':prova'] = 'teste';
-    }
-
-    if ($hasDistancia) {
-        $setParts[] = 'distancia_km = :distancia_km';
-        $params[':distancia_km'] = $distanciaKm;
-    }
-
-    if ($hasPace) {
-        $setParts[] = 'pace_segundos_km = :pace_segundos_km';
-        $params[':pace_segundos_km'] = $paceSegundosKm;
-    }
+    $dbUpdated = false;
 
     try {
-        dbExecute(
-            'UPDATE rp_testes_historico
-                SET ' . implode(",\n                    ", $setParts) . '
-              WHERE id = :id',
-            $params
-        );
-    } catch (Throwable $e) {
-        $fallbackCandidates = [
-            ['tempo_segundos = :tempo_segundos, distancia_km = :distancia_km, pace_segundos_km = :pace_segundos_km', [':tempo_segundos' => $tempoSegundos, ':distancia_km' => $distanciaKm, ':pace_segundos_km' => $paceSegundosKm, ':id' => $testeId]],
-            ['tempo_segundos = :tempo_segundos, distancia_km = :distancia_km', [':tempo_segundos' => $tempoSegundos, ':distancia_km' => $distanciaKm, ':id' => $testeId]],
-            ['tempo_segundos = :tempo_segundos', [':tempo_segundos' => $tempoSegundos, ':id' => $testeId]],
-        ];
+        try {
+            $teste = dbFetchOne(
+                'SELECT id, usuario_id FROM rp_testes_historico WHERE id = :id LIMIT 1',
+                [':id' => $testeId]
+            );
 
-        $updated = false;
-        $attemptErrors = [];
-
-        foreach ($fallbackCandidates as [$setClause, $fallbackParams]) {
+            if (!$teste || (int) ($teste['usuario_id'] ?? 0) !== $alvoUsuarioId) {
+                jsonResponse(['error' => 'Teste não encontrado para este usuário'], 404);
+            }
+        } catch (Throwable $e) {
+            // Compatibilidade com schema legado sem coluna usuario_id.
             try {
-                dbExecute('UPDATE rp_testes_historico SET ' . $setClause . ' WHERE id = :id', $fallbackParams);
-                $updated = true;
-                break;
+                $teste = dbFetchOne(
+                    'SELECT id FROM rp_testes_historico WHERE id = :id LIMIT 1',
+                    [':id' => $testeId]
+                );
+
+                if (!$teste) {
+                    jsonResponse(['error' => 'Teste não encontrado para este usuário'], 404);
+                }
             } catch (Throwable $inner) {
-                $attemptErrors[] = $inner->getMessage();
+                // Sem leitura confiável do banco: segue com fallback em arquivo.
             }
         }
 
-        if (!$updated) {
-            error_log('[AgeRun PHP] Falha ao atualizar teste (PUT): ' . $e->getMessage() . ' | tentativas: ' . implode(' || ', $attemptErrors));
-            upsertEditedTestOverride($alvoUsuarioId, $testeId, $tempoSegundos, $distanciaKm, $paceSegundosKm);
+        $hasProva = safeDbColumnExists('rp_testes_historico', 'prova');
+        $hasDistancia = safeDbColumnExists('rp_testes_historico', 'distancia_km');
+        $hasPace = safeDbColumnExists('rp_testes_historico', 'pace_segundos_km');
+
+        $setParts = ['tempo_segundos = :tempo_segundos'];
+        $params = [
+            ':tempo_segundos' => $tempoSegundos,
+            ':id' => $testeId,
+        ];
+
+        if ($hasProva) {
+            $setParts[] = 'prova = :prova';
+            $params[':prova'] = 'teste';
         }
+
+        if ($hasDistancia) {
+            $setParts[] = 'distancia_km = :distancia_km';
+            $params[':distancia_km'] = $distanciaKm;
+        }
+
+        if ($hasPace) {
+            $setParts[] = 'pace_segundos_km = :pace_segundos_km';
+            $params[':pace_segundos_km'] = $paceSegundosKm;
+        }
+
+        try {
+            dbExecute(
+                'UPDATE rp_testes_historico
+                    SET ' . implode(",\n                        ", $setParts) . '
+                  WHERE id = :id',
+                $params
+            );
+            $dbUpdated = true;
+        } catch (Throwable $e) {
+            $fallbackCandidates = [
+                ['tempo_segundos = :tempo_segundos, distancia_km = :distancia_km, pace_segundos_km = :pace_segundos_km', [':tempo_segundos' => $tempoSegundos, ':distancia_km' => $distanciaKm, ':pace_segundos_km' => $paceSegundosKm, ':id' => $testeId]],
+                ['tempo_segundos = :tempo_segundos, distancia_km = :distancia_km', [':tempo_segundos' => $tempoSegundos, ':distancia_km' => $distanciaKm, ':id' => $testeId]],
+                ['tempo_segundos = :tempo_segundos', [':tempo_segundos' => $tempoSegundos, ':id' => $testeId]],
+            ];
+
+            $attemptErrors = [];
+
+            foreach ($fallbackCandidates as [$setClause, $fallbackParams]) {
+                try {
+                    dbExecute('UPDATE rp_testes_historico SET ' . $setClause . ' WHERE id = :id', $fallbackParams);
+                    $dbUpdated = true;
+                    break;
+                } catch (Throwable $inner) {
+                    $attemptErrors[] = $inner->getMessage();
+                }
+            }
+
+            if (!$dbUpdated) {
+                error_log('[AgeRun PHP] Falha ao atualizar teste (PUT): ' . $e->getMessage() . ' | tentativas: ' . implode(' || ', $attemptErrors));
+            }
+        }
+    } catch (Throwable $fatal) {
+        error_log('[AgeRun PHP] Erro inesperado no PUT de teste: ' . $fatal->getMessage());
     }
 
-    if (isset($updated) && $updated === true) {
+    if ($dbUpdated) {
         clearEditedTestOverride($alvoUsuarioId, $testeId);
+    } else {
+        upsertEditedTestOverride($alvoUsuarioId, $testeId, $tempoSegundos, $distanciaKm, $paceSegundosKm);
     }
 
     jsonResponse([
