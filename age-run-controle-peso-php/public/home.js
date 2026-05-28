@@ -9,11 +9,11 @@ const btnLogout = document.getElementById('btnLogout');
 const homePesoPerdido = document.getElementById('homePesoPerdido');
 const homeRankingPosicao = document.getElementById('homeRankingPosicao');
 const homeRpsResumo = document.getElementById('homeRpsResumo');
-const homeGrupoTiroResumo = document.getElementById('homeGrupoTiroResumo');
 const homeResumoAviso = document.getElementById('homeResumoAviso');
 const homeRankingCard = document.getElementById('homeRankingCard');
 const homeStatsIntro = document.getElementById('homeStatsIntro');
 const homeStatsGrid = document.getElementById('homeStatsGrid');
+const homeLevelItems = Array.from(document.querySelectorAll('.home-level-item'));
 
 // Inicialização
 document.addEventListener('DOMContentLoaded', async () => {
@@ -73,32 +73,66 @@ function formatPeso(value) {
 }
 
 function formatRpsResumo(rpsData) {
-    if (!rpsData || typeof rpsData !== 'object') {
-        return '-';
-    }
-
     const blocos = [
-        ['5K', rpsData.rp_5k_formatado],
-        ['10K', rpsData.rp_10k_formatado],
-        ['21K', rpsData.rp_21k_formatado],
-        ['42K', rpsData.rp_42k_formatado]
+        ['5K', rpsData?.rp_5k_formatado || '-'],
+        ['10K', rpsData?.rp_10k_formatado || '-'],
+        ['21K', rpsData?.rp_21k_formatado || '-'],
+        ['42K', rpsData?.rp_42k_formatado || '-']
     ];
 
     return blocos
-        .map(([label, value]) => `${label}: ${value || '-'}`)
-        .join(' | ');
+        .map(([label, value]) => `
+            <div class="home-rp-item">
+                <span class="home-rp-distance">${label}</span>
+                <strong class="home-rp-time">${value}</strong>
+            </div>
+        `)
+        .join('');
 }
 
-function formatGrupoTiroResumo(gruposTiroData) {
-    const grupo = gruposTiroData?.meu_grupo;
-    if (!grupo) {
-        return '-';
+function normalizeNivelLabel(text) {
+    return String(text || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-zA-Z0-9\s]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .toLowerCase();
+}
+
+function marcarNivelAtual(gruposTiroData) {
+    if (!homeLevelItems.length) {
+        return;
     }
 
-    const nome = grupo.nome_nivel || 'Grupo de tiro';
-    const melhor = grupo.melhor_pace_formatado || '-';
-    const pior = grupo.pior_pace_formatado || '-';
-    return `${nome} (${melhor} a ${pior})`;
+    homeLevelItems.forEach((item) => {
+        item.classList.remove('home-level-item-current');
+        const tagAtual = item.querySelector('.home-level-tag');
+        if (tagAtual) {
+            tagAtual.remove();
+        }
+    });
+
+    const nivelAtual = normalizeNivelLabel(gruposTiroData?.meu_grupo?.nome_nivel || '');
+    if (!nivelAtual) {
+        return;
+    }
+
+    const itemAtual = homeLevelItems.find((item) => {
+        const nivelKey = normalizeNivelLabel(item.dataset.levelKey || '');
+        const nivelItem = normalizeNivelLabel(item.textContent);
+        return nivelKey === nivelAtual || nivelItem.includes(nivelAtual) || nivelAtual.includes(nivelItem);
+    });
+
+    if (!itemAtual) {
+        return;
+    }
+
+    itemAtual.classList.add('home-level-item-current');
+    const tag = document.createElement('span');
+    tag.className = 'home-level-tag';
+    tag.textContent = 'Nivel atual';
+    itemAtual.appendChild(tag);
 }
 
 function findMinhaPosicaoRanking(rankingData) {
@@ -132,8 +166,8 @@ async function carregarResumoHome() {
 
         if (homeStatsIntro) {
             homeStatsIntro.textContent = isMasculino
-                ? 'Resumo com seu progresso atual, ranking, RPs e grupo de tiros.'
-                : 'Resumo com seu progresso atual, RPs e grupo de tiros.';
+                ? 'Resumo com seu progresso atual, ranking e RPs.'
+                : 'Resumo com seu progresso atual e RPs.';
         }
 
         const [pesagensResp, rpsResp, gruposTiroResp, rankingResp] = await Promise.all([
@@ -172,14 +206,10 @@ async function carregarResumoHome() {
         }
 
         if (homeRpsResumo) {
-            homeRpsResumo.textContent = rpsResp?.ok ? formatRpsResumo(rpsData) : '-';
+            homeRpsResumo.innerHTML = formatRpsResumo(rpsResp?.ok ? rpsData : null);
         }
 
-        if (homeGrupoTiroResumo) {
-            homeGrupoTiroResumo.textContent = gruposTiroResp?.ok
-                ? formatGrupoTiroResumo(gruposTiroData)
-                : '-';
-        }
+        marcarNivelAtual(gruposTiroResp?.ok ? gruposTiroData : null);
 
         if (homeResumoAviso) {
             const avisos = [];
