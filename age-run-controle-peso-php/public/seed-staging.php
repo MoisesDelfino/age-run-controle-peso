@@ -249,6 +249,7 @@ try {
     ensureCoreSeedTables();
 
     $athletes = [
+        ['nome' => 'Moises Delfino', 'email' => 'moisescamposdelfino@gmail.com', 'sexo' => 'masculino'],
         ['nome' => 'Moises Dev', 'email' => 'moises@staging.local', 'sexo' => 'masculino'],
         ['nome' => 'Carlos Sprint', 'email' => 'carlos@staging.local', 'sexo' => 'masculino'],
         ['nome' => 'Bruno Pace', 'email' => 'bruno@staging.local', 'sexo' => 'masculino'],
@@ -281,15 +282,28 @@ try {
 
     $users = [];
     foreach ($athletes as $index => $athlete) {
-        dbExecute(
-            'INSERT INTO usuarios (nome, email, senha, sexo) VALUES (:nome, :email, :senha, :sexo)',
-            [
-                ':nome' => $athlete['nome'],
-                ':email' => $athlete['email'],
-                ':senha' => $passwordHash,
-                ':sexo' => $athlete['sexo'],
-            ]
-        );
+        $row = dbFetchOne('SELECT id FROM usuarios WHERE email = :email LIMIT 1', [':email' => $athlete['email']]);
+        if ($row) {
+            dbExecute(
+                'UPDATE usuarios SET nome = :nome, senha = :senha, sexo = :sexo WHERE id = :id',
+                [
+                    ':nome' => $athlete['nome'],
+                    ':senha' => $passwordHash,
+                    ':sexo' => $athlete['sexo'],
+                    ':id' => (int) ($row['id'] ?? 0),
+                ]
+            );
+        } else {
+            dbExecute(
+                'INSERT INTO usuarios (nome, email, senha, sexo) VALUES (:nome, :email, :senha, :sexo)',
+                [
+                    ':nome' => $athlete['nome'],
+                    ':email' => $athlete['email'],
+                    ':senha' => $passwordHash,
+                    ':sexo' => $athlete['sexo'],
+                ]
+            );
+        }
 
         $row = dbFetchOne('SELECT id FROM usuarios WHERE email = :email LIMIT 1', [':email' => $athlete['email']]);
         $userId = (int) ($row['id'] ?? 0);
@@ -297,10 +311,13 @@ try {
             continue;
         }
 
+        dbExecute('DELETE FROM pesagens WHERE usuario_id = :uid', [':uid' => $userId]);
+        dbExecute('DELETE FROM rp_testes_historico WHERE usuario_id = :uid', [':uid' => $userId]);
+
         $users[] = ['id' => $userId, 'nome' => $athlete['nome'], 'email' => $athlete['email'], 'sexo' => $athlete['sexo']];
 
-        $pesoInicial = 102 - ($index * 3.1);
-        $pesoAtual = $pesoInicial - (2.5 + ($index * 0.8));
+        $pesoInicial = 103 - ($index * 2.7);
+        $pesoAtual = $pesoInicial - (3.2 + ($index * 0.6));
 
         dbExecute(
             'INSERT INTO pesagens (usuario_id, peso, data_pesagem, excluido) VALUES (:uid, :peso, :data, 0)',
@@ -330,7 +347,7 @@ try {
         );
 
         if ($trainerId > 0) {
-            $tempo5k = 1800 - ($index * 35);
+            $tempo5k = 1680 - ($index * 30);
             $dist5k = 5.0;
             $pace5k = $tempo5k / $dist5k;
 
@@ -347,6 +364,24 @@ try {
                     ':data' => date('Y-m-d H:i:s', strtotime('-2 days')),
                 ]
             );
+
+            $tempoTiro = 1080 - ($index * 18);
+            $distTiro = 3.0;
+            $paceTiro = $tempoTiro / $distTiro;
+
+            dbExecute(
+                'INSERT INTO rp_testes_historico (usuario_id, treinador_id, prova, tempo_segundos, distancia_km, pace_segundos_km, criado_em)
+                 VALUES (:uid, :tid, :prova, :tempo, :dist, :pace, :data)',
+                [
+                    ':uid' => $userId,
+                    ':tid' => $trainerId,
+                    ':prova' => 'teste',
+                    ':tempo' => $tempoTiro,
+                    ':dist' => $distTiro,
+                    ':pace' => $paceTiro,
+                    ':data' => date('Y-m-d H:i:s', strtotime('-1 days')),
+                ]
+            );
         }
     }
 
@@ -356,11 +391,34 @@ try {
 
     if (dbColumnExistsSeed('usuarios', 'rp_5k')) {
         foreach ($users as $index => $u) {
-            $rp5k = 1800 - ($index * 35);
-            dbExecute('UPDATE usuarios SET rp_5k = :rp WHERE id = :id', [':rp' => $rp5k, ':id' => $u['id']]);
+            $rp5k = 1680 - ($index * 30);
+            $rp10k = 3480 - ($index * 55);
+            $rp21k = 7800 - ($index * 95);
+            $rp42k = 16200 - ($index * 120);
+
+            dbExecute(
+                'UPDATE usuarios
+                 SET rp_5k = :rp5k, rp_10k = :rp10k, rp_21k = :rp21k, rp_42k = :rp42k
+                 WHERE id = :id',
+                [
+                    ':rp5k' => $rp5k,
+                    ':rp10k' => $rp10k,
+                    ':rp21k' => $rp21k,
+                    ':rp42k' => $rp42k,
+                    ':id' => $u['id'],
+                ]
+            );
 
             if (dbColumnExistsSeed('usuarios', 'rp_5k_status')) {
-                dbExecute("UPDATE usuarios SET rp_5k_status = 'aprovado' WHERE id = :id", [':id' => $u['id']]);
+                dbExecute(
+                    "UPDATE usuarios
+                        SET rp_5k_status = 'aprovado',
+                            rp_10k_status = 'aprovado',
+                            rp_21k_status = 'aprovado',
+                            rp_42k_status = 'aprovado'
+                      WHERE id = :id",
+                    [':id' => $u['id']]
+                );
             }
         }
     }
@@ -371,6 +429,7 @@ try {
         'login_padrao' => [
             'senha' => '123456',
             'exemplos' => [
+                'moisescamposdelfino@gmail.com',
                 'moises@staging.local',
                 'ana@staging.local',
                 'treinador@staging.local',
