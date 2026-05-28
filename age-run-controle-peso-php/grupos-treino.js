@@ -1,7 +1,7 @@
 // Configuração da API
 var API_BASE = API_BASE || (window.location.hostname === 'localhost'
     ? `http://localhost:${window.location.port}/api`
-    : (window.location.pathname.startsWith('/controle') ? '/controle/api' : '/api'));
+    : (window.location.pathname.startsWith('/dev') ? '/dev/api' : (window.location.pathname.startsWith('/controle') ? '/controle/api' : '/api')));
 
 var usuarioLogado = usuarioLogado || null;
 
@@ -78,7 +78,7 @@ async function verificarSessao(tentativas = 3) {
                 return verificarSessao(tentativas - 1);
             }
 
-            window.location.href = '/controle/login';
+            window.location.href = (window.location.pathname.startsWith('/dev') ? '/dev/login' : '/controle/login');
             return false;
         }
 
@@ -96,7 +96,7 @@ async function verificarSessao(tentativas = 3) {
             return verificarSessao(tentativas - 1);
         }
 
-        window.location.href = '/controle/login';
+        window.location.href = (window.location.pathname.startsWith('/dev') ? '/dev/login' : '/controle/login');
         return false;
     }
 }
@@ -251,7 +251,7 @@ async function handleLogout() {
 
         if (response.ok) {
             setTimeout(() => {
-                window.location.href = '/controle/login';
+                window.location.href = (window.location.pathname.startsWith('/dev') ? '/dev/login' : '/controle/login');
             }, 100);
         }
     } catch (error) {

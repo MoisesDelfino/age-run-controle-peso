@@ -1,6 +1,6 @@
 var API_BASE = API_BASE || (window.location.hostname === 'localhost' 
     ? `http://localhost:${window.location.port}/api`
-    : '/controle/api');
+    : (window.location.pathname.startsWith('/dev') ? '/dev/api' : '/controle/api'));
 
 let emailRecuperacao = '';
 
@@ -109,7 +109,7 @@ redefinirSenhaForm.addEventListener('submit', async (e) => {
             showMessage(message2, '✅ Senha redefinida com sucesso!', 'success');
             
             setTimeout(() => {
-                window.location.href = '/controle/login';
+                window.location.href = (window.location.pathname.startsWith('/dev') ? '/dev/login' : '/controle/login');
             }, 2000);
         } else {
             showMessage(message2, data.error || 'Erro ao redefinir senha', 'error');

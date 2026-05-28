@@ -4,6 +4,29 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/config.php';
 
+function createSqlitePdo(array $config): PDO
+{
+    $defaultSqlitePath = dirname(__DIR__) . '/storage/peso.db';
+    $sqlitePath = trim((string) ($config['database'] ?? ''));
+    if ($sqlitePath === '') {
+        $sqlitePath = $defaultSqlitePath;
+    }
+
+    $configuredDir = dirname($sqlitePath);
+    $configuredPathUsable = is_file($sqlitePath) || is_dir($configuredDir);
+    if (!$configuredPathUsable) {
+        $sqlitePath = $defaultSqlitePath;
+    }
+
+    $fallbackDir = dirname($sqlitePath);
+    if (!is_dir($fallbackDir)) {
+        @mkdir($fallbackDir, 0775, true);
+    }
+
+    $dsn = 'sqlite:' . $sqlitePath;
+    return new PDO($dsn);
+}
+
 function db(): PDO
 {
     static $pdo = null;
@@ -16,29 +39,56 @@ function db(): PDO
     $driver = strtolower((string) ($config['driver'] ?? 'mysql'));
 
     if ($driver === 'sqlite') {
-        $sqlitePath = (string) ($config['database'] ?? '');
-        if ($sqlitePath === '') {
-            $sqlitePath = dirname(__DIR__) . '/storage/peso.db';
-        }
-        $dsn = 'sqlite:' . $sqlitePath;
-        $pdo = new PDO($dsn);
+        $pdo = createSqlitePdo($config);
     } elseif ($driver === 'pgsql' || $driver === 'postgres' || $driver === 'postgresql') {
-        $dsn = sprintf(
-            'pgsql:host=%s;port=%s;dbname=%s',
-            $config['host'],
-            $config['port'],
-            $config['database']
-        );
-        $pdo = new PDO($dsn, (string) $config['username'], (string) $config['password']);
+        $username = trim((string) ($config['username'] ?? ''));
+        $database = trim((string) ($config['database'] ?? ''));
+        if (isDevRequestPath() && ($username === '' || $database === '')) {
+            error_log('[AgeRun PHP] DB pgsql incompleto em /dev, usando fallback sqlite');
+            $pdo = createSqlitePdo(['database' => dirname(__DIR__) . '/storage/peso.db']);
+        } else {
+            try {
+                $dsn = sprintf(
+                    'pgsql:host=%s;port=%s;dbname=%s',
+                    $config['host'],
+                    $config['port'],
+                    $config['database']
+                );
+                $pdo = new PDO($dsn, (string) $config['username'], (string) $config['password']);
+            } catch (Throwable $e) {
+                if (isDevRequestPath()) {
+                    error_log('[AgeRun PHP] Falha pgsql em /dev, usando sqlite: ' . $e->getMessage());
+                    $pdo = createSqlitePdo(['database' => dirname(__DIR__) . '/storage/peso.db']);
+                } else {
+                    throw $e;
+                }
+            }
+        }
     } else {
-        $dsn = sprintf(
-            'mysql:host=%s;port=%s;dbname=%s;charset=%s',
-            $config['host'],
-            $config['port'],
-            $config['database'],
-            $config['charset']
-        );
-        $pdo = new PDO($dsn, (string) $config['username'], (string) $config['password']);
+        $username = trim((string) ($config['username'] ?? ''));
+        $database = trim((string) ($config['database'] ?? ''));
+        if (isDevRequestPath() && ($username === '' || $database === '')) {
+            error_log('[AgeRun PHP] DB mysql incompleto em /dev, usando fallback sqlite');
+            $pdo = createSqlitePdo(['database' => dirname(__DIR__) . '/storage/peso.db']);
+        } else {
+            try {
+                $dsn = sprintf(
+                    'mysql:host=%s;port=%s;dbname=%s;charset=%s',
+                    $config['host'],
+                    $config['port'],
+                    $config['database'],
+                    $config['charset']
+                );
+                $pdo = new PDO($dsn, (string) $config['username'], (string) $config['password']);
+            } catch (Throwable $e) {
+                if (isDevRequestPath()) {
+                    error_log('[AgeRun PHP] Falha mysql em /dev, usando sqlite: ' . $e->getMessage());
+                    $pdo = createSqlitePdo(['database' => dirname(__DIR__) . '/storage/peso.db']);
+                } else {
+                    throw $e;
+                }
+            }
+        }
     }
 
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);

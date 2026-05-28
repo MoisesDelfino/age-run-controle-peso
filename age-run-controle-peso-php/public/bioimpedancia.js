@@ -2,7 +2,7 @@
 // Configuração da API
 var API_BASE = API_BASE || (window.location.hostname === 'localhost' 
     ? `http://localhost:${window.location.port}/api`
-    : (window.location.pathname.startsWith('/controle') ? '/controle/api' : '/api'));
+    : (window.location.pathname.startsWith('/dev') ? '/dev/api' : (window.location.pathname.startsWith('/controle') ? '/controle/api' : '/api')));
 
 const API_BASE_CANDIDATES = window.location.hostname === 'localhost'
     ? [API_BASE]
@@ -40,6 +40,14 @@ async function fetchJsonFromApi(path, options = {}) {
     }
 
     throw lastError || new Error('Falha ao conectar na API');
+}
+
+function normalizarNumero(valor) {
+    if (valor === null || valor === undefined) {
+        return NaN;
+    }
+    const texto = String(valor).trim().replace(',', '.');
+    return Number.parseFloat(texto);
 }
 
 // Inicialização
@@ -115,7 +123,7 @@ async function carregarNomeUsuario() {
                 }
             }
         } else if (response.status === 401 || (usuario && usuario.authenticated === false)) {
-            window.location.href = '/controle/login';
+            window.location.href = (window.location.pathname.startsWith('/dev') ? '/dev/login' : '/controle/login');
             return;
         }
     } catch (error) {
@@ -131,6 +139,15 @@ async function carregarNomeUsuario() {
 async function calcularIMC(altura) {
     console.log('🧮 Iniciando cálculo IMC com altura:', altura);
     try {
+        const alturaValor = normalizarNumero(altura);
+        if (!Number.isFinite(alturaValor) || alturaValor <= 0 || alturaValor > 3) {
+            const imcContainer = document.getElementById('imcContainer');
+            if (imcContainer) {
+                imcContainer.innerHTML = '<p class="info-message">⚠️ Altura inválida. Atualize sua altura na aba Pesagem para calcular o IMC.</p>';
+            }
+            return;
+        }
+
         const { response, data } = await fetchJsonFromApi('/meu-historico', {
             headers: { 'Content-Type': 'application/json' }
         });
@@ -140,7 +157,7 @@ async function calcularIMC(altura) {
         if (!response.ok) {
             console.error('❌ Erro ao buscar pesagens:', response.status);
             if (response.status === 401) {
-                window.location.href = '/controle/login';
+                window.location.href = (window.location.pathname.startsWith('/dev') ? '/dev/login' : '/controle/login');
                 return;
             }
             const imcContainer = document.getElementById('imcContainer');
@@ -169,9 +186,16 @@ async function calcularIMC(altura) {
         // Pegar última pesagem ativa (mais recente)
         const ultimaPesagem = pesagensAtivas[0];
         console.log('📊 Última pesagem ativa:', ultimaPesagem);
-        const peso = parseFloat(ultimaPesagem.peso);
+        const peso = normalizarNumero(ultimaPesagem.peso);
+        if (!Number.isFinite(peso) || peso <= 0) {
+            const imcContainer = document.getElementById('imcContainer');
+            if (imcContainer) {
+                imcContainer.innerHTML = '<p class="info-message">⚠️ Peso inválido na última pesagem. Registre uma nova pesagem para calcular o IMC.</p>';
+            }
+            return;
+        }
         console.log('⚖️ Peso usado para cálculo:', peso);
-        const imc = (peso / (altura * altura)).toFixed(1);
+        const imc = (peso / (alturaValor * alturaValor)).toFixed(1);
         
         // Verificar se tem dados de bioimpedância
         const temBioimpedancia = ultimaPesagem.gordura_percentual !== null && 
@@ -211,7 +235,7 @@ async function calcularIMC(altura) {
         }
         
         // Calcular peso ideal e progresso
-        const pesoIdeal = (25 * altura * altura).toFixed(1);
+        const pesoIdeal = (25 * alturaValor * alturaValor).toFixed(1);
         const diferenca = (peso - pesoIdeal).toFixed(1);
         const faltaPerder = parseFloat(diferenca);
         const progresso = faltaPerder > 0 ? Math.max(5, Math.min(100, 100 - (faltaPerder * 3.5))) : 100;
@@ -219,24 +243,36 @@ async function calcularIMC(altura) {
         // Calcular métricas avançadas se houver bioimpedância
         let metricasAvancadas = null;
         if (temBioimpedancia) {
-            metricasAvancadas = calcularMetricasAvancadas(ultimaPesagem, altura);
+            metricasAvancadas = calcularMetricasAvancadas(ultimaPesagem, alturaValor);
         }
+
+        const metricasValidas = metricasAvancadas
+            && Number.isFinite(Number(metricasAvancadas.img))
+            && Number.isFinite(Number(metricasAvancadas.ffmi))
+            && Number.isFinite(Number(metricasAvancadas.gorduraPerc));
+        const usarModoAvancado = temBioimpedancia && metricasValidas;
         
         // Renderizar
         const container = document.getElementById('imcContainer');
         if (container) {
             container.innerHTML = renderizarAnaliseCompleta({
                 imc, classificacao, cor, corHex, altura, peso, pesoIdeal, diferenca, progresso,
-                temBioimpedancia, metricasAvancadas
+                altura: alturaValor,
+                temBioimpedancia: usarModoAvancado,
+                metricasAvancadas
             });
             
             // Adicionar event listeners para as abas se houver bioimpedância
-            if (temBioimpedancia) {
+            if (usarModoAvancado) {
                 setupTabListeners();
             }
         }
     } catch (error) {
         console.error('❌ Erro ao calcular IMC:', error);
+        const imcContainer = document.getElementById('imcContainer');
+        if (imcContainer) {
+            imcContainer.innerHTML = '<p class="info-message">❌ Não foi possível calcular o IMC agora. Atualize a página e tente novamente.</p>';
+        }
     }
 }
 
@@ -320,7 +356,7 @@ function calcularMetricasAvancadas(pesagem, altura) {
 function renderizarAnaliseCompleta(dados) {
     const { imc, classificacao, cor, corHex, altura, peso, pesoIdeal, diferenca, progresso, temBioimpedancia, metricasAvancadas } = dados;
     
-    if (!temBioimpedancia) {
+    if (!temBioimpedancia || !metricasAvancadas) {
         // Renderização tradicional (sem abas)
         return `
             <div class="imc-card">
@@ -648,7 +684,7 @@ async function salvarBioimpedancia(e) {
             await carregarNomeUsuario(); // Atualizar IMC
         } else {
             if (response.status === 401) {
-                window.location.href = '/controle/login';
+                window.location.href = (window.location.pathname.startsWith('/dev') ? '/dev/login' : '/controle/login');
                 return;
             }
             mostrarNotificacao('❌ Erro ao salvar: ' + ((payload && payload.error) || 'Erro desconhecido'), 'error');
@@ -675,7 +711,7 @@ async function carregarHistoricoBio() {
         if (!response.ok) {
             console.error('❌ Erro ao carregar histórico:', response.status);
             if (response.status === 401) {
-                window.location.href = '/controle/login';
+                window.location.href = (window.location.pathname.startsWith('/dev') ? '/dev/login' : '/controle/login');
                 return;
             }
             return;
@@ -683,14 +719,21 @@ async function carregarHistoricoBio() {
 
         const pesagens = Array.isArray(data) ? data : [];
         console.log('📊 Pesagens recebidas:', pesagens);
-        
-        // Filtrar apenas pesagens com dados de bioimpedância
-        const bioimpedancias = pesagens.filter(p => 
-            p.gordura_percentual || p.massa_muscular_percentual || 
-            p.agua_percentual || p.massa_ossea || 
-            p.metabolismo_basal || p.idade_metabolica || 
-            p.gordura_visceral
-        );
+
+        const possuiValor = (valor) => valor !== null && valor !== undefined && String(valor).trim() !== '';
+        const camposBio = [
+            'gordura_percentual',
+            'massa_muscular_percentual',
+            'agua_percentual',
+            'massa_ossea',
+            'metabolismo_basal',
+            'idade_metabolica',
+            'gordura_visceral'
+        ];
+
+        // Considerar apenas pesagens ativas e com algum dado de bioimpedância preenchido.
+        const pesagensAtivas = pesagens.filter(p => !p.excluido || p.excluido === 0);
+        const bioimpedancias = pesagensAtivas.filter(p => camposBio.some((campo) => possuiValor(p[campo])));
         
         const container = document.getElementById('historicoBioContainer');
         
@@ -703,20 +746,22 @@ async function carregarHistoricoBio() {
         
         bioimpedancias.forEach(bio => {
             const data = new Date(bio.data_pesagem).toLocaleDateString('pt-BR');
+            const peso = normalizarNumero(bio.peso);
+            const pesoTexto = Number.isFinite(peso) ? `${peso.toFixed(1)} kg` : '-';
             html += `
                 <div class="bio-historico-card">
                     <div class="bio-historico-header">
                         <span class="bio-historico-data">📅 ${data}</span>
-                        <span class="bio-historico-peso">⚖️ ${bio.peso.toFixed(1)} kg</span>
+                        <span class="bio-historico-peso">⚖️ ${pesoTexto}</span>
                     </div>
                     <div class="bio-historico-details">
-                        ${bio.gordura_percentual ? `<div class="bio-detail"><span>Gordura:</span> <strong>${bio.gordura_percentual}%</strong></div>` : ''}
-                        ${bio.massa_muscular_percentual ? `<div class="bio-detail"><span>Massa Muscular:</span> <strong>${bio.massa_muscular_percentual}%</strong></div>` : ''}
-                        ${bio.agua_percentual ? `<div class="bio-detail"><span>Água:</span> <strong>${bio.agua_percentual}%</strong></div>` : ''}
-                        ${bio.massa_ossea ? `<div class="bio-detail"><span>Massa Óssea:</span> <strong>${bio.massa_ossea} kg</strong></div>` : ''}
-                        ${bio.metabolismo_basal ? `<div class="bio-detail"><span>Metabolismo Basal:</span> <strong>${bio.metabolismo_basal} kcal</strong></div>` : ''}
-                        ${bio.idade_metabolica ? `<div class="bio-detail"><span>Idade Metabólica:</span> <strong>${bio.idade_metabolica} anos</strong></div>` : ''}
-                        ${bio.gordura_visceral ? `<div class="bio-detail"><span>Gordura Visceral:</span> <strong>Nível ${bio.gordura_visceral}</strong></div>` : ''}
+                        ${possuiValor(bio.gordura_percentual) ? `<div class="bio-detail"><span>Gordura:</span> <strong>${bio.gordura_percentual}%</strong></div>` : ''}
+                        ${possuiValor(bio.massa_muscular_percentual) ? `<div class="bio-detail"><span>Massa Muscular:</span> <strong>${bio.massa_muscular_percentual}%</strong></div>` : ''}
+                        ${possuiValor(bio.agua_percentual) ? `<div class="bio-detail"><span>Água:</span> <strong>${bio.agua_percentual}%</strong></div>` : ''}
+                        ${possuiValor(bio.massa_ossea) ? `<div class="bio-detail"><span>Massa Óssea:</span> <strong>${bio.massa_ossea} kg</strong></div>` : ''}
+                        ${possuiValor(bio.metabolismo_basal) ? `<div class="bio-detail"><span>Metabolismo Basal:</span> <strong>${bio.metabolismo_basal} kcal</strong></div>` : ''}
+                        ${possuiValor(bio.idade_metabolica) ? `<div class="bio-detail"><span>Idade Metabólica:</span> <strong>${bio.idade_metabolica} anos</strong></div>` : ''}
+                        ${possuiValor(bio.gordura_visceral) ? `<div class="bio-detail"><span>Gordura Visceral:</span> <strong>Nível ${bio.gordura_visceral}</strong></div>` : ''}
                     </div>
                 </div>
             `;

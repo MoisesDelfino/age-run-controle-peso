@@ -1,6 +1,6 @@
 var API_BASE = API_BASE || (window.location.hostname === 'localhost'
     ? `http://localhost:${window.location.port}/api`
-    : (window.location.pathname.startsWith('/controle') ? '/controle/api' : '/api'));
+    : (window.location.pathname.startsWith('/dev') ? '/dev/api' : (window.location.pathname.startsWith('/controle') ? '/controle/api' : '/api')));
 
 var usuarioLogado = usuarioLogado || null;
 
@@ -16,11 +16,14 @@ const kpiPendentes = document.getElementById('kpiPendentes');
 const kpiComBio = document.getElementById('kpiComBio');
 const kpiSemRp = document.getElementById('kpiSemRp');
 const coachGroupsSummary = document.getElementById('coachGroupsSummary');
+const coachShootingGroupsSummary = document.getElementById('coachShootingGroupsSummary');
 
 let usuariosCache = [];
 let termoBuscaAtual = '';
 let expandedUserId = null;
 let kpiFiltroAtual = 'ativos';
+const editingTests = {};
+let confirmModalResolver = null;
 
 const provaLabels = {
     rp_5k: '5 km',
@@ -37,6 +40,7 @@ const RACE_DISTANCES = {
 };
 
 const GROUP_COMPAT_THRESHOLD = 6;
+const SHOOTING_GROUP_COMPAT_THRESHOLD = 5;
 
 function getStatusText(status) {
     if (status === 'pendente') return 'Aguardando aprovação';
@@ -76,6 +80,180 @@ function formatPace(secondsPerKm) {
     const minutes = Math.floor(rounded / 60);
     const seconds = rounded % 60;
     return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')} /km`;
+}
+
+function formatRaceTime(seconds) {
+    const parsed = Number(seconds);
+    if (!parsed || Number.isNaN(parsed) || parsed <= 0) {
+        return '-';
+    }
+
+    const rounded = Math.round(parsed);
+    const hours = Math.floor(rounded / 3600);
+    const minutes = Math.floor((rounded % 3600) / 60);
+    const secs = rounded % 60;
+
+    if (hours > 0) {
+        return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    }
+
+    return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+}
+
+function formatDistanceKm(value) {
+    const parsed = Number(value);
+    if (!parsed || Number.isNaN(parsed) || parsed <= 0) {
+        return '-';
+    }
+
+    return `${parsed.toLocaleString('pt-BR', {
+        minimumFractionDigits: parsed % 1 === 0 ? 0 : 1,
+        maximumFractionDigits: 2
+    })} km`;
+}
+
+function parseRaceTimeToSeconds(value) {
+    const raw = String(value || '').trim();
+    if (!raw) {
+        return null;
+    }
+
+    if (raw.includes(':')) {
+        const parts = raw.split(':').map((part) => part.trim());
+        if (parts.some((part) => part === '' || !/^\d+$/.test(part))) {
+            return null;
+        }
+
+        const numbers = parts.map((part) => Number.parseInt(part, 10));
+        if (numbers.length === 2) {
+            const [minutes, seconds] = numbers;
+            if (seconds >= 60) {
+                return null;
+            }
+            return (minutes * 60) + seconds;
+        }
+
+        if (numbers.length === 3) {
+            const [hours, minutes, seconds] = numbers;
+            if (minutes >= 60 || seconds >= 60) {
+                return null;
+            }
+            return (hours * 3600) + (minutes * 60) + seconds;
+        }
+
+        return null;
+    }
+
+    if (!/^\d+$/.test(raw)) {
+        return null;
+    }
+
+    const parsed = Number.parseInt(raw, 10);
+    return parsed > 0 ? parsed : null;
+}
+
+function formatCoachHistoryDate(value) {
+    if (!value) {
+        return '-';
+    }
+
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) {
+        return '-';
+    }
+
+    return parsed.toLocaleString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+function calcularPaceDaProva(prova, tempoSegundos) {
+    const distancia = Number(RACE_DISTANCES[prova]);
+    if (!distancia || Number.isNaN(distancia) || distancia <= 0 || !tempoSegundos) {
+        return null;
+    }
+
+    return tempoSegundos / distancia;
+}
+
+function calcularPaceTeste(tempoSegundos, distanciaKm) {
+    const distancia = Number(distanciaKm);
+    if (!distancia || Number.isNaN(distancia) || distancia <= 0 || !tempoSegundos) {
+        return null;
+    }
+
+    return tempoSegundos / distancia;
+}
+
+function renderCoachTesteHistorico(usuario) {
+    const historico = usuario.rp_testes_historico || [];
+    if (!historico.length) {
+        return '<div class="group-meta coach-rp-test-empty">Nenhum teste registrado ainda.</div>';
+    }
+
+    return `
+        <div class="coach-rp-test-history-list">
+            ${historico.map((item) => `
+                <article class="coach-rp-test-history-item">
+                    <div class="coach-rp-test-history-main">
+                        <div class="coach-rp-test-chip-row">
+                            <strong class="coach-rp-test-chip">${item.tempo_formatado || formatRaceTime(item.tempo_segundos)}</strong>
+                            <span class="coach-rp-test-chip">${formatDistanceKm(item.distancia_km)}</span>
+                            <span class="coach-rp-test-chip coach-rp-test-chip-accent">${item.pace_formatado || formatPace(item.pace_segundos_km)}</span>
+                        </div>
+                        <div class="coach-rp-test-meta-row">
+                            <span>${formatCoachHistoryDate(item.criado_em)}</span>
+                            <span>${item.treinador_nome || 'Treinador'}</span>
+                        </div>
+                    </div>
+                    <div class="coach-rp-test-history-actions">
+                        <button class="btn btn-secondary coach-rp-test-edit" data-user-id="${usuario.usuario_id}" data-test-id="${item.id}" data-tempo="${item.tempo_formatado || formatRaceTime(item.tempo_segundos)}" data-distancia="${item.distancia_km}">Editar</button>
+                        <button class="btn coach-rp-test-delete" data-user-id="${usuario.usuario_id}" data-test-id="${item.id}">Excluir</button>
+                    </div>
+                </article>
+            `).join('')}
+        </div>
+    `;
+}
+
+function renderCoachTestePanel(usuario) {
+    const tempoInputId = `teste-tempo-${usuario.usuario_id}`;
+    const distanciaInputId = `teste-distancia-${usuario.usuario_id}`;
+    const editing = editingTests[usuario.usuario_id] || null;
+    return `
+        <div class="coach-rp-test-panel">
+            <div class="coach-rp-test-panel-header">
+                <div>
+                    <strong class="coach-rp-test-title">Testes</strong>
+                    <div class="group-meta">Informe tempo e distância para calcular o pace automaticamente.</div>
+                </div>
+                ${editing ? '<span class="coach-rp-test-mode">Editando teste</span>' : ''}
+            </div>
+            <div class="coach-rp-test-controls">
+                <div class="coach-rp-test-field">
+                    <label class="group-meta" for="${tempoInputId}">Tempo</label>
+                    <input id="${tempoInputId}" class="coach-rp-test-input" type="text" placeholder="12:00" value="${editing?.tempo || ''}" data-user-id="${usuario.usuario_id}" data-test-field="tempo" />
+                </div>
+                <div class="coach-rp-test-field">
+                    <label class="group-meta" for="${distanciaInputId}">Distância (km)</label>
+                    <input id="${distanciaInputId}" class="coach-rp-test-input" type="text" placeholder="2" value="${editing?.distancia || ''}" data-user-id="${usuario.usuario_id}" data-test-field="distancia" />
+                </div>
+                <div class="coach-rp-test-preview">
+                    <span class="group-meta">Pace calculado</span>
+                    <strong class="coach-rp-test-pace" data-user-id="${usuario.usuario_id}">Pace: -</strong>
+                </div>
+                <div class="coach-rp-test-buttons">
+                    <button class="btn btn-secondary coach-rp-test-save" data-user-id="${usuario.usuario_id}">${editing ? 'Salvar edição' : 'Salvar teste'}</button>
+                    ${editing ? `<button class="btn coach-rp-test-cancel" data-user-id="${usuario.usuario_id}">Cancelar</button>` : ''}
+                </div>
+            </div>
+            ${renderCoachTesteHistorico(usuario)}
+        </div>
+    `;
 }
 
 function calcularScorePerformance(usuario) {
@@ -153,6 +331,144 @@ function montarGruposTreinoResumo(usuarios) {
     });
 }
 
+function getUltimoTesteValido(usuario) {
+    const historico = Array.isArray(usuario?.rp_testes_historico)
+        ? usuario.rp_testes_historico
+        : [];
+
+    if (!historico.length) {
+        return null;
+    }
+
+    const testesOrdenados = [...historico].sort((a, b) => {
+        const dataA = new Date(a?.criado_em || 0).getTime();
+        const dataB = new Date(b?.criado_em || 0).getTime();
+        if (dataA !== dataB) {
+            return dataB - dataA;
+        }
+        return Number(b?.id || 0) - Number(a?.id || 0);
+    });
+
+    return testesOrdenados.find((teste) => {
+        const tempoSegundos = Number(teste?.tempo_segundos);
+        const distanciaKm = Number(teste?.distancia_km);
+        const pace = Number(teste?.pace_segundos_km) || (tempoSegundos > 0 && distanciaKm > 0 ? tempoSegundos / distanciaKm : null);
+        return tempoSegundos > 0 && distanciaKm > 0 && pace > 0;
+    }) || null;
+}
+
+function calcularScoreTesteTiro(teste) {
+    const tempoSegundos = Number(teste?.tempo_segundos);
+    const distanciaKm = Number(teste?.distancia_km);
+    const pace = Number(teste?.pace_segundos_km) || (tempoSegundos > 0 && distanciaKm > 0 ? tempoSegundos / distanciaKm : null);
+
+    if (!pace || Number.isNaN(pace) || pace <= 0 || !tempoSegundos || !distanciaKm) {
+        return null;
+    }
+
+    const tempoMinutos = tempoSegundos / 60;
+    const bonusTempo = Math.min(28, Math.log1p(Math.max(0, tempoMinutos - 4)) * 10);
+    const bonusDistancia = Math.min(22, Math.log1p(Math.max(0, distanciaKm - 0.8)) * 9);
+
+    // Menor score = nível mais alto. Mantém o pace como base e premia testes sustentados.
+    return pace - bonusTempo - bonusDistancia;
+}
+
+function montarGruposTreinoTiro(usuarios) {
+    const atletas = (usuarios || [])
+        .map((usuario) => {
+            const teste = getUltimoTesteValido(usuario);
+            if (!teste) {
+                return null;
+            }
+
+            const tempoSegundos = Number(teste.tempo_segundos);
+            const distanciaKm = Number(teste.distancia_km);
+            const pace = Number(teste.pace_segundos_km) || (tempoSegundos > 0 && distanciaKm > 0 ? tempoSegundos / distanciaKm : null);
+            const score = calcularScoreTesteTiro(teste);
+
+            if (!score || Number.isNaN(score) || score <= 0 || !pace || Number.isNaN(pace) || pace <= 0) {
+                return null;
+            }
+
+            return {
+                usuario,
+                teste,
+                score,
+                pace,
+                tempoSegundos,
+                distanciaKm
+            };
+        })
+        .filter(Boolean)
+        .sort((a, b) => a.score - b.score);
+
+    if (!atletas.length) {
+        return [];
+    }
+
+    const grupos = [];
+
+    atletas.forEach((atleta) => {
+        const grupoAtual = grupos[grupos.length - 1];
+
+        if (!grupoAtual) {
+            grupos.push({
+                usuarios: [atleta],
+                mediaScore: atleta.score
+            });
+            return;
+        }
+
+        const diffPercent = Math.abs(((atleta.score - grupoAtual.mediaScore) / grupoAtual.mediaScore) * 100);
+        if (diffPercent <= SHOOTING_GROUP_COMPAT_THRESHOLD) {
+            grupoAtual.usuarios.push(atleta);
+            const total = grupoAtual.usuarios.length;
+            grupoAtual.mediaScore = ((grupoAtual.mediaScore * (total - 1)) + atleta.score) / total;
+            return;
+        }
+
+        grupos.push({
+            usuarios: [atleta],
+            mediaScore: atleta.score
+        });
+    });
+
+    return grupos.map((grupo, index) => {
+        const scores = grupo.usuarios.map((item) => item.score).sort((a, b) => a - b);
+        const paces = grupo.usuarios.map((item) => item.pace).sort((a, b) => a - b);
+        const paceMedio = grupo.usuarios.reduce((acc, item) => acc + item.pace, 0) / grupo.usuarios.length;
+        const tempoMedio = grupo.usuarios.reduce((acc, item) => acc + item.tempoSegundos, 0) / grupo.usuarios.length;
+        const distanciaMedia = grupo.usuarios.reduce((acc, item) => acc + item.distanciaKm, 0) / grupo.usuarios.length;
+
+        return {
+            id: index + 1,
+            mediaScore: grupo.mediaScore,
+            melhorScore: scores[0],
+            piorScore: scores[scores.length - 1],
+            melhorPace: paces[0],
+            piorPace: paces[paces.length - 1],
+            mediaPace: paceMedio,
+            mediaTempoSegundos: tempoMedio,
+            mediaDistanciaKm: distanciaMedia,
+            usuarios: grupo.usuarios
+        };
+    });
+}
+
+function getAnimalNivelTiroLabel(index) {
+    const animais = [
+        '🐆 Guepardo',
+        '🦌 Antilope',
+        '🐺 Lobo',
+        '🐎 Cavalo',
+        '🦊 Raposa',
+        '🐢 Tartaruga'
+    ];
+
+    return animais[index] || `🐾 Pelotao ${index + 1}`;
+}
+
 function renderResumoGruposTreino(usuarios) {
     if (!coachGroupsSummary) return;
 
@@ -173,6 +489,37 @@ function renderResumoGruposTreino(usuarios) {
                 <h4>Grupo ${grupo.id}</h4>
                 <p class="group-meta">${grupo.usuarios.length} atleta(s) • Ritmo médio: ${formatPace(grupo.mediaScore)}</p>
                 <p class="group-meta">Faixa: ${formatPace(grupo.melhorScore)} até ${formatPace(grupo.piorScore)}</p>
+                <div class="coach-group-chips">${nomes}</div>
+            </article>
+        `;
+    }).join('');
+}
+
+function renderResumoGruposTiro(usuarios) {
+    if (!coachShootingGroupsSummary) return;
+
+    const grupos = montarGruposTreinoTiro(usuarios);
+
+    if (!grupos.length) {
+        coachShootingGroupsSummary.innerHTML = '<p class="group-empty">Registre testes para gerar níveis de treino de tiro.</p>';
+        return;
+    }
+
+    coachShootingGroupsSummary.innerHTML = grupos.map((grupo) => {
+        const indice = Math.max(0, Number(grupo.id) - 1);
+        const tituloNivel = getAnimalNivelTiroLabel(indice);
+        const nomes = grupo.usuarios
+            .map((item) => {
+                const teste = item.teste || {};
+                const resumoTeste = `${formatRaceTime(teste.tempo_segundos)} em ${formatDistanceKm(teste.distancia_km)} (${formatPace(teste.pace_segundos_km)})`;
+                return `<span class="coach-group-chip" title="Último teste: ${resumoTeste}">${item.usuario.nome}</span>`;
+            })
+            .join('');
+
+        return `
+            <article class="coach-group-card shooting-group-card">
+                <h4>${tituloNivel}</h4>
+                <p class="group-meta">Faixa de nível: ${formatPace(grupo.melhorPace)} ate ${formatPace(grupo.piorPace)}</p>
                 <div class="coach-group-chips">${nomes}</div>
             </article>
         `;
@@ -599,12 +946,12 @@ async function verificarSessao(tentativas = 3) {
                 return verificarSessao(tentativas - 1);
             }
 
-            window.location.href = '/controle/login';
+            window.location.href = (window.location.pathname.startsWith('/dev') ? '/dev/login' : '/controle/login');
             return false;
         }
 
         if ((data.perfil || '').toLowerCase() !== 'treinador') {
-            window.location.href = '/controle/home';
+            window.location.href = (window.location.pathname.startsWith('/dev') ? '/dev/home' : '/controle/home');
             return false;
         }
 
@@ -621,7 +968,7 @@ async function verificarSessao(tentativas = 3) {
             return verificarSessao(tentativas - 1);
         }
 
-        window.location.href = '/controle/login';
+        window.location.href = (window.location.pathname.startsWith('/dev') ? '/dev/login' : '/controle/login');
         return false;
     }
 }
@@ -687,6 +1034,7 @@ function renderCoachDetails(usuario) {
             <div class="coach-health-panel">
                 ${renderAnaliseBioDoUsuario(usuario)}
             </div>
+            ${renderCoachTestePanel(usuario)}
             <div class="coach-rp-list">
                 ${renderCoachRps(usuario)}
             </div>
@@ -762,6 +1110,7 @@ async function carregarPainelTreinador() {
 
         atualizarKpis(usuariosCache);
         renderResumoGruposTreino(usuariosCache);
+        renderResumoGruposTiro(usuariosCache);
 
         if (coachPanelMessage) {
             coachPanelMessage.textContent = `Usuários ativos carregados: ${usuariosCache.length}`;
@@ -804,6 +1153,159 @@ async function atualizarStatusRpTreinador(usuarioId, prova, status) {
     }
 }
 
+async function registrarTesteTreinador(usuarioId, tempo, distanciaKm) {
+    try {
+        const response = await fetch(`${API_BASE}/treinador/usuarios/${usuarioId}/testes`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({ tempo, distancia_km: distanciaKm })
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.error || 'Erro ao registrar teste');
+        }
+
+        if (coachPanelMessage) {
+            coachPanelMessage.textContent = `Teste salvo: ${data.teste?.tempo_formatado || tempo} em ${formatDistanceKm(data.teste?.distancia_km || distanciaKm)} (${data.teste?.pace_formatado || '-'})`;
+        }
+
+        delete editingTests[usuarioId];
+
+        await carregarPainelTreinador();
+    } catch (error) {
+        console.error('Erro ao registrar teste:', error);
+        if (coachPanelMessage) {
+            coachPanelMessage.textContent = `Erro: ${error.message}`;
+        }
+    }
+}
+
+async function atualizarTesteTreinador(usuarioId, testeId, tempo, distanciaKm) {
+    try {
+        const response = await fetch(`${API_BASE}/treinador/usuarios/${usuarioId}/testes/${testeId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({ tempo, distancia_km: distanciaKm })
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.error || 'Erro ao atualizar teste');
+        }
+
+        delete editingTests[usuarioId];
+        if (coachPanelMessage) {
+            coachPanelMessage.textContent = `Teste atualizado: ${data.teste?.tempo_formatado || tempo} em ${formatDistanceKm(data.teste?.distancia_km || distanciaKm)} (${data.teste?.pace_formatado || '-'})`;
+        }
+
+        await carregarPainelTreinador();
+    } catch (error) {
+        console.error('Erro ao atualizar teste:', error);
+        if (coachPanelMessage) {
+            coachPanelMessage.textContent = `Erro: ${error.message}`;
+        }
+    }
+}
+
+async function excluirTesteTreinador(usuarioId, testeId) {
+    try {
+        const response = await fetch(`${API_BASE}/treinador/usuarios/${usuarioId}/testes/${testeId}`, {
+            method: 'DELETE',
+            credentials: 'include'
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.error || 'Erro ao excluir teste');
+        }
+
+        if (editingTests[usuarioId]?.id === testeId) {
+            delete editingTests[usuarioId];
+        }
+
+        if (coachPanelMessage) {
+            coachPanelMessage.textContent = data.message || 'Teste excluído com sucesso';
+        }
+
+        await carregarPainelTreinador();
+    } catch (error) {
+        console.error('Erro ao excluir teste:', error);
+        if (coachPanelMessage) {
+            coachPanelMessage.textContent = `Erro: ${error.message}`;
+        }
+    }
+}
+
+function closeConfirmModal(result = false) {
+    const modal = document.getElementById('coachConfirmModal');
+    if (!modal) {
+        return;
+    }
+
+    modal.style.display = 'none';
+    if (confirmModalResolver) {
+        const resolver = confirmModalResolver;
+        confirmModalResolver = null;
+        resolver(result);
+    }
+}
+
+function openConfirmModal({ title, message, warning }) {
+    let modal = document.getElementById('coachConfirmModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'coachConfirmModal';
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <h3 id="coachConfirmTitle"></h3>
+                <p id="coachConfirmMessage" class="modal-text"></p>
+                <p id="coachConfirmWarning" class="modal-warning"></p>
+                <p class="modal-info">Esta ação não pode ser desfeita.</p>
+                <div class="modal-actions">
+                    <button type="button" id="coachConfirmCancel" class="btn btn-secondary">Cancelar</button>
+                    <button type="button" id="coachConfirmOk" class="btn btn-danger">Excluir</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        modal.addEventListener('click', (event) => {
+            if (event.target === modal) {
+                closeConfirmModal(false);
+            }
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                const openModal = document.getElementById('coachConfirmModal');
+                if (openModal && openModal.style.display === 'flex') {
+                    closeConfirmModal(false);
+                }
+            }
+        });
+
+        modal.querySelector('#coachConfirmCancel').addEventListener('click', () => closeConfirmModal(false));
+        modal.querySelector('#coachConfirmOk').addEventListener('click', () => closeConfirmModal(true));
+    }
+
+    modal.querySelector('#coachConfirmTitle').textContent = title || 'Confirmar exclusão';
+    modal.querySelector('#coachConfirmMessage').textContent = message || 'Tem certeza que deseja excluir este item?';
+    modal.querySelector('#coachConfirmWarning').textContent = warning || '';
+    modal.style.display = 'flex';
+
+    return new Promise((resolve) => {
+        confirmModalResolver = resolve;
+    });
+}
+
 async function handleLogout() {
     try {
         const response = await fetch(`${API_BASE}/auth/logout`, {
@@ -813,7 +1315,7 @@ async function handleLogout() {
 
         if (response.ok) {
             setTimeout(() => {
-                window.location.href = '/controle/login';
+                window.location.href = (window.location.pathname.startsWith('/dev') ? '/dev/login' : '/controle/login');
             }, 100);
         }
     } catch (error) {
@@ -836,7 +1338,7 @@ if (btnLogout) {
 }
 
 if (coachUsersContainer) {
-    coachUsersContainer.addEventListener('click', (event) => {
+    coachUsersContainer.addEventListener('click', async (event) => {
         const tabButton = event.target.closest('.coach-tab-btn');
         if (tabButton) {
             event.preventDefault();
@@ -876,6 +1378,84 @@ if (coachUsersContainer) {
             return;
         }
 
+        const saveTestButton = event.target.closest('.coach-rp-test-save');
+        if (saveTestButton) {
+            event.preventDefault();
+
+            const usuarioId = saveTestButton.getAttribute('data-user-id');
+            const tempoInput = coachUsersContainer.querySelector(`.coach-rp-test-input[data-user-id="${usuarioId}"][data-test-field="tempo"]`);
+            const distanciaInput = coachUsersContainer.querySelector(`.coach-rp-test-input[data-user-id="${usuarioId}"][data-test-field="distancia"]`);
+            const tempo = tempoInput?.value?.trim() || '';
+            const distancia = String(distanciaInput?.value || '').trim().replace(',', '.');
+            const distanciaKm = Number.parseFloat(distancia);
+
+            if (!usuarioId) return;
+            if (!parseRaceTimeToSeconds(tempo)) {
+                if (coachPanelMessage) {
+                    coachPanelMessage.textContent = 'Informe um tempo válido. Use MM:SS ou HH:MM:SS.';
+                }
+                return;
+            }
+
+            if (!distanciaKm || Number.isNaN(distanciaKm) || distanciaKm <= 0) {
+                if (coachPanelMessage) {
+                    coachPanelMessage.textContent = 'Informe uma distância válida em km.';
+                }
+                return;
+            }
+
+            const editing = editingTests[usuarioId] || null;
+            if (editing?.id) {
+                atualizarTesteTreinador(usuarioId, editing.id, tempo, distanciaKm);
+            } else {
+                registrarTesteTreinador(usuarioId, tempo, distanciaKm);
+            }
+            return;
+        }
+
+        const cancelTestButton = event.target.closest('.coach-rp-test-cancel');
+        if (cancelTestButton) {
+            event.preventDefault();
+            const usuarioId = cancelTestButton.getAttribute('data-user-id');
+            if (!usuarioId) return;
+            delete editingTests[usuarioId];
+            filtrarUsuarios();
+            return;
+        }
+
+        const editTestButton = event.target.closest('.coach-rp-test-edit');
+        if (editTestButton) {
+            event.preventDefault();
+            const usuarioId = editTestButton.getAttribute('data-user-id');
+            const testeId = Number(editTestButton.getAttribute('data-test-id'));
+            if (!usuarioId || !testeId) return;
+            editingTests[usuarioId] = {
+                id: testeId,
+                tempo: editTestButton.getAttribute('data-tempo') || '',
+                distancia: editTestButton.getAttribute('data-distancia') || ''
+            };
+            filtrarUsuarios();
+            return;
+        }
+
+        const deleteTestButton = event.target.closest('.coach-rp-test-delete');
+        if (deleteTestButton) {
+            event.preventDefault();
+            const usuarioId = deleteTestButton.getAttribute('data-user-id');
+            const testeId = Number(deleteTestButton.getAttribute('data-test-id'));
+            if (!usuarioId || !testeId) return;
+            const allowDelete = await openConfirmModal({
+                title: '🗑️ Excluir Teste',
+                message: 'Tem certeza que deseja excluir este teste do histórico?',
+                warning: 'Essa ação removerá o registro permanentemente.'
+            });
+            if (!allowDelete) {
+                return;
+            }
+            excluirTesteTreinador(usuarioId, testeId);
+            return;
+        }
+
         const summary = event.target.closest('.coach-user-summary');
         if (!summary) return;
 
@@ -883,6 +1463,24 @@ if (coachUsersContainer) {
         const usuarioId = Number(summary.getAttribute('data-user-id'));
         expandedUserId = Number(expandedUserId) === usuarioId ? null : usuarioId;
         filtrarUsuarios();
+    });
+}
+
+if (coachUsersContainer) {
+    coachUsersContainer.addEventListener('input', (event) => {
+        const input = event.target.closest('.coach-rp-test-input');
+        if (!input) return;
+
+        const usuarioId = input.getAttribute('data-user-id');
+        const tempoInput = coachUsersContainer.querySelector(`.coach-rp-test-input[data-user-id="${usuarioId}"][data-test-field="tempo"]`);
+        const distanciaInput = coachUsersContainer.querySelector(`.coach-rp-test-input[data-user-id="${usuarioId}"][data-test-field="distancia"]`);
+        const paceSpan = coachUsersContainer.querySelector(`.coach-rp-test-pace[data-user-id="${usuarioId}"]`);
+        if (!paceSpan) return;
+
+        const tempoSegundos = parseRaceTimeToSeconds(tempoInput?.value);
+        const distanciaKm = Number.parseFloat(String(distanciaInput?.value || '').trim().replace(',', '.'));
+        const pace = calcularPaceTeste(tempoSegundos, distanciaKm);
+        paceSpan.textContent = `Pace: ${pace ? formatPace(pace) : '-'}`;
     });
 }
 

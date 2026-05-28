@@ -11,6 +11,7 @@ set_exception_handler(static function (Throwable $e): void {
     $cfg = appConfig();
     $isDebug = ($cfg['app_env'] ?? 'production') !== 'production';
     $uriPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
+    $isDevPath = str_starts_with($uriPath, '/dev/');
     $accept = (string) ($_SERVER['HTTP_ACCEPT'] ?? '');
     $isApi = str_contains($uriPath, '/api/');
 
@@ -20,7 +21,7 @@ set_exception_handler(static function (Throwable $e): void {
         http_response_code(500);
         header('Content-Type: application/json; charset=utf-8');
         $payload = ['error' => 'Erro interno do servidor'];
-        if ($isDebug) {
+        if ($isDebug || $isDevPath) {
             $payload['debug'] = $e->getMessage();
         }
         echo json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
@@ -29,7 +30,7 @@ set_exception_handler(static function (Throwable $e): void {
 
     http_response_code(500);
     header('Content-Type: text/plain; charset=utf-8');
-    echo $isDebug ? ('Erro interno do servidor: ' . $e->getMessage()) : 'Erro interno do servidor';
+    echo ($isDebug || $isDevPath) ? ('Erro interno do servidor: ' . $e->getMessage()) : 'Erro interno do servidor';
 });
 
 setupSession();
@@ -110,46 +111,324 @@ function dbColumnExists(string $table, string $column): bool
 
 function ensureUsuariosCompatibilityColumns(): void
 {
-    $driver = strtolower((string) (appConfig()['db']['driver'] ?? 'mysql'));
+    try {
+        $driver = strtolower((string) (appConfig()['db']['driver'] ?? 'mysql'));
 
-    $missing = [];
-    $targetColumns = [
-        'perfil' => "VARCHAR(20) DEFAULT 'aluno'",
-        'rp_5k' => 'INTEGER DEFAULT NULL',
-        'rp_10k' => 'INTEGER DEFAULT NULL',
-        'rp_21k' => 'INTEGER DEFAULT NULL',
-        'rp_42k' => 'INTEGER DEFAULT NULL',
-        'rp_5k_status' => "VARCHAR(20) DEFAULT NULL",
-        'rp_10k_status' => "VARCHAR(20) DEFAULT NULL",
-        'rp_21k_status' => "VARCHAR(20) DEFAULT NULL",
-        'rp_42k_status' => "VARCHAR(20) DEFAULT NULL",
-    ];
+        $missing = [];
+        $targetColumns = [
+            'perfil' => "VARCHAR(20) DEFAULT 'aluno'",
+            'rp_5k' => 'INTEGER DEFAULT NULL',
+            'rp_10k' => 'INTEGER DEFAULT NULL',
+            'rp_21k' => 'INTEGER DEFAULT NULL',
+            'rp_42k' => 'INTEGER DEFAULT NULL',
+            'rp_5k_status' => "VARCHAR(20) DEFAULT NULL",
+            'rp_10k_status' => "VARCHAR(20) DEFAULT NULL",
+            'rp_21k_status' => "VARCHAR(20) DEFAULT NULL",
+            'rp_42k_status' => "VARCHAR(20) DEFAULT NULL",
+        ];
 
-    foreach ($targetColumns as $column => $definition) {
-        if (!dbColumnExists('usuarios', $column)) {
-            $missing[$column] = $definition;
+        foreach ($targetColumns as $column => $definition) {
+            if (!dbColumnExists('usuarios', $column)) {
+                $missing[$column] = $definition;
+            }
         }
-    }
 
-    foreach ($missing as $column => $definition) {
+        foreach ($missing as $column => $definition) {
+            try {
+                if ($driver === 'sqlite') {
+                    dbExecute("ALTER TABLE usuarios ADD COLUMN {$column} {$definition}");
+                } elseif ($driver === 'pgsql' || $driver === 'postgres' || $driver === 'postgresql') {
+                    dbExecute("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS {$column} {$definition}");
+                } else {
+                    dbExecute("ALTER TABLE usuarios ADD COLUMN {$column} {$definition}");
+                }
+            } catch (Throwable $e) {
+                // Coluna pode ter sido criada em corrida por outra requisição.
+            }
+        }
+
         try {
-            if ($driver === 'sqlite') {
-                dbExecute("ALTER TABLE usuarios ADD COLUMN {$column} {$definition}");
-            } elseif ($driver === 'pgsql' || $driver === 'postgres' || $driver === 'postgresql') {
-                dbExecute("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS {$column} {$definition}");
-            } else {
-                dbExecute("ALTER TABLE usuarios ADD COLUMN {$column} {$definition}");
+            dbExecute("UPDATE usuarios SET perfil = 'aluno' WHERE perfil IS NULL OR TRIM(perfil) = ''");
+        } catch (Throwable $e) {
+            // Ignorar em caso de ambientes sem coluna ainda visível.
+        }
+    } catch (Throwable $e) {
+        error_log('[AgeRun PHP] ensureUsuariosCompatibilityColumns ignorado: ' . $e->getMessage());
+    }
+}
+
+function ensureCoreTables(): void
+{
+    try {
+        $driver = strtolower((string) (appConfig()['db']['driver'] ?? 'mysql'));
+
+        if ($driver === 'sqlite') {
+            dbExecute(
+                'CREATE TABLE IF NOT EXISTS usuarios (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    nome TEXT NOT NULL,
+                    email TEXT NOT NULL UNIQUE,
+                    senha TEXT NOT NULL,
+                    sexo TEXT DEFAULT "masculino",
+                    altura REAL NULL,
+                    data_cadastro DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    codigo_recuperacao TEXT NULL,
+                    codigo_expiracao DATETIME NULL
+                )'
+            );
+
+            dbExecute(
+                'CREATE TABLE IF NOT EXISTS pesagens (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    usuario_id INTEGER NOT NULL,
+                    peso REAL NOT NULL,
+                    gordura_percentual REAL NULL,
+                    massa_muscular_percentual REAL NULL,
+                    agua_percentual REAL NULL,
+                    massa_ossea REAL NULL,
+                    metabolismo_basal INTEGER NULL,
+                    idade_metabolica INTEGER NULL,
+                    gordura_visceral INTEGER NULL,
+                    data_pesagem DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    excluido INTEGER DEFAULT 0
+                )'
+            );
+
+            dbExecute('CREATE INDEX IF NOT EXISTS idx_usuarios_email ON usuarios(email)');
+            dbExecute('CREATE INDEX IF NOT EXISTS idx_pesagens_usuario_id ON pesagens(usuario_id)');
+            return;
+        }
+
+        if ($driver === 'pgsql' || $driver === 'postgres' || $driver === 'postgresql') {
+            dbExecute(
+                'CREATE TABLE IF NOT EXISTS usuarios (
+                    id INTEGER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+                    nome TEXT NOT NULL,
+                    email TEXT NOT NULL UNIQUE,
+                    senha TEXT NOT NULL,
+                    sexo TEXT DEFAULT \'masculino\',
+                    altura DOUBLE PRECISION NULL,
+                    data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    codigo_recuperacao TEXT NULL,
+                    codigo_expiracao TIMESTAMP NULL
+                )'
+            );
+
+            dbExecute(
+                'CREATE TABLE IF NOT EXISTS pesagens (
+                    id INTEGER GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+                    usuario_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+                    peso DOUBLE PRECISION NOT NULL,
+                    gordura_percentual DOUBLE PRECISION NULL,
+                    massa_muscular_percentual DOUBLE PRECISION NULL,
+                    agua_percentual DOUBLE PRECISION NULL,
+                    massa_ossea DOUBLE PRECISION NULL,
+                    metabolismo_basal INTEGER NULL,
+                    idade_metabolica INTEGER NULL,
+                    gordura_visceral INTEGER NULL,
+                    data_pesagem TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    excluido INTEGER DEFAULT 0
+                )'
+            );
+
+            dbExecute('CREATE INDEX IF NOT EXISTS idx_usuarios_email ON usuarios(email)');
+            dbExecute('CREATE INDEX IF NOT EXISTS idx_pesagens_usuario_id ON pesagens(usuario_id)');
+            return;
+        }
+
+        dbExecute(
+            'CREATE TABLE IF NOT EXISTS usuarios (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                nome VARCHAR(255) NOT NULL,
+                email VARCHAR(255) NOT NULL UNIQUE,
+                senha VARCHAR(255) NOT NULL,
+                sexo VARCHAR(20) DEFAULT \'masculino\',
+                altura DECIMAL(4,2) NULL,
+                data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                codigo_recuperacao VARCHAR(20) NULL,
+                codigo_expiracao DATETIME NULL
+            )'
+        );
+
+        dbExecute(
+            'CREATE TABLE IF NOT EXISTS pesagens (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                usuario_id INT NOT NULL,
+                peso DECIMAL(6,2) NOT NULL,
+                gordura_percentual DECIMAL(5,2) NULL,
+                massa_muscular_percentual DECIMAL(5,2) NULL,
+                agua_percentual DECIMAL(5,2) NULL,
+                massa_ossea DECIMAL(5,2) NULL,
+                metabolismo_basal INT NULL,
+                idade_metabolica INT NULL,
+                gordura_visceral INT NULL,
+                data_pesagem DATETIME DEFAULT CURRENT_TIMESTAMP,
+                excluido TINYINT(1) DEFAULT 0,
+                CONSTRAINT fk_pesagens_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+            )'
+        );
+
+        try {
+            dbExecute('CREATE INDEX idx_usuarios_email ON usuarios(email)');
+        } catch (Throwable $e) {
+            // Indice ja existe.
+        }
+
+        try {
+            dbExecute('CREATE INDEX idx_pesagens_usuario_id ON pesagens(usuario_id)');
+        } catch (Throwable $e) {
+            // Indice ja existe.
+        }
+    } catch (Throwable $e) {
+        error_log('[AgeRun PHP] ensureCoreTables ignorado: ' . $e->getMessage());
+    }
+}
+
+function ensureRpTestesTable(): void
+{
+    try {
+        $driver = strtolower((string) (appConfig()['db']['driver'] ?? 'mysql'));
+
+        if ($driver === 'sqlite') {
+            dbExecute(
+                'CREATE TABLE IF NOT EXISTS rp_testes_historico (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    usuario_id INTEGER NOT NULL,
+                    treinador_id INTEGER NOT NULL,
+                    prova TEXT NULL,
+                    tempo_segundos INTEGER NOT NULL,
+                    distancia_km REAL NOT NULL,
+                    pace_segundos_km REAL NOT NULL,
+                    criado_em DATETIME DEFAULT CURRENT_TIMESTAMP
+                )'
+            );
+            if (!dbColumnExists('rp_testes_historico', 'prova')) {
+                dbExecute('ALTER TABLE rp_testes_historico ADD COLUMN prova TEXT');
+            }
+            if (!dbColumnExists('rp_testes_historico', 'distancia_km')) {
+                dbExecute('ALTER TABLE rp_testes_historico ADD COLUMN distancia_km REAL');
+            }
+            dbExecute('CREATE INDEX IF NOT EXISTS idx_rp_testes_usuario_data ON rp_testes_historico(usuario_id, criado_em DESC)');
+            return;
+        }
+
+        if ($driver === 'pgsql' || $driver === 'postgres' || $driver === 'postgresql') {
+            dbExecute(
+                'CREATE TABLE IF NOT EXISTS rp_testes_historico (
+                    id BIGSERIAL PRIMARY KEY,
+                    usuario_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+                    treinador_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+                    prova VARCHAR(20) NULL,
+                    tempo_segundos INTEGER NOT NULL,
+                    distancia_km DOUBLE PRECISION NOT NULL,
+                    pace_segundos_km DOUBLE PRECISION NOT NULL,
+                    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )'
+            );
+            if (!dbColumnExists('rp_testes_historico', 'prova')) {
+                dbExecute('ALTER TABLE rp_testes_historico ADD COLUMN IF NOT EXISTS prova VARCHAR(20)');
+            }
+            if (!dbColumnExists('rp_testes_historico', 'distancia_km')) {
+                dbExecute('ALTER TABLE rp_testes_historico ADD COLUMN IF NOT EXISTS distancia_km DOUBLE PRECISION');
+            }
+            dbExecute('CREATE INDEX IF NOT EXISTS idx_rp_testes_usuario_data ON rp_testes_historico(usuario_id, criado_em DESC)');
+            return;
+        }
+
+        dbExecute(
+            'CREATE TABLE IF NOT EXISTS rp_testes_historico (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                usuario_id INT NOT NULL,
+                treinador_id INT NOT NULL,
+                prova VARCHAR(20) NULL,
+                tempo_segundos INT NOT NULL,
+                distancia_km DECIMAL(10,4) NOT NULL,
+                pace_segundos_km DECIMAL(10,4) NOT NULL,
+                criado_em DATETIME DEFAULT CURRENT_TIMESTAMP,
+                CONSTRAINT fk_rp_testes_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+                CONSTRAINT fk_rp_testes_treinador FOREIGN KEY (treinador_id) REFERENCES usuarios(id) ON DELETE CASCADE
+            )'
+        );
+
+        if (!dbColumnExists('rp_testes_historico', 'prova')) {
+            try {
+                dbExecute('ALTER TABLE rp_testes_historico ADD COLUMN prova VARCHAR(20) NULL AFTER treinador_id');
+            } catch (Throwable $e) {
+                // Coluna pode ter sido criada em corrida.
+            }
+        }
+
+        try {
+            if (!dbColumnExists('rp_testes_historico', 'distancia_km')) {
+                dbExecute('ALTER TABLE rp_testes_historico ADD COLUMN distancia_km DECIMAL(10,4) NULL AFTER tempo_segundos');
             }
         } catch (Throwable $e) {
-            // Coluna pode ter sido criada em corrida por outra requisição.
+            // Coluna pode ter sido criada em corrida.
         }
+
+        try {
+            dbExecute('CREATE INDEX idx_rp_testes_usuario_data ON rp_testes_historico(usuario_id, criado_em)');
+        } catch (Throwable $e) {
+            // Índice já pode existir.
+        }
+    } catch (Throwable $e) {
+        error_log('[AgeRun PHP] ensureRpTestesTable ignorado: ' . $e->getMessage());
+    }
+}
+
+function buildRpTestesHistoricoMap(array $usuarioIds): array
+{
+    $ids = array_values(array_unique(array_filter(array_map(static fn ($id) => (int) $id, $usuarioIds), static fn ($id) => $id > 0)));
+    if (!$ids) {
+        return [];
     }
 
-    try {
-        dbExecute("UPDATE usuarios SET perfil = 'aluno' WHERE perfil IS NULL OR TRIM(perfil) = ''");
-    } catch (Throwable $e) {
-        // Ignorar em caso de ambientes sem coluna ainda visível.
+    $placeholders = [];
+    $params = [];
+    foreach ($ids as $index => $usuarioId) {
+        $placeholder = ':uid' . $index;
+        $placeholders[] = $placeholder;
+        $params[$placeholder] = $usuarioId;
     }
+
+    $rows = dbFetchAll(
+        'SELECT h.id, h.usuario_id, h.treinador_id, h.prova, h.tempo_segundos, h.distancia_km, h.pace_segundos_km, h.criado_em,
+                t.nome AS treinador_nome
+           FROM rp_testes_historico h
+      LEFT JOIN usuarios t ON t.id = h.treinador_id
+          WHERE h.usuario_id IN (' . implode(', ', $placeholders) . ')
+          ORDER BY h.criado_em DESC, h.id DESC',
+        $params
+    );
+
+    $historico = [];
+    foreach ($rows as $row) {
+        $usuarioId = (int) ($row['usuario_id'] ?? 0);
+        if ($usuarioId <= 0) {
+            continue;
+        }
+
+        $prova = (string) ($row['prova'] ?? '');
+        $distancia = isset($row['distancia_km']) && is_numeric($row['distancia_km'])
+            ? (float) $row['distancia_km']
+            : ((isset(RACE_DISTANCES[$prova]) && is_numeric(RACE_DISTANCES[$prova])) ? (float) RACE_DISTANCES[$prova] : null);
+
+        $historico[$usuarioId] ??= [];
+        $historico[$usuarioId][] = [
+            'id' => (int) ($row['id'] ?? 0),
+            'prova' => $prova !== '' ? $prova : null,
+            'tempo_segundos' => (int) ($row['tempo_segundos'] ?? 0),
+            'tempo_formatado' => formatSecondsToRaceTime($row['tempo_segundos'] ?? null),
+            'distancia_km' => $distancia,
+            'pace_segundos_km' => isset($row['pace_segundos_km']) ? (float) $row['pace_segundos_km'] : null,
+            'pace_formatado' => formatPace($row['pace_segundos_km'] ?? null),
+            'criado_em' => $row['criado_em'] ?? null,
+            'treinador_id' => (int) ($row['treinador_id'] ?? 0),
+            'treinador_nome' => (string) ($row['treinador_nome'] ?? ''),
+        ];
+    }
+
+    return $historico;
 }
 
 function parseRaceTimeToSeconds(mixed $value): ?int
@@ -315,6 +594,166 @@ function mapRunnerForGroup(array $user, float $myScore, ?float $scoreOverride = 
     ];
 }
 
+function getShootingLevelLabel(int $index): string
+{
+    $labels = [
+        '🐆 Guepardo',
+        '🦌 Antilope',
+        '🐺 Lobo',
+        '🐎 Cavalo',
+        '🦊 Raposa',
+        '🐢 Tartaruga',
+    ];
+
+    return $labels[$index] ?? ('🐾 Pelotao ' . ($index + 1));
+}
+
+function getLatestValidShootingTest(array $historico): ?array
+{
+    foreach ($historico as $item) {
+        $tempoSegundos = isset($item['tempo_segundos']) && is_numeric($item['tempo_segundos'])
+            ? (float) $item['tempo_segundos']
+            : 0.0;
+        $distanciaKm = isset($item['distancia_km']) && is_numeric($item['distancia_km'])
+            ? (float) $item['distancia_km']
+            : 0.0;
+        $pace = isset($item['pace_segundos_km']) && is_numeric($item['pace_segundos_km'])
+            ? (float) $item['pace_segundos_km']
+            : ($tempoSegundos > 0 && $distanciaKm > 0 ? ($tempoSegundos / $distanciaKm) : 0.0);
+
+        if ($tempoSegundos > 0 && $distanciaKm > 0 && $pace > 0) {
+            return [
+                'tempo_segundos' => $tempoSegundos,
+                'distancia_km' => $distanciaKm,
+                'pace_segundos_km' => $pace,
+            ];
+        }
+    }
+
+    return null;
+}
+
+function calculateShootingTestScore(array $teste): ?float
+{
+    $tempoSegundos = isset($teste['tempo_segundos']) && is_numeric($teste['tempo_segundos'])
+        ? (float) $teste['tempo_segundos']
+        : 0.0;
+    $distanciaKm = isset($teste['distancia_km']) && is_numeric($teste['distancia_km'])
+        ? (float) $teste['distancia_km']
+        : 0.0;
+    $pace = isset($teste['pace_segundos_km']) && is_numeric($teste['pace_segundos_km'])
+        ? (float) $teste['pace_segundos_km']
+        : ($tempoSegundos > 0 && $distanciaKm > 0 ? ($tempoSegundos / $distanciaKm) : 0.0);
+
+    if ($tempoSegundos <= 0 || $distanciaKm <= 0 || $pace <= 0) {
+        return null;
+    }
+
+    $tempoMinutos = $tempoSegundos / 60.0;
+    $bonusTempo = min(28.0, log(1.0 + max(0.0, $tempoMinutos - 4.0)) * 10.0);
+    $bonusDistancia = min(22.0, log(1.0 + max(0.0, $distanciaKm - 0.8)) * 9.0);
+    $score = $pace - $bonusTempo - $bonusDistancia;
+
+    return $score > 0 ? $score : null;
+}
+
+function buildShootingGroups(array $users, array $historicoMap, float $compatThresholdPercent = 5.0): array
+{
+    $atletas = [];
+
+    foreach ($users as $row) {
+        $usuarioId = (int) ($row['id'] ?? 0);
+        if ($usuarioId <= 0) {
+            continue;
+        }
+
+        $teste = getLatestValidShootingTest($historicoMap[$usuarioId] ?? []);
+        if (!$teste) {
+            continue;
+        }
+
+        $score = calculateShootingTestScore($teste);
+        if ($score === null) {
+            continue;
+        }
+
+        $atletas[] = [
+            'usuario_id' => $usuarioId,
+            'nome' => (string) ($row['nome'] ?? ''),
+            'score' => $score,
+            'pace_segundos_km' => (float) $teste['pace_segundos_km'],
+        ];
+    }
+
+    if (!$atletas) {
+        return [];
+    }
+
+    usort($atletas, static fn($a, $b) => (float) $a['score'] <=> (float) $b['score']);
+
+    $grupos = [];
+
+    foreach ($atletas as $atleta) {
+        $lastIndex = count($grupos) - 1;
+
+        if ($lastIndex < 0) {
+            $grupos[] = [
+                'usuarios' => [$atleta],
+                'media_score' => (float) $atleta['score'],
+            ];
+            continue;
+        }
+
+        $mediaAtual = (float) ($grupos[$lastIndex]['media_score'] ?? 0.0);
+        if ($mediaAtual <= 0) {
+            $grupos[] = [
+                'usuarios' => [$atleta],
+                'media_score' => (float) $atleta['score'],
+            ];
+            continue;
+        }
+
+        $diffPercent = abs((((float) $atleta['score']) - $mediaAtual) / $mediaAtual) * 100.0;
+        if ($diffPercent <= $compatThresholdPercent) {
+            $grupos[$lastIndex]['usuarios'][] = $atleta;
+            $total = count($grupos[$lastIndex]['usuarios']);
+            $grupos[$lastIndex]['media_score'] = (($mediaAtual * ($total - 1)) + (float) $atleta['score']) / $total;
+            continue;
+        }
+
+        $grupos[] = [
+            'usuarios' => [$atleta],
+            'media_score' => (float) $atleta['score'],
+        ];
+    }
+
+    $result = [];
+    foreach ($grupos as $index => $grupo) {
+        $paces = array_map(static fn($item) => (float) ($item['pace_segundos_km'] ?? 0), $grupo['usuarios']);
+        $paces = array_values(array_filter($paces, static fn($value) => $value > 0));
+        sort($paces);
+
+        if (!$paces) {
+            continue;
+        }
+
+        $result[] = [
+            'id' => $index + 1,
+            'nome_nivel' => getShootingLevelLabel($index),
+            'melhor_pace_seg_km' => $paces[0],
+            'pior_pace_seg_km' => $paces[count($paces) - 1],
+            'melhor_pace_formatado' => formatPace($paces[0]),
+            'pior_pace_formatado' => formatPace($paces[count($paces) - 1]),
+            'usuarios' => array_map(static fn($item) => [
+                'usuario_id' => (int) ($item['usuario_id'] ?? 0),
+                'nome' => (string) ($item['nome'] ?? ''),
+            ], $grupo['usuarios']),
+        ];
+    }
+
+    return $result;
+}
+
 function requireTrainerAuth(): int
 {
     $userId = requireAuth();
@@ -338,7 +777,11 @@ function requireTrainerAuth(): int
     return $userId;
 }
 
-ensureUsuariosCompatibilityColumns();
+if (str_starts_with($path, '/api/')) {
+    ensureCoreTables();
+    ensureUsuariosCompatibilityColumns();
+    ensureRpTestesTable();
+}
 
 if ($method === 'POST' && $path === '/api/auth/cadastro') {
     $input = jsonInput();
@@ -417,8 +860,10 @@ if ($method === 'POST' && $path === '/api/auth/login') {
         error_log('[AgeRun PHP] Erro no login: ' . $e->getMessage());
         $cfg = appConfig();
         $isDebug = ($cfg['app_env'] ?? 'production') !== 'production';
+        $uriPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
+        $isDevPath = str_starts_with($uriPath, '/dev/');
         $payload = ['error' => 'Erro interno do servidor'];
-        if ($isDebug) {
+        if ($isDebug || $isDevPath) {
             $payload['debug'] = $e->getMessage();
         }
         jsonResponse($payload, 500);
@@ -442,17 +887,23 @@ if ($method === 'GET' && $path === '/api/auth/session') {
     }
 
     try {
-        $usuario = dbFetchOne(
-            'SELECT id, nome, email, altura, sexo, perfil FROM usuarios WHERE id = :id LIMIT 1',
-            [':id' => $userId]
-        );
-    } catch (PDOException) {
-        $usuario = dbFetchOne('SELECT id, nome, email FROM usuarios WHERE id = :id LIMIT 1', [':id' => $userId]);
-        if ($usuario) {
-            $usuario['altura'] = null;
-            $usuario['sexo'] = 'masculino';
-            $usuario['perfil'] = 'aluno';
+        try {
+            $usuario = dbFetchOne(
+                'SELECT id, nome, email, altura, sexo, perfil FROM usuarios WHERE id = :id LIMIT 1',
+                [':id' => $userId]
+            );
+        } catch (PDOException) {
+            $usuario = dbFetchOne('SELECT id, nome, email FROM usuarios WHERE id = :id LIMIT 1', [':id' => $userId]);
+            if ($usuario) {
+                $usuario['altura'] = null;
+                $usuario['sexo'] = 'masculino';
+                $usuario['perfil'] = 'aluno';
+            }
         }
+    } catch (Throwable $e) {
+        error_log('[AgeRun PHP] Erro em /api/auth/session: ' . $e->getMessage());
+        $_SESSION = [];
+        jsonResponse(['authenticated' => false]);
     }
 
     if (!$usuario) {
@@ -905,6 +1356,57 @@ if ($method === 'GET' && $path === '/api/performance/grupos') {
     ]);
 }
 
+if ($method === 'GET' && $path === '/api/performance/grupos-tiro') {
+    $usuarioId = requireAuth();
+
+    $rows = dbFetchAll(
+        'SELECT u.id, u.nome
+           FROM usuarios u
+          WHERE EXISTS (
+                SELECT 1
+                  FROM pesagens p
+                 WHERE p.usuario_id = u.id
+                   AND (p.excluido IS NULL OR p.excluido = 0)
+          )
+          ORDER BY u.nome ASC'
+    );
+
+    if (!$rows) {
+        jsonResponse([
+            'meu_grupo' => null,
+            'grupos' => [],
+            'aviso' => 'Nenhum usuário ativo encontrado para montar grupos de tiro.',
+        ]);
+    }
+
+    $historicoMap = buildRpTestesHistoricoMap(array_map(static fn ($row) => (int) ($row['id'] ?? 0), $rows));
+    $grupos = buildShootingGroups($rows, $historicoMap);
+
+    if (!$grupos) {
+        jsonResponse([
+            'meu_grupo' => null,
+            'grupos' => [],
+            'aviso' => 'Sem testes válidos para montar os grupos de tiro.',
+        ]);
+    }
+
+    $meuGrupo = null;
+    foreach ($grupos as $grupo) {
+        foreach (($grupo['usuarios'] ?? []) as $membro) {
+            if ((int) ($membro['usuario_id'] ?? 0) === $usuarioId) {
+                $meuGrupo = $grupo;
+                break 2;
+            }
+        }
+    }
+
+    jsonResponse([
+        'meu_grupo' => $meuGrupo,
+        'grupos' => $grupos,
+        'aviso' => $meuGrupo ? null : 'Você ainda não possui teste válido para entrar em um grupo de tiro.',
+    ]);
+}
+
 if ($method === 'GET' && $path === '/api/treinador/usuarios-ativos') {
     requireTrainerAuth();
 
@@ -949,15 +1451,18 @@ if ($method === 'GET' && $path === '/api/treinador/usuarios-ativos') {
 
     $rows = dbFetchAll($query);
 
-    $usuarios = array_map(static function ($row) {
+    $historicoMap = buildRpTestesHistoricoMap(array_map(static fn ($row) => (int) ($row['id'] ?? 0), $rows));
+
+    $usuarios = array_map(static function ($row) use ($historicoMap) {
         $altura = isset($row['altura']) && $row['altura'] !== null ? (float) $row['altura'] : null;
         $pesoAtual = isset($row['peso_atual']) && $row['peso_atual'] !== null ? (float) $row['peso_atual'] : null;
         $imc = ($altura && $pesoAtual && $altura > 0)
             ? round($pesoAtual / ($altura * $altura), 2)
             : null;
+        $usuarioId = (int) ($row['id'] ?? 0);
 
         return [
-            'usuario_id' => (int) ($row['id'] ?? 0),
+            'usuario_id' => $usuarioId,
             'nome' => (string) ($row['nome'] ?? ''),
             'email' => (string) ($row['email'] ?? ''),
             'altura' => $altura,
@@ -987,6 +1492,7 @@ if ($method === 'GET' && $path === '/api/treinador/usuarios-ativos') {
                 'rp_21k_formatado' => formatSecondsToRaceTime($row['rp_21k'] ?? null),
                 'rp_42k_formatado' => formatSecondsToRaceTime($row['rp_42k'] ?? null),
             ],
+            'rp_testes_historico' => $historicoMap[$usuarioId] ?? [],
         ];
     }, $rows);
 
@@ -1032,6 +1538,140 @@ if ($method === 'PUT' && preg_match('#^/api/treinador/rps/(\d+)/aprovacao$#', $p
     jsonResponse([
         'success' => true,
         'message' => sprintf('Status %s atualizado para %s', $prova, $status),
+    ]);
+}
+
+if ($method === 'POST' && preg_match('#^/api/treinador/usuarios/(\d+)/testes$#', $path, $matches) === 1) {
+    $treinadorId = requireTrainerAuth();
+
+    $alvoUsuarioId = (int) $matches[1];
+    $input = jsonInput();
+    $tempoSegundos = parseRaceTimeToSeconds($input['tempo'] ?? null);
+    $distanciaKm = isset($input['distancia_km']) ? (float) $input['distancia_km'] : 0.0;
+
+    if ($tempoSegundos === -1 || $tempoSegundos === null || $tempoSegundos <= 0) {
+        jsonResponse(['error' => 'Tempo do teste inválido'], 400);
+    }
+
+    if ($distanciaKm <= 0 || $distanciaKm > 1000) {
+        jsonResponse(['error' => 'Distância do teste inválida'], 400);
+    }
+
+    $usuario = dbFetchOne('SELECT id FROM usuarios WHERE id = :id LIMIT 1', [':id' => $alvoUsuarioId]);
+    if (!$usuario) {
+        jsonResponse(['error' => 'Usuário não encontrado'], 404);
+    }
+
+    $paceSegundosKm = $tempoSegundos / $distanciaKm;
+
+    dbExecute(
+        'INSERT INTO rp_testes_historico (usuario_id, treinador_id, prova, tempo_segundos, distancia_km, pace_segundos_km)
+         VALUES (:usuario_id, :treinador_id, :prova, :tempo_segundos, :distancia_km, :pace_segundos_km)',
+        [
+            ':usuario_id' => $alvoUsuarioId,
+            ':treinador_id' => $treinadorId,
+            ':prova' => 'teste',
+            ':tempo_segundos' => $tempoSegundos,
+            ':distancia_km' => $distanciaKm,
+            ':pace_segundos_km' => $paceSegundosKm,
+        ]
+    );
+    $testeId = dbLastInsertId();
+
+    jsonResponse([
+        'success' => true,
+        'message' => 'Teste registrado com sucesso',
+        'teste' => [
+            'id' => $testeId,
+            'tempo_segundos' => $tempoSegundos,
+            'tempo_formatado' => formatSecondsToRaceTime($tempoSegundos),
+            'distancia_km' => $distanciaKm,
+            'pace_segundos_km' => $paceSegundosKm,
+            'pace_formatado' => formatPace($paceSegundosKm),
+        ],
+    ], 201);
+}
+
+if ($method === 'PUT' && preg_match('#^/api/treinador/usuarios/(\d+)/testes/(\d+)$#', $path, $matches) === 1) {
+    $treinadorId = requireTrainerAuth();
+
+    $alvoUsuarioId = (int) $matches[1];
+    $testeId = (int) $matches[2];
+    $input = jsonInput();
+    $tempoSegundos = parseRaceTimeToSeconds($input['tempo'] ?? null);
+    $distanciaKm = isset($input['distancia_km']) ? (float) $input['distancia_km'] : 0.0;
+
+    if ($tempoSegundos === -1 || $tempoSegundos === null || $tempoSegundos <= 0) {
+        jsonResponse(['error' => 'Tempo do teste inválido'], 400);
+    }
+
+    if ($distanciaKm <= 0 || $distanciaKm > 1000) {
+        jsonResponse(['error' => 'Distância do teste inválida'], 400);
+    }
+
+    $teste = dbFetchOne(
+        'SELECT id, usuario_id FROM rp_testes_historico WHERE id = :id LIMIT 1',
+        [':id' => $testeId]
+    );
+
+    if (!$teste || (int) ($teste['usuario_id'] ?? 0) !== $alvoUsuarioId) {
+        jsonResponse(['error' => 'Teste não encontrado para este usuário'], 404);
+    }
+
+    $paceSegundosKm = $tempoSegundos / $distanciaKm;
+
+    dbExecute(
+        'UPDATE rp_testes_historico
+            SET treinador_id = :treinador_id,
+                prova = :prova,
+                tempo_segundos = :tempo_segundos,
+                distancia_km = :distancia_km,
+                pace_segundos_km = :pace_segundos_km
+          WHERE id = :id',
+        [
+            ':treinador_id' => $treinadorId,
+            ':prova' => 'teste',
+            ':tempo_segundos' => $tempoSegundos,
+            ':distancia_km' => $distanciaKm,
+            ':pace_segundos_km' => $paceSegundosKm,
+            ':id' => $testeId,
+        ]
+    );
+
+    jsonResponse([
+        'success' => true,
+        'message' => 'Teste atualizado com sucesso',
+        'teste' => [
+            'id' => $testeId,
+            'tempo_segundos' => $tempoSegundos,
+            'tempo_formatado' => formatSecondsToRaceTime($tempoSegundos),
+            'distancia_km' => $distanciaKm,
+            'pace_segundos_km' => $paceSegundosKm,
+            'pace_formatado' => formatPace($paceSegundosKm),
+        ],
+    ]);
+}
+
+if ($method === 'DELETE' && preg_match('#^/api/treinador/usuarios/(\d+)/testes/(\d+)$#', $path, $matches) === 1) {
+    requireTrainerAuth();
+
+    $alvoUsuarioId = (int) $matches[1];
+    $testeId = (int) $matches[2];
+
+    $teste = dbFetchOne(
+        'SELECT id, usuario_id FROM rp_testes_historico WHERE id = :id LIMIT 1',
+        [':id' => $testeId]
+    );
+
+    if (!$teste || (int) ($teste['usuario_id'] ?? 0) !== $alvoUsuarioId) {
+        jsonResponse(['error' => 'Teste não encontrado para este usuário'], 404);
+    }
+
+    dbExecute('DELETE FROM rp_testes_historico WHERE id = :id', [':id' => $testeId]);
+
+    jsonResponse([
+        'success' => true,
+        'message' => 'Teste excluído com sucesso',
     ]);
 }
 

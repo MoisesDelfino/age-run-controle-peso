@@ -1,5 +1,5 @@
 // Configuração da API
-var API_BASE = API_BASE || (window.location.pathname.startsWith('/controle') ? '/controle/api' : '/api');
+var API_BASE = API_BASE || (window.location.pathname.startsWith('/dev') ? '/dev/api' : (window.location.pathname.startsWith('/controle') ? '/controle/api' : '/api'));
 
 // Elementos do DOM
 const messageDiv = document.getElementById('message');
@@ -76,7 +76,7 @@ if (document.getElementById('loginForm')) {
             mostrarMensagem('✅ Login realizado! Redirecionando...', 'success');
             
             setTimeout(() => {
-                window.location.href = '/controle/home';
+                window.location.href = (window.location.pathname.startsWith('/dev') ? '/dev/home' : '/controle/home');
             }, 1000);
             
         } catch (error) {
@@ -138,7 +138,7 @@ if (document.getElementById('cadastroForm')) {
             mostrarMensagem('✅ Conta criada! Redirecionando...', 'success');
             
             setTimeout(() => {
-                window.location.href = '/controle/home';
+                window.location.href = (window.location.pathname.startsWith('/dev') ? '/dev/home' : '/controle/home');
             }, 1000);
             
         } catch (error) {

@@ -1,7 +1,7 @@
 // Configuração da API
 var API_BASE = API_BASE || (window.location.hostname === 'localhost' 
     ? `http://localhost:${window.location.port}/api`
-    : '/controle/api');
+    : (window.location.pathname.startsWith('/dev') ? '/dev/api' : '/controle/api'));
 
 // Elementos do DOM
 const pesagemForm = document.getElementById('pesagemForm');
@@ -48,7 +48,7 @@ async function verificarSessao() {
         const data = await response.json();
         
         if (!data.authenticated) {
-            window.location.href = '/controle/login';
+            window.location.href = (window.location.pathname.startsWith('/dev') ? '/dev/login' : '/controle/login');
             return;
         }
         
@@ -59,7 +59,7 @@ async function verificarSessao() {
         
     } catch (error) {
         console.error('Erro ao verificar sessão:', error);
-        window.location.href = '/controle/login';
+        window.location.href = (window.location.pathname.startsWith('/dev') ? '/dev/login' : '/controle/login');
     }
 }
 
@@ -83,13 +83,13 @@ async function handleLogout() {
         // Sempre redirecionar, independente da resposta
         console.log('Redirecionando para /login');
         setTimeout(() => {
-            window.location.href = '/controle/login';
+            window.location.href = (window.location.pathname.startsWith('/dev') ? '/dev/login' : '/controle/login');
         }, 100);
         
     } catch (error) {
         console.error('Erro ao fazer logout:', error);
         // Mesmo com erro, redirecionar para login
-        window.location.href = '/controle/login';
+        window.location.href = (window.location.pathname.startsWith('/dev') ? '/dev/login' : '/controle/login');
     }
 }
 

@@ -115,8 +115,20 @@ function redirectTo(string $path): never
 
 function sendHtml(string $fileName): never
 {
-    $path = dirname(__DIR__) . '/public/' . $fileName;
-    if (!is_file($path)) {
+    $candidates = [
+        dirname(__DIR__) . '/public/' . $fileName,
+        dirname(__DIR__) . '/' . $fileName,
+    ];
+
+    $path = null;
+    foreach ($candidates as $candidate) {
+        if (is_file($candidate)) {
+            $path = $candidate;
+            break;
+        }
+    }
+
+    if ($path === null) {
         http_response_code(404);
         echo 'Arquivo não encontrado';
         exit;

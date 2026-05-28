@@ -412,6 +412,19 @@ main {
     background: linear-gradient(135deg, #f7fbff 0%, #f4f9f0 100%);
 }
 
+.coach-groups-section + .coach-groups-section {
+    margin-top: 10px;
+}
+
+.coach-groups-shooting {
+    background: linear-gradient(135deg, #f9fcff 0%, #f1f8ff 100%);
+    border-color: #d6e3f7;
+}
+
+.shooting-group-card {
+    border-left: 4px solid #64b5f6;
+}
+
 .coach-groups-section h3 {
     margin-bottom: 4px;
     color: #2c3e50;
@@ -626,6 +639,146 @@ main {
     padding: 6px 12px;
     font-size: 0.75rem;
 }
+.coach-rp-test-panel {
+    margin: 12px 0 14px;
+    padding: 14px;
+    border: 1px solid #dfe6d6;
+    border-radius: 12px;
+    background: linear-gradient(180deg, rgba(139, 195, 74, 0.08), rgba(255, 255, 255, 0.96));
+}
+.coach-rp-test-panel-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+.coach-rp-test-title {
+    display: block;
+    font-size: 1rem;
+    color: var(--dark-color);
+    margin-bottom: 2px;
+}
+.coach-rp-test-mode {
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(33, 150, 243, 0.12);
+    color: #1565c0;
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+.coach-rp-test-controls {
+    display: grid;
+    grid-template-columns: minmax(120px, 160px) minmax(120px, 160px) minmax(140px, 1fr) auto;
+    gap: 10px;
+    align-items: end;
+    margin-bottom: 14px;
+}
+.coach-rp-test-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.coach-rp-test-input {
+    width: 100%;
+    min-height: 42px;
+    padding: 10px 12px;
+    border: 1px solid #d7dfcf;
+    border-radius: 10px;
+    background: #fff;
+    color: #1f1f1f;
+}
+.coach-rp-test-input:focus {
+    outline: none;
+    border-color: #8bc34a;
+    box-shadow: 0 0 0 3px rgba(139, 195, 74, 0.18);
+}
+.coach-rp-test-preview {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    min-height: 42px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    background: rgba(33, 150, 243, 0.08);
+}
+.coach-rp-test-pace {
+    color: #0d47a1;
+    font-size: 0.95rem;
+}
+.coach-rp-test-buttons {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+.coach-rp-test-buttons .btn,
+.coach-rp-test-history-actions .btn {
+    width: auto;
+    min-height: 42px;
+    padding: 9px 14px;
+    font-size: 0.8rem;
+}
+.coach-rp-test-cancel,
+.coach-rp-test-delete {
+    background: transparent;
+    border: 1px solid #d16b6b;
+    color: #c62828;
+}
+.coach-rp-test-cancel:hover,
+.coach-rp-test-delete:hover {
+    background: rgba(198, 40, 40, 0.08);
+}
+.coach-rp-test-history-list {
+    display: grid;
+    gap: 10px;
+}
+.coach-rp-test-history-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px;
+    border: 1px solid #e3e3e3;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.92);
+}
+.coach-rp-test-history-main {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+}
+.coach-rp-test-chip-row,
+.coach-rp-test-meta-row,
+.coach-rp-test-history-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+.coach-rp-test-chip {
+    display: inline-flex;
+    align-items: center;
+    min-height: 30px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: #eef3ea;
+    color: #29422b;
+    font-size: 0.82rem;
+    font-weight: 600;
+}
+.coach-rp-test-chip-accent {
+    background: rgba(33, 150, 243, 0.12);
+    color: #1458b2;
+}
+.coach-rp-test-meta-row {
+    color: #667085;
+    font-size: 0.82rem;
+}
+.coach-rp-test-empty {
+    padding: 10px 0 4px;
+}
 
 .coach-reprove {
     background: #ef5350;
@@ -766,6 +919,11 @@ body.dark-mode .coach-groups-section {
     border-color: #33424c;
 }
 
+body.dark-mode .coach-groups-shooting {
+    background: linear-gradient(135deg, #1b2733 0%, #1a2430 100%);
+    border-color: #314559;
+}
+
 body.dark-mode .coach-groups-section h3 {
     color: #e1f5c4;
 }
@@ -773,6 +931,10 @@ body.dark-mode .coach-groups-section h3 {
 body.dark-mode .coach-group-card {
     background: #161d22;
     border-color: #2f3d47;
+}
+
+body.dark-mode .shooting-group-card {
+    border-left-color: #6ab9ff;
 }
 
 body.dark-mode .coach-group-card h4 {
@@ -835,6 +997,48 @@ body.dark-mode .coach-rp-item {
     background: #121212;
     border-color: #2e2e2e;
 }
+body.dark-mode .coach-rp-test-panel {
+    background: linear-gradient(180deg, rgba(61, 87, 33, 0.22), rgba(18, 18, 18, 0.92));
+    border-color: #415028;
+}
+body.dark-mode .coach-rp-test-title {
+    color: #eef8dc;
+}
+body.dark-mode .coach-rp-test-mode {
+    background: rgba(100, 181, 246, 0.16);
+    color: #bbdefb;
+}
+body.dark-mode .coach-rp-test-input {
+    background: #101010;
+    color: #f0f0f0;
+    border-color: #3a3a3a;
+}
+body.dark-mode .coach-rp-test-preview {
+    background: rgba(100, 181, 246, 0.12);
+}
+body.dark-mode .coach-rp-test-pace {
+    color: #d4e7ff;
+}
+body.dark-mode .coach-rp-test-history-item {
+    background: #151515;
+    border-color: #2f2f2f;
+}
+body.dark-mode .coach-rp-test-chip {
+    background: #263126;
+    color: #d9efc2;
+}
+body.dark-mode .coach-rp-test-chip-accent {
+    background: rgba(100, 181, 246, 0.18);
+    color: #d6eaff;
+}
+body.dark-mode .coach-rp-test-meta-row {
+    color: #b7b7b7;
+}
+body.dark-mode .coach-rp-test-cancel,
+body.dark-mode .coach-rp-test-delete {
+    border-color: #a85a5a;
+    color: #ffc7c7;
+}
 
 body.dark-mode .coach-bio-grid,
 body.dark-mode .coach-metrics {
@@ -883,6 +1087,14 @@ body.dark-mode .coach-metrics {
     .coach-rp-header {
         flex-direction: column;
         align-items: flex-start;
+    }
+    .coach-rp-test-controls {
+        grid-template-columns: 1fr;
+    }
+    .coach-rp-test-buttons,
+    .coach-rp-test-history-item {
+        flex-direction: column;
+        align-items: stretch;
     }
 }
 
@@ -1652,6 +1864,73 @@ body.dark-mode .nav-link.active {
     margin: 0 auto;
 }
 
+.home-stats-section {
+    margin-bottom: 32px;
+}
+
+.home-stats-section .card {
+    padding: 28px;
+}
+
+.home-stats-intro {
+    margin-bottom: 10px;
+}
+
+.home-resumo-aviso {
+    margin: 0 0 14px;
+}
+
+.home-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.home-stats-grid.home-stats-grid-no-ranking {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.home-stat-card {
+    border: 1px solid #dce7f1;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #f7fbff 0%, #f2f9ef 100%);
+    padding: 14px;
+    min-height: 110px;
+}
+
+.home-stat-label {
+    display: block;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #4b6073;
+    margin-bottom: 8px;
+}
+
+.home-stat-value {
+    display: block;
+    font-size: 1.3rem;
+    line-height: 1.35;
+    color: #243645;
+}
+
+.home-stat-value-small {
+    font-size: 1rem;
+}
+
+@media (max-width: 768px) {
+    .home-stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .home-stats-grid.home-stats-grid-no-ranking {
+        grid-template-columns: 1fr;
+    }
+
+    .home-stat-card {
+        min-height: auto;
+    }
+}
+
 body.dark-mode .card,
 body.dark-mode .feature-card,
 body.dark-mode .testimonial-card {
@@ -1672,6 +1951,23 @@ body.dark-mode .welcome-text,
 body.dark-mode .feature-card p,
 body.dark-mode .testimonial-card p {
     color: #cfcfcf;
+}
+
+body.dark-mode .home-stat-card {
+    border-color: #33424c;
+    background: linear-gradient(135deg, #1f2a31 0%, #1e2a1f 100%);
+}
+
+body.dark-mode .home-stat-label {
+    color: #b8cfde;
+}
+
+body.dark-mode .home-stat-value {
+    color: #e8f5d1;
+}
+
+body.dark-mode .home-resumo-aviso {
+    color: #b8c2cf;
 }
 
 body.dark-mode .footer {
@@ -1740,6 +2036,41 @@ body.dark-mode .modal {
 body.dark-mode .modal-content {
     background: #1f1f1f;
     color: #e8e8e8;
+}
+
+body.dark-mode .modal-content h3 {
+    color: #cfe9a8;
+}
+
+body.dark-mode .modal-subtitle {
+    color: #c3cad6;
+}
+
+body.dark-mode .modal-text {
+    color: #e6ebf3;
+}
+
+body.dark-mode .modal-info {
+    color: #b2b8c3;
+}
+
+body.dark-mode .modal-warning {
+    background: linear-gradient(90deg, rgba(144, 202, 86, 0.2), rgba(92, 143, 67, 0.14));
+    border-left-color: #9cd45c;
+    color: #eef7df;
+}
+
+body.dark-mode .modal-warning strong {
+    color: #d7f2b5;
+}
+
+body.dark-mode .modal-actions .btn-secondary {
+    background: #30363f;
+    color: #f1f4f8;
+}
+
+body.dark-mode .modal-actions .btn-secondary:hover {
+    background: #3a4250;
 }
 
 body.dark-mode .close {
