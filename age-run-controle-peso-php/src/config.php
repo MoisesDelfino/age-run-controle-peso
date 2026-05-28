@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-function loadEnv(string $path): void
+function loadEnv(string $path, bool $overrideExisting = false): void
 {
     if (!is_file($path)) {
         return;
@@ -26,6 +26,16 @@ function loadEnv(string $path): void
 
         $key = trim($parts[0]);
         $value = trim($parts[1]);
+
+        if (!$overrideExisting) {
+            $alreadySet = array_key_exists($key, $_ENV)
+                || array_key_exists($key, $_SERVER)
+                || getenv($key) !== false;
+
+            if ($alreadySet) {
+                continue;
+            }
+        }
 
         if ($value !== '' && (($value[0] === '"' && str_ends_with($value, '"')) || ($value[0] === "'" && str_ends_with($value, "'")))) {
             $value = substr($value, 1, -1);
@@ -51,7 +61,14 @@ function appConfig(): array
         return $config;
     }
 
-    loadEnv(dirname(__DIR__) . '/.env');
+    $envCandidates = [
+        dirname(__DIR__) . '/.env',
+        dirname(__DIR__, 2) . '/.env',
+    ];
+
+    foreach ($envCandidates as $envPath) {
+        loadEnv($envPath);
+    }
 
     $config = [
         'app_env' => (string) env('APP_ENV', 'production'),
