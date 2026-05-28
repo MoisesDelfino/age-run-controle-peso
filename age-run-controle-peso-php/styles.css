@@ -1917,6 +1917,66 @@ body.dark-mode .nav-link.active {
     font-size: 1rem;
 }
 
+.home-rps-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.home-rp-item {
+    border: 1px solid #dbe8f1;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.45);
+    padding: 8px 10px;
+}
+
+.home-rp-distance {
+    display: block;
+    font-size: 0.74rem;
+    color: #5e7588;
+    margin-bottom: 2px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+}
+
+.home-rp-time {
+    display: block;
+    font-size: 1rem;
+    color: #203745;
+}
+
+.home-levels-section {
+    margin-top: 14px;
+    border-top: 1px solid #e2edf6;
+    padding-top: 14px;
+}
+
+.home-levels-section h3 {
+    font-size: 1rem;
+    margin: 0 0 10px;
+    color: #32495a;
+}
+
+.home-levels-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.home-level-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #dbe8f1;
+    border-radius: 999px;
+    background: #f7fbff;
+    color: #304b5f;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 7px 10px;
+    white-space: nowrap;
+}
+
 @media (max-width: 768px) {
     .home-stats-grid {
         grid-template-columns: 1fr;
@@ -1928,6 +1988,11 @@ body.dark-mode .nav-link.active {
 
     .home-stat-card {
         min-height: auto;
+    }
+
+    .home-rps-grid,
+    .home-levels-grid {
+        grid-template-columns: 1fr;
     }
 }
 
@@ -1964,6 +2029,33 @@ body.dark-mode .home-stat-label {
 
 body.dark-mode .home-stat-value {
     color: #e8f5d1;
+}
+
+body.dark-mode .home-rp-item {
+    border-color: #36506a;
+    background: rgba(22, 33, 40, 0.6);
+}
+
+body.dark-mode .home-rp-distance {
+    color: #a7bfd2;
+}
+
+body.dark-mode .home-rp-time {
+    color: #e4f1ff;
+}
+
+body.dark-mode .home-levels-section {
+    border-top-color: #2b3e4d;
+}
+
+body.dark-mode .home-levels-section h3 {
+    color: #d6e7f5;
+}
+
+body.dark-mode .home-level-chip {
+    border-color: #36506a;
+    background: #1c2a34;
+    color: #cfe3f3;
 }
 
 body.dark-mode .home-resumo-aviso {

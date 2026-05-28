@@ -73,20 +73,21 @@ function formatPeso(value) {
 }
 
 function formatRpsResumo(rpsData) {
-    if (!rpsData || typeof rpsData !== 'object') {
-        return '-';
-    }
-
     const blocos = [
-        ['5K', rpsData.rp_5k_formatado],
-        ['10K', rpsData.rp_10k_formatado],
-        ['21K', rpsData.rp_21k_formatado],
-        ['42K', rpsData.rp_42k_formatado]
+        ['5K', rpsData?.rp_5k_formatado || '-'],
+        ['10K', rpsData?.rp_10k_formatado || '-'],
+        ['21K', rpsData?.rp_21k_formatado || '-'],
+        ['42K', rpsData?.rp_42k_formatado || '-']
     ];
 
     return blocos
-        .map(([label, value]) => `${label}: ${value || '-'}`)
-        .join(' | ');
+        .map(([label, value]) => `
+            <div class="home-rp-item">
+                <span class="home-rp-distance">${label}</span>
+                <strong class="home-rp-time">${value}</strong>
+            </div>
+        `)
+        .join('');
 }
 
 function formatGrupoTiroResumo(gruposTiroData) {
@@ -172,7 +173,7 @@ async function carregarResumoHome() {
         }
 
         if (homeRpsResumo) {
-            homeRpsResumo.textContent = rpsResp?.ok ? formatRpsResumo(rpsData) : '-';
+            homeRpsResumo.innerHTML = formatRpsResumo(rpsResp?.ok ? rpsData : null);
         }
 
         if (homeGrupoTiroResumo) {
