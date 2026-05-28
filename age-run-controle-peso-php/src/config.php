@@ -67,16 +67,22 @@ function appConfig(): array
         return $config;
     }
 
+    $isDevPath = isDevRequestPath();
+
     $envCandidates = [
-        dirname(__DIR__) . '/.env',
-        dirname(__DIR__, 2) . '/.env',
+        [dirname(__DIR__) . '/.env', false],
+        [dirname(__DIR__, 2) . '/.env', false],
     ];
 
-    foreach ($envCandidates as $envPath) {
-        loadEnv($envPath);
+    if ($isDevPath) {
+        $envCandidates[] = [dirname(__DIR__) . '/.env.dev', true];
+        $envCandidates[] = [dirname(__DIR__, 2) . '/dev/.env', true];
+        $envCandidates[] = [dirname(__DIR__, 2) . '/.env.dev', true];
     }
 
-    $isDevPath = isDevRequestPath();
+    foreach ($envCandidates as [$envPath, $overrideExisting]) {
+        loadEnv($envPath, $overrideExisting);
+    }
 
     $dbPrefix = $isDevPath ? 'DEV_DB_' : 'DB_';
 
