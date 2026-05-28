@@ -14,6 +14,7 @@ const groupSameLevel = document.getElementById('groupSameLevel');
 const groupHigherLevel = document.getElementById('groupHigherLevel');
 const groupLowerLevel = document.getElementById('groupLowerLevel');
 const groupsNotice = document.getElementById('groupsNotice');
+const welcomeSection = document.querySelector('.welcome-section');
 
 const statusBadgeMap = {
     rp_5k_status: document.getElementById('statusRp5k'),
@@ -131,6 +132,12 @@ function fillRpInputs(data) {
         rpPaceSummary.textContent = data.ritmo_medio_formatado
             ? `Seu ritmo médio estimado: ${data.ritmo_medio_formatado}`
             : '';
+    }
+
+    const rp5kSeconds = Number(data?.rp_5k);
+    const hasRp5k = Number.isFinite(rp5kSeconds) && rp5kSeconds > 0;
+    if (welcomeSection) {
+        welcomeSection.style.display = hasRp5k ? 'none' : '';
     }
 
     renderRpStatuses(data);
