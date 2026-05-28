@@ -1,0 +1,20 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="64" y1="32" x2="448" y2="480" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0f172a"/>
+      <stop offset="1" stop-color="#020617"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="132" y1="128" x2="380" y2="384" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#22c55e"/>
+      <stop offset="1" stop-color="#14b8a6"/>
+    </linearGradient>
+  </defs>
+  <rect x="16" y="16" width="480" height="480" rx="112" fill="url(#bg)"/>
+  <circle cx="256" cy="208" r="126" fill="url(#accent)" opacity="0.18"/>
+  <path d="M120 356C156 300 199 270 257 270C315 270 358 300 392 356" stroke="url(#accent)" stroke-width="20" stroke-linecap="round"/>
+  <path d="M166 150C188 134 220 124 256 124C292 124 324 134 346 150" stroke="#e2e8f0" stroke-width="18" stroke-linecap="round" opacity="0.9"/>
+  <path d="M184 220C184 178 218 146 260 146C302 146 336 178 336 220C336 262 302 294 260 294C218 294 184 262 184 220Z" fill="#e2e8f0" opacity="0.10"/>
+  <path d="M210 186H302L285 208H233L216 228H288L274 248H202L210 186Z" fill="#f8fafc"/>
+  <path d="M244 250L304 250L262 314H225L244 250Z" fill="url(#accent)"/>
+  <text x="256" y="402" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="54" font-weight="700" fill="#f8fafc" letter-spacing="4">AGE RUN</text>
+</svg>

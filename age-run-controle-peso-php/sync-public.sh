@@ -15,6 +15,7 @@ auth.js
 bioimpedancia.html
 bioimpedancia.js
 bioimpedancia-scanner.js
+apple-touch-icon.png
 cadastro.html
 effects.css
 grupos-treino.html
@@ -30,6 +31,11 @@ ranking.html
 ranking.js
 recuperar-senha.html
 recuperar-senha.js
+manifest.json
+pwa-icon.svg
+icon-192.png
+icon-512.png
+sw.js
 styles.css
 theme.js
 treinador.html
