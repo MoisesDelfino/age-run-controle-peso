@@ -1894,7 +1894,7 @@ body.dark-mode .nav-link.active {
 }
 
 .home-stats-grid.home-stats-grid-no-ranking {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .home-stat-card {
@@ -1922,6 +1922,10 @@ body.dark-mode .nav-link.active {
 
 .home-stat-value-small {
     font-size: 1rem;
+}
+
+.home-rps-card {
+    grid-column: 1 / -1;
 }
 
 .home-rps-grid {

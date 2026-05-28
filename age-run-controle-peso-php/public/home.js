@@ -9,7 +9,6 @@ const btnLogout = document.getElementById('btnLogout');
 const homePesoPerdido = document.getElementById('homePesoPerdido');
 const homeRankingPosicao = document.getElementById('homeRankingPosicao');
 const homeRpsResumo = document.getElementById('homeRpsResumo');
-const homeGrupoTiroResumo = document.getElementById('homeGrupoTiroResumo');
 const homeResumoAviso = document.getElementById('homeResumoAviso');
 const homeRankingCard = document.getElementById('homeRankingCard');
 const homeStatsIntro = document.getElementById('homeStatsIntro');
@@ -89,18 +88,6 @@ function formatRpsResumo(rpsData) {
             </div>
         `)
         .join('');
-}
-
-function formatGrupoTiroResumo(gruposTiroData) {
-    const grupo = gruposTiroData?.meu_grupo;
-    if (!grupo) {
-        return '-';
-    }
-
-    const nome = grupo.nome_nivel || 'Grupo de tiro';
-    const melhor = grupo.melhor_pace_formatado || '-';
-    const pior = grupo.pior_pace_formatado || '-';
-    return `${nome} (${melhor} a ${pior})`;
 }
 
 function normalizeNivelLabel(text) {
@@ -219,12 +206,6 @@ async function carregarResumoHome() {
 
         if (homeRpsResumo) {
             homeRpsResumo.innerHTML = formatRpsResumo(rpsResp?.ok ? rpsData : null);
-        }
-
-        if (homeGrupoTiroResumo) {
-            homeGrupoTiroResumo.textContent = gruposTiroResp?.ok
-                ? formatGrupoTiroResumo(gruposTiroData)
-                : '-';
         }
 
         marcarNivelAtual(gruposTiroResp?.ok ? gruposTiroData : null);
