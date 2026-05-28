@@ -641,8 +641,10 @@ function requireTrainerAuth(): int
     return $userId;
 }
 
-ensureUsuariosCompatibilityColumns();
-ensureRpTestesTable();
+if (str_starts_with($path, '/api/')) {
+    ensureUsuariosCompatibilityColumns();
+    ensureRpTestesTable();
+}
 
 if ($method === 'POST' && $path === '/api/auth/cadastro') {
     $input = jsonInput();
