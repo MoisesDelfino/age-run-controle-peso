@@ -87,6 +87,19 @@
         return /iphone|ipad|ipod/i.test(window.navigator.userAgent) && !window.MSStream;
     }
 
+    function isMobileInstallDevice() {
+        if (isIosDevice()) {
+            return true;
+        }
+
+        if (window.navigator.userAgentData && typeof window.navigator.userAgentData.mobile === 'boolean') {
+            return window.navigator.userAgentData.mobile;
+        }
+
+        return /android|iphone|ipad|ipod|iemobile|opera mini|mobile/i.test(window.navigator.userAgent)
+            || (window.matchMedia('(pointer: coarse)').matches && window.matchMedia('(hover: none)').matches);
+    }
+
     function hasDismissedPwaBanner() {
         try {
             return localStorage.getItem(PWA_DISMISSED_KEY) === '1';
@@ -334,6 +347,10 @@
         ensurePwaHeadTags();
         registerServiceWorker();
 
+        if (!isMobileInstallDevice()) {
+            return;
+        }
+
         if (hasDismissedPwaBanner()) {
             return;
         }
@@ -350,6 +367,10 @@
     }
 
     window.addEventListener('beforeinstallprompt', (event) => {
+        if (!isMobileInstallDevice()) {
+            return;
+        }
+
         event.preventDefault();
         deferredInstallPrompt = event;
 
