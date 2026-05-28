@@ -118,6 +118,71 @@ function safeDbColumnExists(string $table, string $column): bool
     }
 }
 
+function insertRpTesteHistoricoCompat(
+    int $alvoUsuarioId,
+    int $treinadorId,
+    int $tempoSegundos,
+    float $distanciaKm,
+    float $paceSegundosKm
+): int {
+    $baseValues = [
+        'usuario_id' => $alvoUsuarioId,
+        'treinador_id' => $treinadorId,
+        'prova' => 'teste',
+        'tempo_segundos' => $tempoSegundos,
+        'distancia_km' => $distanciaKm,
+        'pace_segundos_km' => $paceSegundosKm,
+    ];
+
+    $candidates = [
+        ['usuario_id', 'treinador_id', 'prova', 'tempo_segundos', 'distancia_km', 'pace_segundos_km'],
+        ['usuario_id', 'treinador_id', 'tempo_segundos', 'distancia_km', 'pace_segundos_km'],
+        ['usuario_id', 'treinador_id', 'prova', 'tempo_segundos', 'distancia_km'],
+        ['usuario_id', 'treinador_id', 'prova', 'tempo_segundos', 'pace_segundos_km'],
+        ['usuario_id', 'treinador_id', 'tempo_segundos', 'distancia_km'],
+        ['usuario_id', 'treinador_id', 'tempo_segundos', 'pace_segundos_km'],
+        ['usuario_id', 'treinador_id', 'tempo_segundos'],
+    ];
+
+    $lastError = null;
+
+    $attemptInsert = static function (array $columns) use ($baseValues): void {
+        $placeholders = array_map(static fn ($column) => ':' . $column, $columns);
+        $params = [];
+        foreach ($columns as $column) {
+            $params[':' . $column] = $baseValues[$column];
+        }
+
+        dbExecute(
+            'INSERT INTO rp_testes_historico (' . implode(', ', $columns) . ') VALUES (' . implode(', ', $placeholders) . ')',
+            $params
+        );
+    };
+
+    $ensureRetried = false;
+
+    foreach ($candidates as $columns) {
+        try {
+            $attemptInsert($columns);
+            return dbLastInsertId();
+        } catch (Throwable $e) {
+            $lastError = $e;
+            $message = strtolower($e->getMessage());
+
+            if (!$ensureRetried && (
+                str_contains($message, 'no such table')
+                || str_contains($message, "doesn't exist")
+                || str_contains($message, 'does not exist')
+            )) {
+                $ensureRetried = true;
+                ensureRpTestesTable();
+            }
+        }
+    }
+
+    throw ($lastError ?? new RuntimeException('Falha ao inserir teste no histórico'));
+}
+
 function ensureUsuariosCompatibilityColumns(): void
 {
     try {
@@ -1609,40 +1674,12 @@ if ($method === 'POST' && preg_match('#^/api/treinador/usuarios/(\d+)/testes$#',
 
     $paceSegundosKm = $tempoSegundos / $distanciaKm;
 
-    $hasProva = safeDbColumnExists('rp_testes_historico', 'prova');
-    $hasDistancia = safeDbColumnExists('rp_testes_historico', 'distancia_km');
-    $hasPace = safeDbColumnExists('rp_testes_historico', 'pace_segundos_km');
-
-    $columns = ['usuario_id', 'treinador_id', 'tempo_segundos'];
-    $params = [
-        ':usuario_id' => $alvoUsuarioId,
-        ':treinador_id' => $treinadorId,
-        ':tempo_segundos' => $tempoSegundos,
-    ];
-
-    if ($hasProva) {
-        $columns[] = 'prova';
-        $params[':prova'] = 'teste';
+    try {
+        $testeId = insertRpTesteHistoricoCompat($alvoUsuarioId, $treinadorId, $tempoSegundos, $distanciaKm, $paceSegundosKm);
+    } catch (Throwable $e) {
+        error_log('[AgeRun PHP] Falha ao salvar teste: ' . $e->getMessage());
+        jsonResponse(['error' => 'Erro ao salvar teste'], 500);
     }
-
-    if ($hasDistancia) {
-        $columns[] = 'distancia_km';
-        $params[':distancia_km'] = $distanciaKm;
-    }
-
-    if ($hasPace) {
-        $columns[] = 'pace_segundos_km';
-        $params[':pace_segundos_km'] = $paceSegundosKm;
-    }
-
-    $placeholders = array_map(static fn ($column) => ':' . $column, $columns);
-
-    dbExecute(
-        'INSERT INTO rp_testes_historico (' . implode(', ', $columns) . ')
-         VALUES (' . implode(', ', $placeholders) . ')',
-        $params
-    );
-    $testeId = dbLastInsertId();
 
     jsonResponse([
         'success' => true,
