@@ -1898,6 +1898,10 @@ body.dark-mode .nav-link.active {
     grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.home-stats-grid.home-stats-grid-no-ranking .home-stat-card:first-child {
+    grid-column: 1 / -1;
+}
+
 .home-stat-card {
     border: 1px solid #dce7f1;
     border-radius: 12px;
