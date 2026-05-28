@@ -110,133 +110,141 @@ function dbColumnExists(string $table, string $column): bool
 
 function ensureUsuariosCompatibilityColumns(): void
 {
-    $driver = strtolower((string) (appConfig()['db']['driver'] ?? 'mysql'));
-
-    $missing = [];
-    $targetColumns = [
-        'perfil' => "VARCHAR(20) DEFAULT 'aluno'",
-        'rp_5k' => 'INTEGER DEFAULT NULL',
-        'rp_10k' => 'INTEGER DEFAULT NULL',
-        'rp_21k' => 'INTEGER DEFAULT NULL',
-        'rp_42k' => 'INTEGER DEFAULT NULL',
-        'rp_5k_status' => "VARCHAR(20) DEFAULT NULL",
-        'rp_10k_status' => "VARCHAR(20) DEFAULT NULL",
-        'rp_21k_status' => "VARCHAR(20) DEFAULT NULL",
-        'rp_42k_status' => "VARCHAR(20) DEFAULT NULL",
-    ];
-
-    foreach ($targetColumns as $column => $definition) {
-        if (!dbColumnExists('usuarios', $column)) {
-            $missing[$column] = $definition;
-        }
-    }
-
-    foreach ($missing as $column => $definition) {
-        try {
-            if ($driver === 'sqlite') {
-                dbExecute("ALTER TABLE usuarios ADD COLUMN {$column} {$definition}");
-            } elseif ($driver === 'pgsql' || $driver === 'postgres' || $driver === 'postgresql') {
-                dbExecute("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS {$column} {$definition}");
-            } else {
-                dbExecute("ALTER TABLE usuarios ADD COLUMN {$column} {$definition}");
-            }
-        } catch (Throwable $e) {
-            // Coluna pode ter sido criada em corrida por outra requisição.
-        }
-    }
-
     try {
-        dbExecute("UPDATE usuarios SET perfil = 'aluno' WHERE perfil IS NULL OR TRIM(perfil) = ''");
+        $driver = strtolower((string) (appConfig()['db']['driver'] ?? 'mysql'));
+
+        $missing = [];
+        $targetColumns = [
+            'perfil' => "VARCHAR(20) DEFAULT 'aluno'",
+            'rp_5k' => 'INTEGER DEFAULT NULL',
+            'rp_10k' => 'INTEGER DEFAULT NULL',
+            'rp_21k' => 'INTEGER DEFAULT NULL',
+            'rp_42k' => 'INTEGER DEFAULT NULL',
+            'rp_5k_status' => "VARCHAR(20) DEFAULT NULL",
+            'rp_10k_status' => "VARCHAR(20) DEFAULT NULL",
+            'rp_21k_status' => "VARCHAR(20) DEFAULT NULL",
+            'rp_42k_status' => "VARCHAR(20) DEFAULT NULL",
+        ];
+
+        foreach ($targetColumns as $column => $definition) {
+            if (!dbColumnExists('usuarios', $column)) {
+                $missing[$column] = $definition;
+            }
+        }
+
+        foreach ($missing as $column => $definition) {
+            try {
+                if ($driver === 'sqlite') {
+                    dbExecute("ALTER TABLE usuarios ADD COLUMN {$column} {$definition}");
+                } elseif ($driver === 'pgsql' || $driver === 'postgres' || $driver === 'postgresql') {
+                    dbExecute("ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS {$column} {$definition}");
+                } else {
+                    dbExecute("ALTER TABLE usuarios ADD COLUMN {$column} {$definition}");
+                }
+            } catch (Throwable $e) {
+                // Coluna pode ter sido criada em corrida por outra requisição.
+            }
+        }
+
+        try {
+            dbExecute("UPDATE usuarios SET perfil = 'aluno' WHERE perfil IS NULL OR TRIM(perfil) = ''");
+        } catch (Throwable $e) {
+            // Ignorar em caso de ambientes sem coluna ainda visível.
+        }
     } catch (Throwable $e) {
-        // Ignorar em caso de ambientes sem coluna ainda visível.
+        error_log('[AgeRun PHP] ensureUsuariosCompatibilityColumns ignorado: ' . $e->getMessage());
     }
 }
 
 function ensureRpTestesTable(): void
 {
-    $driver = strtolower((string) (appConfig()['db']['driver'] ?? 'mysql'));
-
-    if ($driver === 'sqlite') {
-        dbExecute(
-            'CREATE TABLE IF NOT EXISTS rp_testes_historico (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                usuario_id INTEGER NOT NULL,
-                treinador_id INTEGER NOT NULL,
-                prova TEXT NULL,
-                tempo_segundos INTEGER NOT NULL,
-                distancia_km REAL NOT NULL,
-                pace_segundos_km REAL NOT NULL,
-                criado_em DATETIME DEFAULT CURRENT_TIMESTAMP
-            )'
-        );
-        if (!dbColumnExists('rp_testes_historico', 'prova')) {
-            dbExecute('ALTER TABLE rp_testes_historico ADD COLUMN prova TEXT');
-        }
-        if (!dbColumnExists('rp_testes_historico', 'distancia_km')) {
-            dbExecute('ALTER TABLE rp_testes_historico ADD COLUMN distancia_km REAL');
-        }
-        dbExecute('CREATE INDEX IF NOT EXISTS idx_rp_testes_usuario_data ON rp_testes_historico(usuario_id, criado_em DESC)');
-        return;
-    }
-
-    if ($driver === 'pgsql' || $driver === 'postgres' || $driver === 'postgresql') {
-        dbExecute(
-            'CREATE TABLE IF NOT EXISTS rp_testes_historico (
-                id BIGSERIAL PRIMARY KEY,
-                usuario_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
-                treinador_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
-                prova VARCHAR(20) NULL,
-                tempo_segundos INTEGER NOT NULL,
-                distancia_km DOUBLE PRECISION NOT NULL,
-                pace_segundos_km DOUBLE PRECISION NOT NULL,
-                criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )'
-        );
-        if (!dbColumnExists('rp_testes_historico', 'prova')) {
-            dbExecute('ALTER TABLE rp_testes_historico ADD COLUMN IF NOT EXISTS prova VARCHAR(20)');
-        }
-        if (!dbColumnExists('rp_testes_historico', 'distancia_km')) {
-            dbExecute('ALTER TABLE rp_testes_historico ADD COLUMN IF NOT EXISTS distancia_km DOUBLE PRECISION');
-        }
-        dbExecute('CREATE INDEX IF NOT EXISTS idx_rp_testes_usuario_data ON rp_testes_historico(usuario_id, criado_em DESC)');
-        return;
-    }
-
-    dbExecute(
-        'CREATE TABLE IF NOT EXISTS rp_testes_historico (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            usuario_id INT NOT NULL,
-            treinador_id INT NOT NULL,
-            prova VARCHAR(20) NULL,
-            tempo_segundos INT NOT NULL,
-            distancia_km DECIMAL(10,4) NOT NULL,
-            pace_segundos_km DECIMAL(10,4) NOT NULL,
-            criado_em DATETIME DEFAULT CURRENT_TIMESTAMP,
-            CONSTRAINT fk_rp_testes_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
-            CONSTRAINT fk_rp_testes_treinador FOREIGN KEY (treinador_id) REFERENCES usuarios(id) ON DELETE CASCADE
-        )'
-    );
-
-    if (!dbColumnExists('rp_testes_historico', 'prova')) {
-        try {
-            dbExecute('ALTER TABLE rp_testes_historico ADD COLUMN prova VARCHAR(20) NULL AFTER treinador_id');
-        } catch (Throwable $e) {
-            // Coluna pode ter sido criada em corrida.
-        }
-    }
-
-    if (!dbColumnExists('rp_testes_historico', 'distancia_km')) {
-        try {
-            dbExecute('ALTER TABLE rp_testes_historico ADD COLUMN distancia_km DECIMAL(10,4) NULL AFTER tempo_segundos');
-        } catch (Throwable $e) {
-            // Coluna pode ter sido criada em corrida.
-        }
-    }
-
     try {
-        dbExecute('CREATE INDEX idx_rp_testes_usuario_data ON rp_testes_historico(usuario_id, criado_em)');
+        $driver = strtolower((string) (appConfig()['db']['driver'] ?? 'mysql'));
+
+        if ($driver === 'sqlite') {
+            dbExecute(
+                'CREATE TABLE IF NOT EXISTS rp_testes_historico (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    usuario_id INTEGER NOT NULL,
+                    treinador_id INTEGER NOT NULL,
+                    prova TEXT NULL,
+                    tempo_segundos INTEGER NOT NULL,
+                    distancia_km REAL NOT NULL,
+                    pace_segundos_km REAL NOT NULL,
+                    criado_em DATETIME DEFAULT CURRENT_TIMESTAMP
+                )'
+            );
+            if (!dbColumnExists('rp_testes_historico', 'prova')) {
+                dbExecute('ALTER TABLE rp_testes_historico ADD COLUMN prova TEXT');
+            }
+            if (!dbColumnExists('rp_testes_historico', 'distancia_km')) {
+                dbExecute('ALTER TABLE rp_testes_historico ADD COLUMN distancia_km REAL');
+            }
+            dbExecute('CREATE INDEX IF NOT EXISTS idx_rp_testes_usuario_data ON rp_testes_historico(usuario_id, criado_em DESC)');
+            return;
+        }
+
+        if ($driver === 'pgsql' || $driver === 'postgres' || $driver === 'postgresql') {
+            dbExecute(
+                'CREATE TABLE IF NOT EXISTS rp_testes_historico (
+                    id BIGSERIAL PRIMARY KEY,
+                    usuario_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+                    treinador_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+                    prova VARCHAR(20) NULL,
+                    tempo_segundos INTEGER NOT NULL,
+                    distancia_km DOUBLE PRECISION NOT NULL,
+                    pace_segundos_km DOUBLE PRECISION NOT NULL,
+                    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )'
+            );
+            if (!dbColumnExists('rp_testes_historico', 'prova')) {
+                dbExecute('ALTER TABLE rp_testes_historico ADD COLUMN IF NOT EXISTS prova VARCHAR(20)');
+            }
+            if (!dbColumnExists('rp_testes_historico', 'distancia_km')) {
+                dbExecute('ALTER TABLE rp_testes_historico ADD COLUMN IF NOT EXISTS distancia_km DOUBLE PRECISION');
+            }
+            dbExecute('CREATE INDEX IF NOT EXISTS idx_rp_testes_usuario_data ON rp_testes_historico(usuario_id, criado_em DESC)');
+            return;
+        }
+
+        dbExecute(
+            'CREATE TABLE IF NOT EXISTS rp_testes_historico (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                usuario_id INT NOT NULL,
+                treinador_id INT NOT NULL,
+                prova VARCHAR(20) NULL,
+                tempo_segundos INT NOT NULL,
+                distancia_km DECIMAL(10,4) NOT NULL,
+                pace_segundos_km DECIMAL(10,4) NOT NULL,
+                criado_em DATETIME DEFAULT CURRENT_TIMESTAMP,
+                CONSTRAINT fk_rp_testes_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+                CONSTRAINT fk_rp_testes_treinador FOREIGN KEY (treinador_id) REFERENCES usuarios(id) ON DELETE CASCADE
+            )'
+        );
+
+        if (!dbColumnExists('rp_testes_historico', 'prova')) {
+            try {
+                dbExecute('ALTER TABLE rp_testes_historico ADD COLUMN prova VARCHAR(20) NULL AFTER treinador_id');
+            } catch (Throwable $e) {
+                // Coluna pode ter sido criada em corrida.
+            }
+        }
+
+        try {
+            if (!dbColumnExists('rp_testes_historico', 'distancia_km')) {
+                dbExecute('ALTER TABLE rp_testes_historico ADD COLUMN distancia_km DECIMAL(10,4) NULL AFTER tempo_segundos');
+            }
+        } catch (Throwable $e) {
+            // Coluna pode ter sido criada em corrida.
+        }
+
+        try {
+            dbExecute('CREATE INDEX idx_rp_testes_usuario_data ON rp_testes_historico(usuario_id, criado_em)');
+        } catch (Throwable $e) {
+            // Índice já pode existir.
+        }
     } catch (Throwable $e) {
-        // Índice já pode existir.
+        error_log('[AgeRun PHP] ensureRpTestesTable ignorado: ' . $e->getMessage());
     }
 }
 
