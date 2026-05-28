@@ -2052,16 +2052,21 @@ if ($method === 'PUT' && preg_match('#^/api/treinador/usuarios/(\d+)/testes/(\d+
 
     $paceSegundosKm = $tempoSegundos / $distanciaKm;
 
+    $hasTreinador = safeDbColumnExists('rp_testes_historico', 'treinador_id');
     $hasProva = safeDbColumnExists('rp_testes_historico', 'prova');
     $hasDistancia = safeDbColumnExists('rp_testes_historico', 'distancia_km');
     $hasPace = safeDbColumnExists('rp_testes_historico', 'pace_segundos_km');
 
-    $setParts = ['treinador_id = :treinador_id', 'tempo_segundos = :tempo_segundos'];
+    $setParts = ['tempo_segundos = :tempo_segundos'];
     $params = [
-        ':treinador_id' => $treinadorId,
         ':tempo_segundos' => $tempoSegundos,
         ':id' => $testeId,
     ];
+
+    if ($hasTreinador) {
+        $setParts[] = 'treinador_id = :treinador_id';
+        $params[':treinador_id'] = $treinadorId;
+    }
 
     if ($hasProva) {
         $setParts[] = 'prova = :prova';
@@ -2078,12 +2083,38 @@ if ($method === 'PUT' && preg_match('#^/api/treinador/usuarios/(\d+)/testes/(\d+
         $params[':pace_segundos_km'] = $paceSegundosKm;
     }
 
-    dbExecute(
-        'UPDATE rp_testes_historico
-            SET ' . implode(",\n                ", $setParts) . '
-          WHERE id = :id',
-        $params
-    );
+    try {
+        dbExecute(
+            'UPDATE rp_testes_historico
+                SET ' . implode(",\n                    ", $setParts) . '
+              WHERE id = :id',
+            $params
+        );
+    } catch (Throwable $e) {
+        $fallbackCandidates = [
+            ['tempo_segundos = :tempo_segundos, distancia_km = :distancia_km, pace_segundos_km = :pace_segundos_km', [':tempo_segundos' => $tempoSegundos, ':distancia_km' => $distanciaKm, ':pace_segundos_km' => $paceSegundosKm, ':id' => $testeId]],
+            ['tempo_segundos = :tempo_segundos, distancia_km = :distancia_km', [':tempo_segundos' => $tempoSegundos, ':distancia_km' => $distanciaKm, ':id' => $testeId]],
+            ['tempo_segundos = :tempo_segundos', [':tempo_segundos' => $tempoSegundos, ':id' => $testeId]],
+        ];
+
+        $updated = false;
+        $attemptErrors = [];
+
+        foreach ($fallbackCandidates as [$setClause, $fallbackParams]) {
+            try {
+                dbExecute('UPDATE rp_testes_historico SET ' . $setClause . ' WHERE id = :id', $fallbackParams);
+                $updated = true;
+                break;
+            } catch (Throwable $inner) {
+                $attemptErrors[] = $inner->getMessage();
+            }
+        }
+
+        if (!$updated) {
+            error_log('[AgeRun PHP] Falha ao atualizar teste (PUT): ' . $e->getMessage() . ' | tentativas: ' . implode(' || ', $attemptErrors));
+            jsonResponse(['error' => 'Erro interno ao atualizar teste'], 500);
+        }
+    }
 
     jsonResponse([
         'success' => true,
