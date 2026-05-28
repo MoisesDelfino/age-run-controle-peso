@@ -255,6 +255,7 @@ try {
         ['nome' => 'Bruno Pace', 'email' => 'bruno@staging.local', 'sexo' => 'masculino'],
         ['nome' => 'Diego Longo', 'email' => 'diego@staging.local', 'sexo' => 'masculino'],
         ['nome' => 'Felipe Sub40', 'email' => 'felipe@staging.local', 'sexo' => 'masculino'],
+        ['nome' => 'Lara Ficticia', 'email' => 'lara.ficticia@staging.local', 'sexo' => 'feminino'],
         ['nome' => 'Ana Ritmo', 'email' => 'ana@staging.local', 'sexo' => 'feminino'],
         ['nome' => 'Julia Progresso', 'email' => 'julia@staging.local', 'sexo' => 'feminino'],
         ['nome' => 'Marina Forca', 'email' => 'marina@staging.local', 'sexo' => 'feminino'],
@@ -266,14 +267,21 @@ try {
     dbExecute("DELETE FROM rp_testes_historico WHERE usuario_id IN (SELECT id FROM usuarios WHERE email LIKE '%@staging.local') OR treinador_id IN (SELECT id FROM usuarios WHERE email LIKE '%@staging.local')");
     dbExecute("DELETE FROM usuarios WHERE email LIKE '%@staging.local'");
 
-    $passwordHash = password_hash('123456', PASSWORD_DEFAULT);
+    $passwordByEmail = [
+        'moisescamposdelfino@gmail.com' => 'Moi@1234',
+        'lara.ficticia@staging.local' => 'Ela@1234',
+    ];
+
+    $resolvePassword = static function (string $email) use ($passwordByEmail): string {
+        return $passwordByEmail[$email] ?? '123456';
+    };
 
     dbExecute(
         'INSERT INTO usuarios (nome, email, senha, sexo) VALUES (:nome, :email, :senha, :sexo)',
         [
             ':nome' => $trainer['nome'],
             ':email' => $trainer['email'],
-            ':senha' => $passwordHash,
+            ':senha' => password_hash($resolvePassword($trainer['email']), PASSWORD_DEFAULT),
             ':sexo' => $trainer['sexo'],
         ]
     );
@@ -288,7 +296,7 @@ try {
                 'UPDATE usuarios SET nome = :nome, senha = :senha, sexo = :sexo WHERE id = :id',
                 [
                     ':nome' => $athlete['nome'],
-                    ':senha' => $passwordHash,
+                    ':senha' => password_hash($resolvePassword($athlete['email']), PASSWORD_DEFAULT),
                     ':sexo' => $athlete['sexo'],
                     ':id' => (int) ($row['id'] ?? 0),
                 ]
@@ -299,7 +307,7 @@ try {
                 [
                     ':nome' => $athlete['nome'],
                     ':email' => $athlete['email'],
-                    ':senha' => $passwordHash,
+                    ':senha' => password_hash($resolvePassword($athlete['email']), PASSWORD_DEFAULT),
                     ':sexo' => $athlete['sexo'],
                 ]
             );
@@ -427,10 +435,15 @@ try {
         'ok' => true,
         'message' => 'Dados ficticios de staging criados com sucesso.',
         'login_padrao' => [
-            'senha' => '123456',
+            'senha_default' => '123456',
+            'senhas_especificas' => [
+                'moisescamposdelfino@gmail.com' => 'Moi@1234',
+                'lara.ficticia@staging.local' => 'Ela@1234',
+            ],
             'exemplos' => [
                 'moisescamposdelfino@gmail.com',
                 'moises@staging.local',
+                'lara.ficticia@staging.local',
                 'ana@staging.local',
                 'treinador@staging.local',
             ],
