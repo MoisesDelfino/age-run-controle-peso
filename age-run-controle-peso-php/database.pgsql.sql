@@ -26,6 +26,18 @@ CREATE TABLE IF NOT EXISTS pesagens (
   excluido INTEGER DEFAULT 0
 );
 
+CREATE TABLE IF NOT EXISTS rp_testes_historico (
+  id BIGSERIAL PRIMARY KEY,
+  usuario_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+  treinador_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+  prova VARCHAR(20) NULL,
+  tempo_segundos INTEGER NOT NULL,
+  distancia_km DOUBLE PRECISION NOT NULL,
+  pace_segundos_km DOUBLE PRECISION NOT NULL,
+  criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE INDEX IF NOT EXISTS idx_pesagens_usuario_id ON pesagens(usuario_id);
 CREATE INDEX IF NOT EXISTS idx_pesagens_data ON pesagens(data_pesagem);
 CREATE INDEX IF NOT EXISTS idx_pesagens_excluido ON pesagens(excluido);
+CREATE INDEX IF NOT EXISTS idx_rp_testes_usuario_data ON rp_testes_historico(usuario_id, criado_em);

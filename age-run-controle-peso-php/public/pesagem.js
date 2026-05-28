@@ -1,7 +1,7 @@
 // Configuração da API
 var API_BASE = API_BASE || (window.location.hostname === 'localhost' 
     ? `http://localhost:${window.location.port}/api`
-    : '/controle/api');
+    : (window.location.pathname.startsWith('/dev') ? '/dev/api' : '/controle/api'));
 
 var usuarioLogado = usuarioLogado || null;
 
@@ -112,7 +112,7 @@ async function verificarSessao() {
         
         if (!data.authenticated) {
             console.log('❌ Usuário não autenticado, redirecionando...');
-            window.location.href = '/controle/login';
+            window.location.href = (window.location.pathname.startsWith('/dev') ? '/dev/login' : '/controle/login');
             return false;
         }
         
@@ -134,7 +134,7 @@ async function verificarSessao() {
         
     } catch (error) {
         console.error('❌ Erro ao verificar sessão:', error);
-        window.location.href = '/controle/login';
+        window.location.href = (window.location.pathname.startsWith('/dev') ? '/dev/login' : '/controle/login');
         return false;
     }
 }
@@ -253,7 +253,7 @@ async function handleLogout() {
         
         if (response.ok) {
             setTimeout(() => {
-                window.location.href = '/controle/login';
+                window.location.href = (window.location.pathname.startsWith('/dev') ? '/dev/login' : '/controle/login');
             }, 100);
         }
     } catch (error) {

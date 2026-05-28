@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel do Treinador - Age Run</title>
     <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="stylesheet" href="styles.css?v=2026052206">
+    <link rel="stylesheet" href="styles.css?v=2026052803">
     <link rel="stylesheet" href="effects.css?v=2026052045">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -43,12 +43,12 @@
     <nav class="nav-menu">
         <div class="container">
             <ul class="nav-list">
-                <li><a href="/controle/home" class="nav-link">🏠 Home</a></li>
-                <li><a href="/controle/pesagem" class="nav-link">📝 Pesagem</a></li>
-                <li><a href="/controle/ranking" class="nav-link">🏆 Ranking</a></li>
-                <li><a href="/controle/grupos-treino" class="nav-link">🤝 Grupos de Treino</a></li>
-                <li><a href="/controle/bioimpedancia" class="nav-link">📊 Bioimpedância</a></li>
-                <li class="trainer-only"><a href="/controle/treinador" class="nav-link active">🧑‍🏫 Treinador</a></li>
+                <li><a href="./home" class="nav-link">🏠 Home</a></li>
+                <li><a href="./pesagem" class="nav-link">📝 Pesagem</a></li>
+                <li><a href="./ranking" class="nav-link">🏆 Ranking</a></li>
+                <li><a href="./grupos-treino" class="nav-link">🤝 Grupos de Treino</a></li>
+                <li><a href="./bioimpedancia" class="nav-link">📊 Bioimpedância</a></li>
+                <li class="trainer-only"><a href="./treinador" class="nav-link active">🧑‍🏫 Treinador</a></li>
             </ul>
         </div>
     </nav>
@@ -97,6 +97,12 @@
                             <p class="group-meta">Usuários com ritmo médio compatível para treinar juntos.</p>
                             <div id="coachGroupsSummary" class="coach-groups-grid"></div>
                         </section>
+
+                        <section class="coach-groups-section coach-groups-shooting" aria-label="Grupos de treino de tiro">
+                            <h3>⚡ Grupos de tiro por nível de teste</h3>
+                            <p class="group-meta">Agrupamento por nível com base em pace, tempo e distância do último teste.</p>
+                            <div id="coachShootingGroupsSummary" class="coach-groups-grid"></div>
+                        </section>
                     </aside>
                 </div>
             </div>
@@ -112,6 +118,6 @@
 
     <script src="theme.js?v=2026052203"></script>
     <script src="menu.js?v=2026052612"></script>
-    <script src="treinador.js?v=2026052612"></script>
+    <script src="treinador.js?v=2026052804"></script>
 </body>
 </html>

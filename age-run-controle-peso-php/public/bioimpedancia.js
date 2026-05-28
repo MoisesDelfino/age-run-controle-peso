@@ -2,7 +2,7 @@
 // Configuração da API
 var API_BASE = API_BASE || (window.location.hostname === 'localhost' 
     ? `http://localhost:${window.location.port}/api`
-    : (window.location.pathname.startsWith('/controle') ? '/controle/api' : '/api'));
+    : (window.location.pathname.startsWith('/dev') ? '/dev/api' : (window.location.pathname.startsWith('/controle') ? '/controle/api' : '/api')));
 
 const API_BASE_CANDIDATES = window.location.hostname === 'localhost'
     ? [API_BASE]
@@ -123,7 +123,7 @@ async function carregarNomeUsuario() {
                 }
             }
         } else if (response.status === 401 || (usuario && usuario.authenticated === false)) {
-            window.location.href = '/controle/login';
+            window.location.href = (window.location.pathname.startsWith('/dev') ? '/dev/login' : '/controle/login');
             return;
         }
     } catch (error) {
@@ -157,7 +157,7 @@ async function calcularIMC(altura) {
         if (!response.ok) {
             console.error('❌ Erro ao buscar pesagens:', response.status);
             if (response.status === 401) {
-                window.location.href = '/controle/login';
+                window.location.href = (window.location.pathname.startsWith('/dev') ? '/dev/login' : '/controle/login');
                 return;
             }
             const imcContainer = document.getElementById('imcContainer');
@@ -684,7 +684,7 @@ async function salvarBioimpedancia(e) {
             await carregarNomeUsuario(); // Atualizar IMC
         } else {
             if (response.status === 401) {
-                window.location.href = '/controle/login';
+                window.location.href = (window.location.pathname.startsWith('/dev') ? '/dev/login' : '/controle/login');
                 return;
             }
             mostrarNotificacao('❌ Erro ao salvar: ' + ((payload && payload.error) || 'Erro desconhecido'), 'error');
@@ -711,7 +711,7 @@ async function carregarHistoricoBio() {
         if (!response.ok) {
             console.error('❌ Erro ao carregar histórico:', response.status);
             if (response.status === 401) {
-                window.location.href = '/controle/login';
+                window.location.href = (window.location.pathname.startsWith('/dev') ? '/dev/login' : '/controle/login');
                 return;
             }
             return;
