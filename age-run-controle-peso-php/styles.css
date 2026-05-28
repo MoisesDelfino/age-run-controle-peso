@@ -589,7 +589,7 @@ main {
 }
 
 .coach-user-accordion.expanded .coach-user-details {
-    max-height: 1200px;
+    max-height: 4200px;
     border-top-color: #e5e5e5;
     padding: 12px 14px 14px;
 }
