@@ -286,9 +286,30 @@ function deletedTestsFilePath(): string
     return dirname(__DIR__) . '/storage/rp_testes_deleted.json';
 }
 
+function editedTestsFilePath(): string
+{
+    return dirname(__DIR__) . '/storage/rp_testes_edited.json';
+}
+
 function loadDeletedTestsList(): array
 {
     $path = deletedTestsFilePath();
+    if (!is_file($path)) {
+        return [];
+    }
+
+    $raw = @file_get_contents($path);
+    if ($raw === false || trim($raw) === '') {
+        return [];
+    }
+
+    $decoded = json_decode($raw, true);
+    return is_array($decoded) ? $decoded : [];
+}
+
+function loadEditedTestsList(): array
+{
+    $path = editedTestsFilePath();
     if (!is_file($path)) {
         return [];
     }
@@ -331,6 +352,84 @@ function saveDeletedTestsList(array $items): void
         json_encode(array_values($items), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT),
         LOCK_EX
     );
+}
+
+function saveEditedTestsList(array $items): void
+{
+    $path = editedTestsFilePath();
+    $dir = dirname($path);
+    if (!is_dir($dir)) {
+        @mkdir($dir, 0775, true);
+    }
+
+    @file_put_contents(
+        $path,
+        json_encode(array_values($items), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT),
+        LOCK_EX
+    );
+}
+
+function getEditedTestOverride(int $usuarioId, int $testeId): ?array
+{
+    if ($usuarioId <= 0 || $testeId <= 0) {
+        return null;
+    }
+
+    foreach (loadEditedTestsList() as $item) {
+        if ((int) ($item['usuario_id'] ?? 0) === $usuarioId && (int) ($item['id'] ?? 0) === $testeId) {
+            return is_array($item) ? $item : null;
+        }
+    }
+
+    return null;
+}
+
+function upsertEditedTestOverride(int $usuarioId, int $testeId, int $tempoSegundos, float $distanciaKm, float $paceSegundosKm): void
+{
+    if ($usuarioId <= 0 || $testeId <= 0) {
+        return;
+    }
+
+    $items = loadEditedTestsList();
+    $updated = false;
+
+    foreach ($items as &$item) {
+        if ((int) ($item['usuario_id'] ?? 0) === $usuarioId && (int) ($item['id'] ?? 0) === $testeId) {
+            $item['tempo_segundos'] = $tempoSegundos;
+            $item['distancia_km'] = $distanciaKm;
+            $item['pace_segundos_km'] = $paceSegundosKm;
+            $item['updated_at'] = date('Y-m-d H:i:s');
+            $updated = true;
+            break;
+        }
+    }
+    unset($item);
+
+    if (!$updated) {
+        $items[] = [
+            'usuario_id' => $usuarioId,
+            'id' => $testeId,
+            'tempo_segundos' => $tempoSegundos,
+            'distancia_km' => $distanciaKm,
+            'pace_segundos_km' => $paceSegundosKm,
+            'updated_at' => date('Y-m-d H:i:s'),
+        ];
+    }
+
+    saveEditedTestsList($items);
+}
+
+function clearEditedTestOverride(int $usuarioId, int $testeId): void
+{
+    if ($usuarioId <= 0 || $testeId <= 0) {
+        return;
+    }
+
+    $items = array_values(array_filter(loadEditedTestsList(), static function ($item) use ($usuarioId, $testeId) {
+        return !((int) ($item['usuario_id'] ?? 0) === $usuarioId && (int) ($item['id'] ?? 0) === $testeId);
+    }));
+
+    saveEditedTestsList($items);
 }
 
 function appendFallbackTeste(array $payload): int
@@ -819,19 +918,40 @@ function buildRpTestesHistoricoMap(array $usuarioIds): array
         }
 
         $prova = (string) ($row['prova'] ?? '');
+        $tempoSegundos = (int) ($row['tempo_segundos'] ?? 0);
         $distancia = isset($row['distancia_km']) && is_numeric($row['distancia_km'])
             ? (float) $row['distancia_km']
             : ((isset(RACE_DISTANCES[$prova]) && is_numeric(RACE_DISTANCES[$prova])) ? (float) RACE_DISTANCES[$prova] : null);
+        $paceSegundosKm = isset($row['pace_segundos_km']) && is_numeric($row['pace_segundos_km'])
+            ? (float) $row['pace_segundos_km']
+            : null;
+
+        $override = $testeId > 0 ? getEditedTestOverride($usuarioId, $testeId) : null;
+        if (is_array($override)) {
+            if (isset($override['tempo_segundos']) && is_numeric($override['tempo_segundos'])) {
+                $tempoSegundos = (int) $override['tempo_segundos'];
+            }
+
+            if (isset($override['distancia_km']) && is_numeric($override['distancia_km'])) {
+                $distancia = (float) $override['distancia_km'];
+            }
+
+            if (isset($override['pace_segundos_km']) && is_numeric($override['pace_segundos_km'])) {
+                $paceSegundosKm = (float) $override['pace_segundos_km'];
+            } elseif ($distancia !== null && $distancia > 0 && $tempoSegundos > 0) {
+                $paceSegundosKm = $tempoSegundos / $distancia;
+            }
+        }
 
         $historico[$usuarioId] ??= [];
         $historico[$usuarioId][] = [
             'id' => $testeId,
             'prova' => $prova !== '' ? $prova : null,
-            'tempo_segundos' => (int) ($row['tempo_segundos'] ?? 0),
-            'tempo_formatado' => formatSecondsToRaceTime($row['tempo_segundos'] ?? null),
+            'tempo_segundos' => $tempoSegundos,
+            'tempo_formatado' => formatSecondsToRaceTime($tempoSegundos),
             'distancia_km' => $distancia,
-            'pace_segundos_km' => isset($row['pace_segundos_km']) ? (float) $row['pace_segundos_km'] : null,
-            'pace_formatado' => formatPace($row['pace_segundos_km'] ?? null),
+            'pace_segundos_km' => $paceSegundosKm,
+            'pace_formatado' => formatPace($paceSegundosKm),
             'criado_em' => $row['criado_em'] ?? null,
             'treinador_id' => (int) ($row['treinador_id'] ?? 0),
             'treinador_nome' => (string) ($row['treinador_nome'] ?? ''),
@@ -2118,8 +2238,12 @@ if ($method === 'PUT' && preg_match('#^/api/treinador/usuarios/(\d+)/testes/(\d+
 
         if (!$updated) {
             error_log('[AgeRun PHP] Falha ao atualizar teste (PUT): ' . $e->getMessage() . ' | tentativas: ' . implode(' || ', $attemptErrors));
-            jsonResponse(['error' => 'Erro interno ao atualizar teste'], 500);
+            upsertEditedTestOverride($alvoUsuarioId, $testeId, $tempoSegundos, $distanciaKm, $paceSegundosKm);
         }
+    }
+
+    if (isset($updated) && $updated === true) {
+        clearEditedTestOverride($alvoUsuarioId, $testeId);
     }
 
     jsonResponse([
@@ -2161,6 +2285,7 @@ if ($method === 'DELETE' && preg_match('#^/api/treinador/usuarios/(\d+)/testes/(
 
         dbExecute('DELETE FROM rp_testes_historico WHERE id = :id', [':id' => $testeId]);
         unmarkTestSoftDeleted($alvoUsuarioId, $testeId);
+        clearEditedTestOverride($alvoUsuarioId, $testeId);
 
         jsonResponse([
             'success' => true,
@@ -2169,6 +2294,7 @@ if ($method === 'DELETE' && preg_match('#^/api/treinador/usuarios/(\d+)/testes/(
     } catch (Throwable $e) {
         // Fallback para ambientes com schema/permissão legado no DELETE.
         markTestSoftDeleted($alvoUsuarioId, $testeId);
+        clearEditedTestOverride($alvoUsuarioId, $testeId);
         jsonResponse([
             'success' => true,
             'message' => 'Teste excluído com sucesso',
