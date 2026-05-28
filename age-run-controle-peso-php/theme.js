@@ -87,6 +87,17 @@
         return /iphone|ipad|ipod/i.test(window.navigator.userAgent) && !window.MSStream;
     }
 
+    function isIosSafariBrowser() {
+        if (!isIosDevice()) {
+            return false;
+        }
+
+        const ua = window.navigator.userAgent;
+        const isSafari = /safari/i.test(ua);
+        const isOtherBrowser = /crios|fxios|edgios|opios|mercury|duckduckgo/i.test(ua);
+        return isSafari && !isOtherBrowser;
+    }
+
     function isMobileInstallDevice() {
         if (isIosDevice()) {
             return true;
@@ -356,13 +367,23 @@
         }
 
         if (isIosDevice()) {
-            showPwaBanner(
-                'Adicione à tela inicial',
-                'No iPhone, toque em Compartilhar e depois em "Adicionar à Tela de Início" para abrir como app.',
-                '',
-                null,
-                'Entendi'
-            );
+            if (isIosSafariBrowser()) {
+                showPwaBanner(
+                    'Adicione à tela inicial',
+                    'No Safari do iPhone, toque em Compartilhar e depois em "Adicionar à Tela de Início".',
+                    '',
+                    null,
+                    'Entendi'
+                );
+            } else {
+                showPwaBanner(
+                    'Instalação no iPhone',
+                    'Para instalar no iPhone, abra este site no Safari e use "Adicionar à Tela de Início".',
+                    '',
+                    null,
+                    'Entendi'
+                );
+            }
         }
     }
 
