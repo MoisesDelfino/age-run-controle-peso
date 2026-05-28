@@ -267,6 +267,28 @@ function fallbackTestsFilePath(): string
 function loadFallbackTests(): array
 {
     $path = fallbackTestsFilePath();
+
+    if (!is_file($path)) {
+        return [];
+    }
+
+    $raw = @file_get_contents($path);
+    if ($raw === false || trim($raw) === '') {
+        return [];
+    }
+
+    $decoded = json_decode($raw, true);
+    return is_array($decoded) ? $decoded : [];
+}
+
+function deletedTestsFilePath(): string
+{
+    return dirname(__DIR__) . '/storage/rp_testes_deleted.json';
+}
+
+function loadDeletedTestsList(): array
+{
+    $path = deletedTestsFilePath();
     if (!is_file($path)) {
         return [];
     }
@@ -283,6 +305,22 @@ function loadFallbackTests(): array
 function saveFallbackTests(array $items): void
 {
     $path = fallbackTestsFilePath();
+
+    $dir = dirname($path);
+    if (!is_dir($dir)) {
+        @mkdir($dir, 0775, true);
+    }
+
+    @file_put_contents(
+        $path,
+        json_encode(array_values($items), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT),
+        LOCK_EX
+    );
+}
+
+function saveDeletedTestsList(array $items): void
+{
+    $path = deletedTestsFilePath();
     $dir = dirname($path);
     if (!is_dir($dir)) {
         @mkdir($dir, 0775, true);
@@ -403,6 +441,55 @@ function insertRpTesteHistoricoCompat(
         'source' => 'file-fallback',
     ]);
     return $fallbackId;
+}
+
+function isTestSoftDeleted(int $usuarioId, int $testeId): bool
+{
+    if ($usuarioId <= 0 || $testeId <= 0) {
+        return false;
+    }
+
+    foreach (loadDeletedTestsList() as $item) {
+        if ((int) ($item['usuario_id'] ?? 0) === $usuarioId && (int) ($item['id'] ?? 0) === $testeId) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function markTestSoftDeleted(int $usuarioId, int $testeId): void
+{
+    if ($usuarioId <= 0 || $testeId <= 0) {
+        return;
+    }
+
+    $items = loadDeletedTestsList();
+    foreach ($items as $item) {
+        if ((int) ($item['usuario_id'] ?? 0) === $usuarioId && (int) ($item['id'] ?? 0) === $testeId) {
+            return;
+        }
+    }
+
+    $items[] = [
+        'usuario_id' => $usuarioId,
+        'id' => $testeId,
+        'deleted_at' => date('Y-m-d H:i:s'),
+    ];
+    saveDeletedTestsList($items);
+}
+
+function unmarkTestSoftDeleted(int $usuarioId, int $testeId): void
+{
+    if ($usuarioId <= 0 || $testeId <= 0) {
+        return;
+    }
+
+    $items = array_values(array_filter(loadDeletedTestsList(), static function ($item) use ($usuarioId, $testeId) {
+        return !((int) ($item['usuario_id'] ?? 0) === $usuarioId && (int) ($item['id'] ?? 0) === $testeId);
+    }));
+
+    saveDeletedTestsList($items);
 }
 
 function ensureUsuariosCompatibilityColumns(): void
@@ -722,7 +809,12 @@ function buildRpTestesHistoricoMap(array $usuarioIds): array
     $historico = [];
     foreach ($rows as $row) {
         $usuarioId = (int) ($row['usuario_id'] ?? 0);
+        $testeId = (int) ($row['id'] ?? 0);
         if ($usuarioId <= 0) {
+            continue;
+        }
+
+        if ($testeId > 0 && isTestSoftDeleted($usuarioId, $testeId)) {
             continue;
         }
 
@@ -733,7 +825,7 @@ function buildRpTestesHistoricoMap(array $usuarioIds): array
 
         $historico[$usuarioId] ??= [];
         $historico[$usuarioId][] = [
-            'id' => (int) ($row['id'] ?? 0),
+            'id' => $testeId,
             'prova' => $prova !== '' ? $prova : null,
             'tempo_segundos' => (int) ($row['tempo_segundos'] ?? 0),
             'tempo_formatado' => formatSecondsToRaceTime($row['tempo_segundos'] ?? null),
@@ -2013,21 +2105,38 @@ if ($method === 'DELETE' && preg_match('#^/api/treinador/usuarios/(\d+)/testes/(
     $alvoUsuarioId = (int) $matches[1];
     $testeId = (int) $matches[2];
 
-    $teste = dbFetchOne(
-        'SELECT id, usuario_id FROM rp_testes_historico WHERE id = :id LIMIT 1',
-        [':id' => $testeId]
-    );
+    try {
+        $teste = dbFetchOne(
+            'SELECT id, usuario_id FROM rp_testes_historico WHERE id = :id LIMIT 1',
+            [':id' => $testeId]
+        );
 
-    if (!$teste || (int) ($teste['usuario_id'] ?? 0) !== $alvoUsuarioId) {
-        jsonResponse(['error' => 'Teste não encontrado para este usuário'], 404);
+        if (!$teste || (int) ($teste['usuario_id'] ?? 0) !== $alvoUsuarioId) {
+            if (isTestSoftDeleted($alvoUsuarioId, $testeId)) {
+                jsonResponse([
+                    'success' => true,
+                    'message' => 'Teste excluído com sucesso',
+                ]);
+            }
+
+            jsonResponse(['error' => 'Teste não encontrado para este usuário'], 404);
+        }
+
+        dbExecute('DELETE FROM rp_testes_historico WHERE id = :id', [':id' => $testeId]);
+        unmarkTestSoftDeleted($alvoUsuarioId, $testeId);
+
+        jsonResponse([
+            'success' => true,
+            'message' => 'Teste excluído com sucesso',
+        ]);
+    } catch (Throwable $e) {
+        // Fallback para ambientes com schema/permissão legado no DELETE.
+        markTestSoftDeleted($alvoUsuarioId, $testeId);
+        jsonResponse([
+            'success' => true,
+            'message' => 'Teste excluído com sucesso',
+        ]);
     }
-
-    dbExecute('DELETE FROM rp_testes_historico WHERE id = :id', [':id' => $testeId]);
-
-    jsonResponse([
-        'success' => true,
-        'message' => 'Teste excluído com sucesso',
-    ]);
 }
 
 if ($method === 'GET' && $path === '/api/estatisticas') {
