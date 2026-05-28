@@ -53,6 +53,12 @@ function env(string $key, mixed $default = null): mixed
     return $value === false || $value === null || $value === '' ? $default : $value;
 }
 
+function isDevRequestPath(): bool
+{
+    $uriPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
+    return str_starts_with($uriPath, '/dev/');
+}
+
 function appConfig(): array
 {
     static $config = null;
@@ -70,20 +76,24 @@ function appConfig(): array
         loadEnv($envPath);
     }
 
+    $isDevPath = isDevRequestPath();
+
+    $dbPrefix = $isDevPath ? 'DEV_DB_' : 'DB_';
+
     $config = [
         'app_env' => (string) env('APP_ENV', 'production'),
         'app_url' => (string) env('APP_URL', ''),
-        'app_base_path' => trim((string) env('APP_BASE_PATH', '/controle')),
-        'session_name' => (string) env('SESSION_NAME', 'age_run.sid'),
+        'app_base_path' => trim((string) env($isDevPath ? 'DEV_APP_BASE_PATH' : 'APP_BASE_PATH', $isDevPath ? '/dev' : '/controle')),
+        'session_name' => (string) env($isDevPath ? 'DEV_SESSION_NAME' : 'SESSION_NAME', $isDevPath ? 'age_run_dev.sid' : 'age_run.sid'),
         'session_secret' => (string) env('SESSION_SECRET', 'age-run-secret-2026'),
         'db' => [
-            'driver' => (string) env('DB_DRIVER', 'mysql'),
-            'host' => (string) env('DB_HOST', '127.0.0.1'),
-            'port' => (string) env('DB_PORT', '3306'),
-            'database' => (string) env('DB_DATABASE', ''),
-            'username' => (string) env('DB_USERNAME', ''),
-            'password' => (string) env('DB_PASSWORD', ''),
-            'charset' => (string) env('DB_CHARSET', 'utf8mb4'),
+            'driver' => (string) env($dbPrefix . 'DRIVER', (string) env('DB_DRIVER', 'mysql')),
+            'host' => (string) env($dbPrefix . 'HOST', (string) env('DB_HOST', '127.0.0.1')),
+            'port' => (string) env($dbPrefix . 'PORT', (string) env('DB_PORT', '3306')),
+            'database' => (string) env($dbPrefix . 'DATABASE', (string) env('DB_DATABASE', '')),
+            'username' => (string) env($dbPrefix . 'USERNAME', (string) env('DB_USERNAME', '')),
+            'password' => (string) env($dbPrefix . 'PASSWORD', (string) env('DB_PASSWORD', '')),
+            'charset' => (string) env($dbPrefix . 'CHARSET', (string) env('DB_CHARSET', 'utf8mb4')),
         ],
         'email' => [
             'from_name' => (string) env('EMAIL_FROM_NAME', 'Age Run'),
