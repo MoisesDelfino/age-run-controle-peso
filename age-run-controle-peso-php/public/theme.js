@@ -111,7 +111,16 @@
             || (window.matchMedia('(pointer: coarse)').matches && window.matchMedia('(hover: none)').matches);
     }
 
+    function shouldPersistPwaDismissal() {
+        // No iOS, o aviso precisa voltar enquanto não estiver em modo instalado.
+        return !isIosDevice();
+    }
+
     function hasDismissedPwaBanner() {
+        if (!shouldPersistPwaDismissal()) {
+            return false;
+        }
+
         try {
             return localStorage.getItem(PWA_DISMISSED_KEY) === '1';
         } catch (error) {
@@ -120,6 +129,10 @@
     }
 
     function markPwaBannerDismissed() {
+        if (!shouldPersistPwaDismissal()) {
+            return;
+        }
+
         try {
             localStorage.setItem(PWA_DISMISSED_KEY, '1');
         } catch (error) {
