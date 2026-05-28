@@ -14,6 +14,7 @@ const homeResumoAviso = document.getElementById('homeResumoAviso');
 const homeRankingCard = document.getElementById('homeRankingCard');
 const homeStatsIntro = document.getElementById('homeStatsIntro');
 const homeStatsGrid = document.getElementById('homeStatsGrid');
+const homeLevelItems = Array.from(document.querySelectorAll('.home-level-item'));
 
 // Inicialização
 document.addEventListener('DOMContentLoaded', async () => {
@@ -102,6 +103,50 @@ function formatGrupoTiroResumo(gruposTiroData) {
     return `${nome} (${melhor} a ${pior})`;
 }
 
+function normalizeNivelLabel(text) {
+    return String(text || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-zA-Z0-9\s]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .toLowerCase();
+}
+
+function marcarNivelAtual(gruposTiroData) {
+    if (!homeLevelItems.length) {
+        return;
+    }
+
+    homeLevelItems.forEach((item) => {
+        item.classList.remove('home-level-item-current');
+        const tagAtual = item.querySelector('.home-level-tag');
+        if (tagAtual) {
+            tagAtual.remove();
+        }
+    });
+
+    const nivelAtual = normalizeNivelLabel(gruposTiroData?.meu_grupo?.nome_nivel || '');
+    if (!nivelAtual) {
+        return;
+    }
+
+    const itemAtual = homeLevelItems.find((item) => {
+        const nivelItem = normalizeNivelLabel(item.textContent);
+        return nivelItem.includes(nivelAtual) || nivelAtual.includes(nivelItem);
+    });
+
+    if (!itemAtual) {
+        return;
+    }
+
+    itemAtual.classList.add('home-level-item-current');
+    const tag = document.createElement('span');
+    tag.className = 'home-level-tag';
+    tag.textContent = 'Nivel atual';
+    itemAtual.appendChild(tag);
+}
+
 function findMinhaPosicaoRanking(rankingData) {
     const lista = Array.isArray(rankingData?.ranking) ? rankingData.ranking : [];
     const meuId = Number(usuarioLogado?.id || 0);
@@ -181,6 +226,8 @@ async function carregarResumoHome() {
                 ? formatGrupoTiroResumo(gruposTiroData)
                 : '-';
         }
+
+        marcarNivelAtual(gruposTiroResp?.ok ? gruposTiroData : null);
 
         if (homeResumoAviso) {
             const avisos = [];
