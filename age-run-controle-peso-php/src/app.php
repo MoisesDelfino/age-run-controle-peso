@@ -858,6 +858,106 @@ function ensureRpTestesTable(): void
     }
 }
 
+function ensureDbHealthChecksTable(): void
+{
+    try {
+        $driver = strtolower((string) (appConfig()['db']['driver'] ?? 'mysql'));
+
+        if ($driver === 'sqlite') {
+            dbExecute(
+                'CREATE TABLE IF NOT EXISTS db_health_checks (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    token TEXT NOT NULL,
+                    payload TEXT NULL,
+                    criado_em DATETIME DEFAULT CURRENT_TIMESTAMP
+                )'
+            );
+            dbExecute('CREATE INDEX IF NOT EXISTS idx_db_health_checks_token ON db_health_checks(token)');
+            return;
+        }
+
+        if ($driver === 'pgsql' || $driver === 'postgres' || $driver === 'postgresql') {
+            dbExecute(
+                'CREATE TABLE IF NOT EXISTS db_health_checks (
+                    id BIGSERIAL PRIMARY KEY,
+                    token VARCHAR(64) NOT NULL,
+                    payload TEXT NULL,
+                    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )'
+            );
+            dbExecute('CREATE INDEX IF NOT EXISTS idx_db_health_checks_token ON db_health_checks(token)');
+            return;
+        }
+
+        dbExecute(
+            'CREATE TABLE IF NOT EXISTS db_health_checks (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                token VARCHAR(64) NOT NULL,
+                payload TEXT NULL,
+                criado_em DATETIME DEFAULT CURRENT_TIMESTAMP
+            )'
+        );
+        try {
+            dbExecute('CREATE INDEX idx_db_health_checks_token ON db_health_checks(token)');
+        } catch (Throwable $e) {
+            // Indice ja existe.
+        }
+    } catch (Throwable $e) {
+        error_log('[AgeRun PHP] ensureDbHealthChecksTable ignorado: ' . $e->getMessage());
+    }
+}
+
+function runDbPersistenceHealthCheck(): array
+{
+    ensureDbHealthChecksTable();
+
+    $token = bin2hex(random_bytes(12));
+    $startedAt = microtime(true);
+    $inserted = false;
+    $readBack = false;
+    $deleted = false;
+    $error = null;
+
+    try {
+        dbExecute(
+            'INSERT INTO db_health_checks (token, payload) VALUES (:token, :payload)',
+            [
+                ':token' => $token,
+                ':payload' => json_encode(['origin' => 'db-health-check', 'time' => date('c')], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+            ]
+        );
+        $inserted = true;
+
+        $row = dbFetchOne('SELECT id, token FROM db_health_checks WHERE token = :token LIMIT 1', [':token' => $token]);
+        $readBack = $row !== null;
+
+        if ($readBack) {
+            dbExecute('DELETE FROM db_health_checks WHERE token = :token', [':token' => $token]);
+            $deleted = true;
+        }
+    } catch (Throwable $e) {
+        $error = $e->getMessage();
+        try {
+            dbExecute('DELETE FROM db_health_checks WHERE token = :token', [':token' => $token]);
+        } catch (Throwable $inner) {
+            // Sem impacto para o retorno do health-check.
+        }
+    }
+
+    $durationMs = (int) round((microtime(true) - $startedAt) * 1000);
+    $ok = $inserted && $readBack && $deleted;
+
+    return [
+        'ok' => $ok,
+        'duration_ms' => $durationMs,
+        'inserted' => $inserted,
+        'read_back' => $readBack,
+        'deleted_probe' => $deleted,
+        'error' => $ok ? null : $error,
+        'checked_at' => date('c'),
+    ];
+}
+
 function buildRpTestesHistoricoMap(array $usuarioIds): array
 {
     $ids = array_values(array_unique(array_filter(array_map(static fn ($id) => (int) $id, $usuarioIds), static fn ($id) => $id > 0)));
@@ -1448,6 +1548,23 @@ if ($method === 'GET' && $path === '/api/auth/session') {
     }
     $usuario['authenticated'] = true;
     jsonResponse($usuario);
+}
+
+if ($method === 'GET' && $path === '/api/admin/db-health') {
+    requireTrainerAuth();
+
+    $dbCheck = runDbPersistenceHealthCheck();
+    $fallback = [
+        'pending_insert_fallback' => count(loadFallbackTests()),
+        'pending_edit_overrides' => count(loadEditedTestsList()),
+        'pending_soft_deletes' => count(loadDeletedTestsList()),
+    ];
+
+    jsonResponse([
+        'success' => $dbCheck['ok'],
+        'db' => $dbCheck,
+        'fallback' => $fallback,
+    ], $dbCheck['ok'] ? 200 : 503);
 }
 
 if ($method === 'POST' && $path === '/api/auth/solicitar-recuperacao') {
