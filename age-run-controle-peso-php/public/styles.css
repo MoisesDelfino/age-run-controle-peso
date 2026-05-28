@@ -1880,6 +1880,13 @@ body.dark-mode .nav-link.active {
     margin: 0 0 14px;
 }
 
+.home-summary-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 250px;
+    gap: 14px;
+    align-items: start;
+}
+
 .home-stats-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1946,38 +1953,44 @@ body.dark-mode .nav-link.active {
 }
 
 .home-levels-section {
-    margin-top: 14px;
-    border-top: 1px solid #e2edf6;
-    padding-top: 14px;
+    border: 1px solid #dce7f1;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #f7fbff 0%, #f2f9ef 100%);
+    padding: 12px;
 }
 
 .home-levels-section h3 {
-    font-size: 1rem;
-    margin: 0 0 10px;
+    font-size: 0.98rem;
+    margin: 0 0 8px;
     color: #32495a;
 }
 
-.home-levels-grid {
+.home-levels-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 8px;
 }
 
-.home-level-chip {
-    display: inline-flex;
+.home-level-item {
+    display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     border: 1px solid #dbe8f1;
-    border-radius: 999px;
-    background: #f7fbff;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.45);
     color: #304b5f;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     font-weight: 600;
-    padding: 7px 10px;
-    white-space: nowrap;
+    padding: 9px 10px;
 }
 
 @media (max-width: 768px) {
+    .home-summary-layout {
+        grid-template-columns: 1fr;
+    }
+
     .home-stats-grid {
         grid-template-columns: 1fr;
     }
@@ -1990,8 +2003,7 @@ body.dark-mode .nav-link.active {
         min-height: auto;
     }
 
-    .home-rps-grid,
-    .home-levels-grid {
+    .home-rps-grid {
         grid-template-columns: 1fr;
     }
 }
@@ -2045,16 +2057,17 @@ body.dark-mode .home-rp-time {
 }
 
 body.dark-mode .home-levels-section {
-    border-top-color: #2b3e4d;
+    border-color: #33424c;
+    background: linear-gradient(135deg, #1f2a31 0%, #1e2a1f 100%);
 }
 
 body.dark-mode .home-levels-section h3 {
     color: #d6e7f5;
 }
 
-body.dark-mode .home-level-chip {
+body.dark-mode .home-level-item {
     border-color: #36506a;
-    background: #1c2a34;
+    background: rgba(22, 33, 40, 0.6);
     color: #cfe3f3;
 }
 
