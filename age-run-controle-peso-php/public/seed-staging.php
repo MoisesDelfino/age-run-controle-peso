@@ -2,8 +2,49 @@
 
 declare(strict_types=1);
 
-require_once __DIR__ . '/../src/config.php';
-require_once __DIR__ . '/../src/db.php';
+$bootstrapCandidates = [
+    __DIR__ . '/src/config.php',
+    __DIR__ . '/../src/config.php',
+    dirname(__DIR__) . '/src/config.php',
+];
+
+$loaded = false;
+foreach ($bootstrapCandidates as $candidate) {
+    if (is_file($candidate)) {
+        require_once $candidate;
+        $loaded = true;
+        break;
+    }
+}
+
+if (!$loaded) {
+    http_response_code(500);
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode(['ok' => false, 'error' => 'Bootstrap config.php nao encontrado']);
+    exit;
+}
+
+$dbCandidates = [
+    __DIR__ . '/src/db.php',
+    __DIR__ . '/../src/db.php',
+    dirname(__DIR__) . '/src/db.php',
+];
+
+$loadedDb = false;
+foreach ($dbCandidates as $candidate) {
+    if (is_file($candidate)) {
+        require_once $candidate;
+        $loadedDb = true;
+        break;
+    }
+}
+
+if (!$loadedDb) {
+    http_response_code(500);
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode(['ok' => false, 'error' => 'Bootstrap db.php nao encontrado']);
+    exit;
+}
 
 header('Content-Type: application/json; charset=utf-8');
 
