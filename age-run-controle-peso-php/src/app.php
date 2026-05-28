@@ -124,7 +124,7 @@ function insertRpTesteHistoricoCompat(
     int $tempoSegundos,
     float $distanciaKm,
     float $paceSegundosKm
-): int {
+): ?int {
     $baseValues = [
         'usuario_id' => $alvoUsuarioId,
         'treinador_id' => $treinadorId,
@@ -145,6 +145,7 @@ function insertRpTesteHistoricoCompat(
     ];
 
     $lastError = null;
+    $attemptErrors = [];
 
     $attemptInsert = static function (array $columns) use ($baseValues): void {
         $placeholders = array_map(static fn ($column) => ':' . $column, $columns);
@@ -164,10 +165,17 @@ function insertRpTesteHistoricoCompat(
     foreach ($candidates as $columns) {
         try {
             $attemptInsert($columns);
-            return dbLastInsertId();
+            try {
+                $lastInsertId = dbLastInsertId();
+                return $lastInsertId > 0 ? $lastInsertId : null;
+            } catch (Throwable $e) {
+                // Em alguns bancos/instalacoes o lastInsertId pode não estar disponível.
+                return null;
+            }
         } catch (Throwable $e) {
             $lastError = $e;
             $message = strtolower($e->getMessage());
+            $attemptErrors[] = sprintf('[%s] %s', implode(',', $columns), $e->getMessage());
 
             if (!$ensureRetried && (
                 str_contains($message, 'no such table')
@@ -178,6 +186,10 @@ function insertRpTesteHistoricoCompat(
                 ensureRpTestesTable();
             }
         }
+    }
+
+    if ($attemptErrors) {
+        error_log('[AgeRun PHP] Tentativas insert rp_testes_historico: ' . implode(' || ', $attemptErrors));
     }
 
     throw ($lastError ?? new RuntimeException('Falha ao inserir teste no histórico'));
