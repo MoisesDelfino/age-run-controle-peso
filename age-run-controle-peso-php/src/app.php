@@ -118,6 +118,147 @@ function safeDbColumnExists(string $table, string $column): bool
     }
 }
 
+function defaultValueForSqlType(string $type, string $timestampValue): mixed
+{
+    $normalized = strtolower($type);
+
+    if (
+        str_contains($normalized, 'int')
+        || str_contains($normalized, 'real')
+        || str_contains($normalized, 'double')
+        || str_contains($normalized, 'float')
+        || str_contains($normalized, 'decimal')
+        || str_contains($normalized, 'numeric')
+    ) {
+        return 0;
+    }
+
+    if (str_contains($normalized, 'date') || str_contains($normalized, 'time')) {
+        return $timestampValue;
+    }
+
+    return '';
+}
+
+function tryInsertRpTesteHistoricoByMetadata(array $baseValues): ?int
+{
+    $driver = strtolower((string) (appConfig()['db']['driver'] ?? 'mysql'));
+    $table = 'rp_testes_historico';
+    $columnsMeta = [];
+
+    if ($driver === 'sqlite') {
+        $rows = dbFetchAll("PRAGMA table_info({$table})");
+        foreach ($rows as $row) {
+            $name = (string) ($row['name'] ?? '');
+            if ($name === '') {
+                continue;
+            }
+
+            $isPk = (int) ($row['pk'] ?? 0) === 1;
+            $hasDefault = array_key_exists('dflt_value', $row) && $row['dflt_value'] !== null;
+            $columnsMeta[] = [
+                'name' => $name,
+                'type' => (string) ($row['type'] ?? ''),
+                'required' => ((int) ($row['notnull'] ?? 0) === 1) && !$hasDefault && !$isPk,
+                'auto' => $isPk,
+            ];
+        }
+    } elseif ($driver === 'pgsql' || $driver === 'postgres' || $driver === 'postgresql') {
+        $rows = dbFetchAll(
+            'SELECT column_name, data_type, is_nullable, column_default
+               FROM information_schema.columns
+              WHERE table_name = :table
+              ORDER BY ordinal_position',
+            [':table' => $table]
+        );
+
+        foreach ($rows as $row) {
+            $name = (string) ($row['column_name'] ?? '');
+            if ($name === '') {
+                continue;
+            }
+
+            $defaultExpr = strtolower((string) ($row['column_default'] ?? ''));
+            $isAuto = str_contains($defaultExpr, 'nextval(') || str_contains($defaultExpr, 'generated');
+            $columnsMeta[] = [
+                'name' => $name,
+                'type' => (string) ($row['data_type'] ?? ''),
+                'required' => strtoupper((string) ($row['is_nullable'] ?? 'YES')) === 'NO' && $defaultExpr === '' && !$isAuto,
+                'auto' => $isAuto,
+            ];
+        }
+    } else {
+        $rows = dbFetchAll("SHOW COLUMNS FROM {$table}");
+        foreach ($rows as $row) {
+            $name = (string) ($row['Field'] ?? '');
+            if ($name === '') {
+                continue;
+            }
+
+            $extra = strtolower((string) ($row['Extra'] ?? ''));
+            $isAuto = str_contains($extra, 'auto_increment');
+            $hasDefault = array_key_exists('Default', $row) && $row['Default'] !== null;
+            $columnsMeta[] = [
+                'name' => $name,
+                'type' => (string) ($row['Type'] ?? ''),
+                'required' => strtoupper((string) ($row['Null'] ?? 'YES')) !== 'YES' && !$hasDefault && !$isAuto,
+                'auto' => $isAuto,
+            ];
+        }
+    }
+
+    if (!$columnsMeta) {
+        throw new RuntimeException('Tabela rp_testes_historico sem metadados de colunas');
+    }
+
+    $timestampValue = date('Y-m-d H:i:s');
+    $values = [];
+
+    foreach ($columnsMeta as $meta) {
+        $name = strtolower((string) ($meta['name'] ?? ''));
+        if ($name === '' || !empty($meta['auto'])) {
+            continue;
+        }
+
+        if (array_key_exists($name, $baseValues)) {
+            $values[$name] = $baseValues[$name];
+            continue;
+        }
+
+        if (in_array($name, ['criado_em', 'created_at', 'updated_at', 'data_teste', 'data_criacao', 'data'], true)) {
+            $values[$name] = $timestampValue;
+            continue;
+        }
+
+        if (!empty($meta['required'])) {
+            $values[$name] = defaultValueForSqlType((string) ($meta['type'] ?? ''), $timestampValue);
+        }
+    }
+
+    if (!$values) {
+        throw new RuntimeException('Sem colunas elegíveis para insert em rp_testes_historico');
+    }
+
+    $columns = array_keys($values);
+    $placeholders = array_map(static fn ($column) => ':' . $column, $columns);
+    $params = [];
+    foreach ($columns as $column) {
+        $params[':' . $column] = $values[$column];
+    }
+
+    dbExecute(
+        'INSERT INTO rp_testes_historico (' . implode(', ', $columns) . ') VALUES (' . implode(', ', $placeholders) . ')',
+        $params
+    );
+
+    try {
+        $lastInsertId = dbLastInsertId();
+        return $lastInsertId > 0 ? $lastInsertId : null;
+    } catch (Throwable $e) {
+        return null;
+    }
+}
+
 function insertRpTesteHistoricoCompat(
     int $alvoUsuarioId,
     int $treinadorId,
@@ -190,6 +331,12 @@ function insertRpTesteHistoricoCompat(
 
     if ($attemptErrors) {
         error_log('[AgeRun PHP] Tentativas insert rp_testes_historico: ' . implode(' || ', $attemptErrors));
+    }
+
+    try {
+        return tryInsertRpTesteHistoricoByMetadata($baseValues);
+    } catch (Throwable $e) {
+        error_log('[AgeRun PHP] Fallback metadata insert falhou: ' . $e->getMessage());
     }
 
     throw ($lastError ?? new RuntimeException('Falha ao inserir teste no histórico'));
