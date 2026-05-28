@@ -26,6 +26,7 @@ function normalizarLinksMenu() {
         '/grupos-treino',
         '/bioimpedancia',
         '/treinador',
+        '/monitoramento',
         '/login',
         '/cadastro',
         '/recuperar-senha'
@@ -48,6 +49,42 @@ function normalizarLinksMenu() {
 
         link.setAttribute('href', withBasePath(semControle));
     });
+}
+
+function ensureOwnerMonitorLink(isOwner) {
+    const navList = document.querySelector('.nav-list');
+    if (!navList) return;
+
+    const existing = navList.querySelector('.owner-monitor-link');
+    if (!isOwner) {
+        if (existing) {
+            existing.remove();
+        }
+        return;
+    }
+
+    const href = withBasePath('/monitoramento');
+    const isActive = window.location.pathname === href || window.location.pathname.endsWith('/monitoramento');
+
+    if (existing) {
+        const link = existing.querySelector('a');
+        if (link) {
+            link.setAttribute('href', href);
+            link.classList.toggle('active', isActive);
+        }
+        return;
+    }
+
+    const li = document.createElement('li');
+    li.className = 'owner-only owner-monitor-link';
+
+    const a = document.createElement('a');
+    a.className = `nav-link${isActive ? ' active' : ''}`;
+    a.href = href;
+    a.textContent = '📡 Monitoramento';
+
+    li.appendChild(a);
+    navList.appendChild(li);
 }
 
 function ativarFallbackRotasNovas(closeMenu) {
@@ -94,6 +131,7 @@ async function aplicarPermissoesMenu() {
         const data = await response.json();
         const isMulher = (data?.sexo || '').toLowerCase() === 'feminino';
         const isTreinador = (data?.perfil || '').toLowerCase() === 'treinador';
+        const isOwner = (data?.email || '').toLowerCase() === 'moisescamposdelfino@gmail.com';
 
         if (isTreinador) {
             document.body.classList.add('is-trainer');
@@ -105,6 +143,8 @@ async function aplicarPermissoesMenu() {
         trainerItems.forEach((item) => {
             item.style.display = isTreinador ? '' : 'none';
         });
+
+        ensureOwnerMonitorLink(isOwner);
 
         if (!isMulher) return;
 

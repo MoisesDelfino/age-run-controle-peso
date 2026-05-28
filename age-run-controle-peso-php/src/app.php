@@ -61,6 +61,7 @@ const TRAINER_OVERRIDE_EMAILS = [
     'moisescamposdelfino@gmail.com',
     'filipe.sul@gmail.com',
 ];
+const MONITOR_OWNER_EMAIL = 'moisescamposdelfino@gmail.com';
 
 function isTrainerOverrideEmail(?string $email): bool
 {
@@ -81,6 +82,216 @@ function isHiddenFromRankingEmail(?string $email): bool
 
     // Contas de teste com este domínio não aparecem no ranking.
     return str_ends_with($normalized, '@teste.local');
+}
+
+function normalizeEmail(string $email): string
+{
+    return strtolower(trim($email));
+}
+
+function isMonitorOwnerEmail(?string $email): bool
+{
+    return normalizeEmail((string) $email) === MONITOR_OWNER_EMAIL;
+}
+
+function monitorEventsFilePath(): string
+{
+    return dirname(__DIR__) . '/storage/monitor_events.jsonl';
+}
+
+function appendMonitorEvent(array $event): void
+{
+    $path = monitorEventsFilePath();
+    $dir = dirname($path);
+    if (!is_dir($dir)) {
+        @mkdir($dir, 0775, true);
+    }
+
+    $payload = [
+        'ts_unix' => time(),
+        'ts_iso' => gmdate('c'),
+    ] + $event;
+
+    @file_put_contents(
+        $path,
+        json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . PHP_EOL,
+        FILE_APPEND | LOCK_EX
+    );
+}
+
+function getUserSnapshotById(int $userId): ?array
+{
+    if ($userId <= 0) {
+        return null;
+    }
+
+    if ((int) ($_SESSION['userId'] ?? 0) === $userId && !empty($_SESSION['email'])) {
+        return [
+            'id' => $userId,
+            'nome' => (string) ($_SESSION['nome'] ?? ''),
+            'email' => (string) ($_SESSION['email'] ?? ''),
+            'perfil' => (string) ($_SESSION['perfil'] ?? 'aluno'),
+        ];
+    }
+
+    try {
+        try {
+            $row = dbFetchOne(
+                'SELECT id, nome, email, perfil FROM usuarios WHERE id = :id LIMIT 1',
+                [':id' => $userId]
+            );
+        } catch (Throwable) {
+            $row = dbFetchOne(
+                'SELECT id, nome, email FROM usuarios WHERE id = :id LIMIT 1',
+                [':id' => $userId]
+            );
+            if ($row) {
+                $row['perfil'] = 'aluno';
+            }
+        }
+    } catch (Throwable) {
+        return null;
+    }
+
+    if (!$row) {
+        return null;
+    }
+
+    $snapshot = [
+        'id' => (int) ($row['id'] ?? 0),
+        'nome' => (string) ($row['nome'] ?? ''),
+        'email' => (string) ($row['email'] ?? ''),
+        'perfil' => (string) ($row['perfil'] ?? 'aluno'),
+    ];
+
+    if ((int) ($_SESSION['userId'] ?? 0) === $snapshot['id']) {
+        $_SESSION['nome'] = $snapshot['nome'];
+        $_SESSION['email'] = $snapshot['email'];
+        $_SESSION['perfil'] = $snapshot['perfil'];
+    }
+
+    return $snapshot;
+}
+
+function isAlunoSnapshot(array $snapshot): bool
+{
+    $email = (string) ($snapshot['email'] ?? '');
+    if (isTrainerOverrideEmail($email)) {
+        return false;
+    }
+
+    $perfil = strtolower(trim((string) ($snapshot['perfil'] ?? 'aluno')));
+    return $perfil !== 'treinador';
+}
+
+function currentClientIp(): string
+{
+    $xff = trim((string) ($_SERVER['HTTP_X_FORWARDED_FOR'] ?? ''));
+    if ($xff !== '') {
+        $parts = explode(',', $xff);
+        return trim((string) ($parts[0] ?? ''));
+    }
+
+    return trim((string) ($_SERVER['REMOTE_ADDR'] ?? ''));
+}
+
+function trackAlunoApiActivity(string $method, string $path): void
+{
+    if (!str_starts_with($path, '/api/')) {
+        return;
+    }
+
+    if ($path === '/api/auth/session' || str_starts_with($path, '/api/admin/monitoramento')) {
+        return;
+    }
+
+    $userId = (int) ($_SESSION['userId'] ?? 0);
+    if ($userId <= 0) {
+        return;
+    }
+
+    $snapshot = getUserSnapshotById($userId);
+    if (!$snapshot || !isAlunoSnapshot($snapshot)) {
+        return;
+    }
+
+    appendMonitorEvent([
+        'event_type' => 'api_action',
+        'method' => strtoupper($method),
+        'path' => $path,
+        'user_id' => (int) ($snapshot['id'] ?? 0),
+        'user_nome' => (string) ($snapshot['nome'] ?? ''),
+        'user_email' => normalizeEmail((string) ($snapshot['email'] ?? '')),
+        'ip' => currentClientIp(),
+    ]);
+}
+
+function trackAlunoPageAccess(string $path): void
+{
+    $userId = (int) ($_SESSION['userId'] ?? 0);
+    if ($userId <= 0) {
+        return;
+    }
+
+    $snapshot = getUserSnapshotById($userId);
+    if (!$snapshot || !isAlunoSnapshot($snapshot)) {
+        return;
+    }
+
+    appendMonitorEvent([
+        'event_type' => 'page_access',
+        'method' => 'GET',
+        'path' => $path,
+        'user_id' => (int) ($snapshot['id'] ?? 0),
+        'user_nome' => (string) ($snapshot['nome'] ?? ''),
+        'user_email' => normalizeEmail((string) ($snapshot['email'] ?? '')),
+        'ip' => currentClientIp(),
+    ]);
+}
+
+function readMonitorEvents(int $limit = 100, int $sinceUnix = 0): array
+{
+    $path = monitorEventsFilePath();
+    if (!is_file($path)) {
+        return [];
+    }
+
+    $rows = @file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    if (!is_array($rows) || !$rows) {
+        return [];
+    }
+
+    $events = [];
+    for ($i = count($rows) - 1; $i >= 0; $i--) {
+        $decoded = json_decode((string) $rows[$i], true);
+        if (!is_array($decoded)) {
+            continue;
+        }
+
+        $ts = (int) ($decoded['ts_unix'] ?? 0);
+        if ($sinceUnix > 0 && $ts < $sinceUnix) {
+            continue;
+        }
+
+        $events[] = $decoded;
+        if (count($events) >= $limit) {
+            break;
+        }
+    }
+
+    return array_reverse($events);
+}
+
+function requireMonitorOwnerAuth(): int
+{
+    $userId = requireAuth();
+    $snapshot = getUserSnapshotById($userId);
+
+    if (!$snapshot || !isMonitorOwnerEmail((string) ($snapshot['email'] ?? ''))) {
+        jsonResponse(['error' => 'Acesso restrito ao administrador do monitoramento'], 403);
+    }
+
+    return $userId;
 }
 
 function dbColumnExists(string $table, string $column): bool
@@ -1411,6 +1622,7 @@ if (str_starts_with($path, '/api/')) {
     ensureCoreTables();
     ensureUsuariosCompatibilityColumns();
     ensureRpTestesTable();
+    trackAlunoApiActivity($method, $path);
 }
 
 if ($method === 'POST' && $path === '/api/auth/cadastro') {
@@ -1475,6 +1687,23 @@ if ($method === 'POST' && $path === '/api/auth/login') {
         $_SESSION['userId'] = (int) $usuario['id'];
         $_SESSION['nome'] = (string) $usuario['nome'];
         $_SESSION['sexo'] = (string) ($usuario['sexo'] ?? 'masculino');
+        $_SESSION['email'] = (string) ($usuario['email'] ?? '');
+        $_SESSION['perfil'] = (string) ($usuario['perfil'] ?? 'aluno');
+
+        if (isAlunoSnapshot([
+            'email' => (string) ($usuario['email'] ?? ''),
+            'perfil' => (string) ($usuario['perfil'] ?? 'aluno'),
+        ])) {
+            appendMonitorEvent([
+                'event_type' => 'login',
+                'method' => 'POST',
+                'path' => '/api/auth/login',
+                'user_id' => (int) ($usuario['id'] ?? 0),
+                'user_nome' => (string) ($usuario['nome'] ?? ''),
+                'user_email' => normalizeEmail((string) ($usuario['email'] ?? '')),
+                'ip' => currentClientIp(),
+            ]);
+        }
 
         jsonResponse([
             'success' => true,
@@ -1501,6 +1730,19 @@ if ($method === 'POST' && $path === '/api/auth/login') {
 }
 
 if ($method === 'POST' && $path === '/api/auth/logout') {
+    $logoutUser = getUserSnapshotById((int) ($_SESSION['userId'] ?? 0));
+    if (is_array($logoutUser) && isAlunoSnapshot($logoutUser)) {
+        appendMonitorEvent([
+            'event_type' => 'logout',
+            'method' => 'POST',
+            'path' => '/api/auth/logout',
+            'user_id' => (int) ($logoutUser['id'] ?? 0),
+            'user_nome' => (string) ($logoutUser['nome'] ?? ''),
+            'user_email' => normalizeEmail((string) ($logoutUser['email'] ?? '')),
+            'ip' => currentClientIp(),
+        ]);
+    }
+
     $_SESSION = [];
     if (ini_get('session.use_cookies')) {
         $params = session_get_cookie_params();
@@ -1565,6 +1807,42 @@ if ($method === 'GET' && $path === '/api/admin/db-health') {
         'db' => $dbCheck,
         'fallback' => $fallback,
     ], $dbCheck['ok'] ? 200 : 503);
+}
+
+if ($method === 'GET' && $path === '/api/admin/monitoramento/feed') {
+    requireMonitorOwnerAuth();
+
+    $limit = (int) ($_GET['limit'] ?? 120);
+    if ($limit < 20) {
+        $limit = 20;
+    }
+    if ($limit > 500) {
+        $limit = 500;
+    }
+
+    $sinceUnix = (int) ($_GET['since'] ?? 0);
+    $events = readMonitorEvents($limit, $sinceUnix);
+    $fiveMinutesAgo = time() - 300;
+
+    $activeUsers = [];
+    foreach ($events as $event) {
+        $eventTs = (int) ($event['ts_unix'] ?? 0);
+        $eventUserId = (int) ($event['user_id'] ?? 0);
+        if ($eventTs >= $fiveMinutesAgo && $eventUserId > 0) {
+            $activeUsers[$eventUserId] = true;
+        }
+    }
+
+    jsonResponse([
+        'success' => true,
+        'events' => $events,
+        'summary' => [
+            'total' => count($events),
+            'ativos_5_min' => count($activeUsers),
+            'ultima_atividade_ts' => count($events) > 0 ? (int) ($events[count($events) - 1]['ts_unix'] ?? 0) : null,
+        ],
+        'server_time' => time(),
+    ]);
 }
 
 if ($method === 'POST' && $path === '/api/auth/solicitar-recuperacao') {
@@ -2555,6 +2833,7 @@ $pages = [
     '/bioimpedancia' => 'bioimpedancia.html',
     '/grupos-treino' => 'grupos-treino.html',
     '/treinador' => 'treinador.html',
+    '/monitoramento' => 'monitoramento.html',
 ];
 
 if ($path === '/' || $path === '') {
@@ -2565,10 +2844,22 @@ if ($path === '/' || $path === '') {
 }
 
 if (array_key_exists($path, $pages)) {
-    $protectedPages = ['/home', '/pesagem', '/ranking', '/bioimpedancia', '/grupos-treino', '/treinador'];
+    $protectedPages = ['/home', '/pesagem', '/ranking', '/bioimpedancia', '/grupos-treino', '/treinador', '/monitoramento'];
     if (in_array($path, $protectedPages, true) && empty($_SESSION['userId'])) {
         redirectTo('/login');
     }
+
+    if ($path === '/monitoramento') {
+        $snapshot = getUserSnapshotById((int) ($_SESSION['userId'] ?? 0));
+        if (!$snapshot || !isMonitorOwnerEmail((string) ($snapshot['email'] ?? ''))) {
+            redirectTo('/home');
+        }
+    }
+
+    if (in_array($path, ['/home', '/pesagem', '/ranking', '/bioimpedancia', '/grupos-treino'], true)) {
+        trackAlunoPageAccess($path);
+    }
+
     sendHtml($pages[$path]);
 }
 

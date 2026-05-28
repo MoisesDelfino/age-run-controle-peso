@@ -22,6 +22,8 @@ grupos-treino.html
 grupos-treino.js
 home.html
 home.js
+monitoramento.html
+monitoramento.js
 index.html
 login.html
 menu.js

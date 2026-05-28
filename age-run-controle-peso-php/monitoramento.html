@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitoramento em Tempo Real - Age Run</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="stylesheet" href="styles.css?v=2026052808">
+    <link rel="stylesheet" href="effects.css?v=2026052045">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        .monitor-layout {
+            display: grid;
+            gap: 16px;
+        }
+
+        .monitor-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+        }
+
+        .monitor-kpi {
+            background: rgba(123, 31, 162, 0.08);
+            border: 1px solid rgba(123, 31, 162, 0.16);
+            border-radius: 12px;
+            padding: 12px;
+        }
+
+        .monitor-kpi-label {
+            font-size: 0.85rem;
+            color: #5b6270;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .monitor-kpi-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #3f2a53;
+        }
+
+        body.dark-mode .monitor-kpi {
+            background: rgba(156, 39, 176, 0.16);
+            border-color: rgba(156, 39, 176, 0.3);
+        }
+
+        body.dark-mode .monitor-kpi-label {
+            color: #d1d5db;
+        }
+
+        body.dark-mode .monitor-kpi-value {
+            color: #f3e8ff;
+        }
+
+        .monitor-status {
+            margin: 0;
+            font-size: 0.95rem;
+            color: #6b7280;
+        }
+
+        .monitor-table-wrap {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid rgba(107, 114, 128, 0.2);
+        }
+
+        .monitor-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 760px;
+            background: #fff;
+        }
+
+        .monitor-table thead {
+            background: #f3f4f6;
+        }
+
+        .monitor-table th,
+        .monitor-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid rgba(107, 114, 128, 0.18);
+            font-size: 0.88rem;
+        }
+
+        .monitor-table td code {
+            font-family: "SFMono-Regular", Menlo, Monaco, Consolas, monospace;
+            font-size: 0.82rem;
+        }
+
+        body.dark-mode .monitor-table {
+            background: #101622;
+        }
+
+        body.dark-mode .monitor-table thead {
+            background: #1a2333;
+        }
+
+        body.dark-mode .monitor-table th,
+        body.dark-mode .monitor-table td {
+            border-bottom-color: rgba(148, 163, 184, 0.18);
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="header-left">
+                    <button class="menu-toggle" aria-label="Menu">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
+                    <img src="logo.png" alt="Age Run" class="logo">
+                </div>
+                <div class="header-text">
+                    <h1><span class="title-desktop">Monitoramento em Tempo Real</span><span class="title-mobile">Monitor</span></h1>
+                    <p class="subtitle">Acessos e ações dos alunos em tempo real.</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn-dark-mode" data-theme-toggle aria-label="Ativar modo escuro" title="Alternar modo escuro">
+                        <span class="material-icons">dark_mode</span>
+                    </button>
+                    <button id="btnLogout" class="btn-logout" aria-label="Sair">
+                        <span class="material-icons">logout</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="menu-overlay"></div>
+
+    <nav class="nav-menu">
+        <div class="container">
+            <ul class="nav-list">
+                <li><a href="./home" class="nav-link">🏠 Home</a></li>
+                <li><a href="./pesagem" class="nav-link">📝 Pesagem</a></li>
+                <li><a href="./ranking" class="nav-link">🏆 Ranking</a></li>
+                <li><a href="./grupos-treino" class="nav-link">🤝 Grupos de Treino</a></li>
+                <li><a href="./bioimpedancia" class="nav-link">📊 Bioimpedância</a></li>
+                <li class="trainer-only"><a href="./treinador" class="nav-link">🧑‍🏫 Treinador</a></li>
+                <li class="owner-only owner-monitor-link"><a href="./monitoramento" class="nav-link active">📡 Monitoramento</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container home-content">
+        <section class="card monitor-layout">
+            <div>
+                <h2>📡 Painel do Administrador</h2>
+                <p class="welcome-text">Visualização exclusiva para moisescamposdelfino@gmail.com.</p>
+                <p id="monitorStatus" class="monitor-status">Conectando ao feed...</p>
+            </div>
+
+            <div class="monitor-summary">
+                <article class="monitor-kpi">
+                    <span class="monitor-kpi-label">Eventos carregados</span>
+                    <strong id="kpiTotalEventos" class="monitor-kpi-value">0</strong>
+                </article>
+                <article class="monitor-kpi">
+                    <span class="monitor-kpi-label">Alunos ativos (5 min)</span>
+                    <strong id="kpiAtivos" class="monitor-kpi-value">0</strong>
+                </article>
+                <article class="monitor-kpi">
+                    <span class="monitor-kpi-label">Última atualização</span>
+                    <strong id="kpiUltimaAtualizacao" class="monitor-kpi-value">-</strong>
+                </article>
+            </div>
+
+            <div class="monitor-table-wrap">
+                <table class="monitor-table">
+                    <thead>
+                        <tr>
+                            <th>Horário</th>
+                            <th>Aluno</th>
+                            <th>Ação</th>
+                            <th>Rota</th>
+                            <th>IP</th>
+                        </tr>
+                    </thead>
+                    <tbody id="monitorEventosBody">
+                        <tr>
+                            <td colspan="5">Nenhum evento ainda.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <script src="theme.js?v=2026052808"></script>
+    <script src="menu.js?v=2026052808"></script>
+    <script src="monitoramento.js?v=2026052808"></script>
+</body>
+</html>
