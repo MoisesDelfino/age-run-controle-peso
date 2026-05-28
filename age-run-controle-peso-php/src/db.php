@@ -16,10 +16,25 @@ function db(): PDO
     $driver = strtolower((string) ($config['driver'] ?? 'mysql'));
 
     if ($driver === 'sqlite') {
-        $sqlitePath = (string) ($config['database'] ?? '');
+        $defaultSqlitePath = dirname(__DIR__) . '/storage/peso.db';
+        $sqlitePath = trim((string) ($config['database'] ?? ''));
         if ($sqlitePath === '') {
-            $sqlitePath = dirname(__DIR__) . '/storage/peso.db';
+            $sqlitePath = $defaultSqlitePath;
         }
+
+        // Some deploy environments provide a stale absolute path in .env.
+        // If that path is not usable, fallback to the project-local storage db.
+        $configuredDir = dirname($sqlitePath);
+        $configuredPathUsable = is_file($sqlitePath) || is_dir($configuredDir);
+        if (!$configuredPathUsable) {
+            $sqlitePath = $defaultSqlitePath;
+        }
+
+        $fallbackDir = dirname($sqlitePath);
+        if (!is_dir($fallbackDir)) {
+            @mkdir($fallbackDir, 0775, true);
+        }
+
         $dsn = 'sqlite:' . $sqlitePath;
         $pdo = new PDO($dsn);
     } elseif ($driver === 'pgsql' || $driver === 'postgres' || $driver === 'postgresql') {
