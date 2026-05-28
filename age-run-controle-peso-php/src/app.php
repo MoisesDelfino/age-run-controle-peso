@@ -109,6 +109,15 @@ function dbColumnExists(string $table, string $column): bool
     return count($rows) > 0;
 }
 
+function safeDbColumnExists(string $table, string $column): bool
+{
+    try {
+        return dbColumnExists($table, $column);
+    } catch (Throwable $e) {
+        return false;
+    }
+}
+
 function ensureUsuariosCompatibilityColumns(): void
 {
     try {
@@ -391,13 +400,22 @@ function buildRpTestesHistoricoMap(array $usuarioIds): array
         $params[$placeholder] = $usuarioId;
     }
 
+    $hasProva = safeDbColumnExists('rp_testes_historico', 'prova');
+    $hasDistancia = safeDbColumnExists('rp_testes_historico', 'distancia_km');
+    $hasPace = safeDbColumnExists('rp_testes_historico', 'pace_segundos_km');
+
     $rows = dbFetchAll(
-        'SELECT h.id, h.usuario_id, h.treinador_id, h.prova, h.tempo_segundos, h.distancia_km, h.pace_segundos_km, h.criado_em,
-                t.nome AS treinador_nome
-           FROM rp_testes_historico h
-      LEFT JOIN usuarios t ON t.id = h.treinador_id
-          WHERE h.usuario_id IN (' . implode(', ', $placeholders) . ')
-          ORDER BY h.criado_em DESC, h.id DESC',
+        'SELECT h.id, h.usuario_id, h.treinador_id, '
+            . ($hasProva ? 'h.prova' : 'NULL AS prova') . ', '
+            . 'h.tempo_segundos, '
+            . ($hasDistancia ? 'h.distancia_km' : 'NULL AS distancia_km') . ', '
+            . ($hasPace ? 'h.pace_segundos_km' : 'NULL AS pace_segundos_km') . ', '
+            . 'h.criado_em, '
+            . 't.nome AS treinador_nome '
+        . 'FROM rp_testes_historico h '
+        . 'LEFT JOIN usuarios t ON t.id = h.treinador_id '
+        . 'WHERE h.usuario_id IN (' . implode(', ', $placeholders) . ') '
+        . 'ORDER BY h.criado_em DESC, h.id DESC',
         $params
     );
 
@@ -1591,17 +1609,38 @@ if ($method === 'POST' && preg_match('#^/api/treinador/usuarios/(\d+)/testes$#',
 
     $paceSegundosKm = $tempoSegundos / $distanciaKm;
 
+    $hasProva = safeDbColumnExists('rp_testes_historico', 'prova');
+    $hasDistancia = safeDbColumnExists('rp_testes_historico', 'distancia_km');
+    $hasPace = safeDbColumnExists('rp_testes_historico', 'pace_segundos_km');
+
+    $columns = ['usuario_id', 'treinador_id', 'tempo_segundos'];
+    $params = [
+        ':usuario_id' => $alvoUsuarioId,
+        ':treinador_id' => $treinadorId,
+        ':tempo_segundos' => $tempoSegundos,
+    ];
+
+    if ($hasProva) {
+        $columns[] = 'prova';
+        $params[':prova'] = 'teste';
+    }
+
+    if ($hasDistancia) {
+        $columns[] = 'distancia_km';
+        $params[':distancia_km'] = $distanciaKm;
+    }
+
+    if ($hasPace) {
+        $columns[] = 'pace_segundos_km';
+        $params[':pace_segundos_km'] = $paceSegundosKm;
+    }
+
+    $placeholders = array_map(static fn ($column) => ':' . $column, $columns);
+
     dbExecute(
-        'INSERT INTO rp_testes_historico (usuario_id, treinador_id, prova, tempo_segundos, distancia_km, pace_segundos_km)
-         VALUES (:usuario_id, :treinador_id, :prova, :tempo_segundos, :distancia_km, :pace_segundos_km)',
-        [
-            ':usuario_id' => $alvoUsuarioId,
-            ':treinador_id' => $treinadorId,
-            ':prova' => 'teste',
-            ':tempo_segundos' => $tempoSegundos,
-            ':distancia_km' => $distanciaKm,
-            ':pace_segundos_km' => $paceSegundosKm,
-        ]
+        'INSERT INTO rp_testes_historico (' . implode(', ', $columns) . ')
+         VALUES (' . implode(', ', $placeholders) . ')',
+        $params
     );
     $testeId = dbLastInsertId();
 
@@ -1647,22 +1686,37 @@ if ($method === 'PUT' && preg_match('#^/api/treinador/usuarios/(\d+)/testes/(\d+
 
     $paceSegundosKm = $tempoSegundos / $distanciaKm;
 
+    $hasProva = safeDbColumnExists('rp_testes_historico', 'prova');
+    $hasDistancia = safeDbColumnExists('rp_testes_historico', 'distancia_km');
+    $hasPace = safeDbColumnExists('rp_testes_historico', 'pace_segundos_km');
+
+    $setParts = ['treinador_id = :treinador_id', 'tempo_segundos = :tempo_segundos'];
+    $params = [
+        ':treinador_id' => $treinadorId,
+        ':tempo_segundos' => $tempoSegundos,
+        ':id' => $testeId,
+    ];
+
+    if ($hasProva) {
+        $setParts[] = 'prova = :prova';
+        $params[':prova'] = 'teste';
+    }
+
+    if ($hasDistancia) {
+        $setParts[] = 'distancia_km = :distancia_km';
+        $params[':distancia_km'] = $distanciaKm;
+    }
+
+    if ($hasPace) {
+        $setParts[] = 'pace_segundos_km = :pace_segundos_km';
+        $params[':pace_segundos_km'] = $paceSegundosKm;
+    }
+
     dbExecute(
         'UPDATE rp_testes_historico
-            SET treinador_id = :treinador_id,
-                prova = :prova,
-                tempo_segundos = :tempo_segundos,
-                distancia_km = :distancia_km,
-                pace_segundos_km = :pace_segundos_km
+            SET ' . implode(",\n                ", $setParts) . '
           WHERE id = :id',
-        [
-            ':treinador_id' => $treinadorId,
-            ':prova' => 'teste',
-            ':tempo_segundos' => $tempoSegundos,
-            ':distancia_km' => $distanciaKm,
-            ':pace_segundos_km' => $paceSegundosKm,
-            ':id' => $testeId,
-        ]
+        $params
     );
 
     jsonResponse([
