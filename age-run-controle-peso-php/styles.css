@@ -1884,12 +1884,13 @@ body.dark-mode .nav-link.active {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 250px;
     gap: 14px;
-    align-items: start;
+    align-items: stretch;
 }
 
 .home-stats-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: auto 1fr;
     gap: 12px;
 }
 
@@ -1926,6 +1927,7 @@ body.dark-mode .nav-link.active {
 
 .home-rps-card {
     grid-column: 1 / -1;
+    height: 100%;
 }
 
 .home-rps-grid {
@@ -2016,10 +2018,12 @@ body.dark-mode .nav-link.active {
 @media (max-width: 768px) {
     .home-summary-layout {
         grid-template-columns: 1fr;
+        align-items: start;
     }
 
     .home-stats-grid {
         grid-template-columns: 1fr;
+        grid-template-rows: auto;
     }
 
     .home-stats-grid.home-stats-grid-no-ranking {

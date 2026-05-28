@@ -119,8 +119,9 @@ function marcarNivelAtual(gruposTiroData) {
     }
 
     const itemAtual = homeLevelItems.find((item) => {
+        const nivelKey = normalizeNivelLabel(item.dataset.levelKey || '');
         const nivelItem = normalizeNivelLabel(item.textContent);
-        return nivelItem.includes(nivelAtual) || nivelAtual.includes(nivelItem);
+        return nivelKey === nivelAtual || nivelItem.includes(nivelAtual) || nivelAtual.includes(nivelItem);
     });
 
     if (!itemAtual) {
@@ -165,8 +166,8 @@ async function carregarResumoHome() {
 
         if (homeStatsIntro) {
             homeStatsIntro.textContent = isMasculino
-                ? 'Resumo com seu progresso atual, ranking, RPs e grupo de tiros.'
-                : 'Resumo com seu progresso atual, RPs e grupo de tiros.';
+                ? 'Resumo com seu progresso atual, ranking e RPs.'
+                : 'Resumo com seu progresso atual e RPs.';
         }
 
         const [pesagensResp, rpsResp, gruposTiroResp, rankingResp] = await Promise.all([
