@@ -162,12 +162,10 @@ function formatCoachHistoryDate(value) {
         return '-';
     }
 
-    return parsed.toLocaleString('pt-BR', {
+    return parsed.toLocaleDateString('pt-BR', {
         day: '2-digit',
         month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
+        year: 'numeric'
     });
 }
 
@@ -207,7 +205,6 @@ function renderCoachTesteHistorico(usuario) {
                         </div>
                         <div class="coach-rp-test-meta-row">
                             <span>${formatCoachHistoryDate(item.criado_em)}</span>
-                            <span>${item.treinador_nome || 'Treinador'}</span>
                         </div>
                     </div>
                     <div class="coach-rp-test-history-actions">
