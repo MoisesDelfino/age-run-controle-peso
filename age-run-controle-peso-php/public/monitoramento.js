@@ -11,7 +11,9 @@ const statusEl = document.getElementById('monitorStatus');
 const totalEl = document.getElementById('kpiTotalEventos');
 const ativosEl = document.getElementById('kpiAtivos');
 const ultimaEl = document.getElementById('kpiUltimaAtualizacao');
+const instaladosEl = document.getElementById('kpiInstalados');
 const bodyEl = document.getElementById('monitorEventosBody');
+const installedBodyEl = document.getElementById('monitorInstaladosBody');
 const btnLogout = document.getElementById('btnLogout');
 
 function isOwnerEmail(email) {
@@ -99,6 +101,35 @@ function renderEvents(events) {
     }).join('');
 }
 
+function renderInstalledUsers(installedUsers) {
+    if (!installedBodyEl) return;
+
+    const list = Array.isArray(installedUsers) ? installedUsers : [];
+    if (!list.length) {
+        installedBodyEl.innerHTML = '<tr><td colspan="5">Nenhuma instalação registrada.</td></tr>';
+        return;
+    }
+
+    installedBodyEl.innerHTML = list.map((item) => {
+        const nome = String(item?.user_nome || '-');
+        const email = String(item?.user_email || '-');
+        const instaladoEm = formatDateTimeFromUnix(item?.installed_at_unix);
+        const plataforma = String(item?.last_platform || '-').toUpperCase();
+        const detectadoPor = String(item?.install_detected_by || '-');
+        const ultimaAtividade = formatDateTimeFromUnix(item?.last_seen_unix);
+
+        return `
+            <tr>
+                <td>${nome}<br><small>${email}</small></td>
+                <td>${instaladoEm}</td>
+                <td>${plataforma}</td>
+                <td>${detectadoPor}</td>
+                <td>${ultimaAtividade}</td>
+            </tr>
+        `;
+    }).join('');
+}
+
 function updateSummary(summary, events) {
     if (totalEl) {
         totalEl.textContent = String(summary?.total ?? events?.length ?? 0);
@@ -110,6 +141,10 @@ function updateSummary(summary, events) {
     const latestTs = summary?.ultima_atividade_ts || 0;
     if (ultimaEl) {
         ultimaEl.textContent = formatDateTimeFromUnix(latestTs);
+    }
+
+    if (instaladosEl) {
+        instaladosEl.textContent = String(summary?.instalados_total ?? 0);
     }
 }
 
@@ -131,12 +166,14 @@ async function carregarFeed() {
 
     const data = await response.json();
     const events = Array.isArray(data?.events) ? data.events : [];
+    const installedUsers = Array.isArray(data?.installed_users) ? data.installed_users : [];
 
     if (events.length > 0) {
         monitorLastTs = Math.max(monitorLastTs, Number(events[events.length - 1]?.ts_unix || 0));
     }
 
     renderEvents(events);
+    renderInstalledUsers(installedUsers);
     updateSummary(data?.summary || {}, events);
 
     const now = new Date();

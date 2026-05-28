@@ -64,6 +64,44 @@
             color: #6b7280;
         }
 
+        .monitor-install-wrap {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid rgba(16, 185, 129, 0.28);
+        }
+
+        .monitor-install-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 640px;
+            background: #fff;
+        }
+
+        .monitor-install-table thead {
+            background: rgba(16, 185, 129, 0.12);
+        }
+
+        .monitor-install-table th,
+        .monitor-install-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid rgba(16, 185, 129, 0.18);
+            font-size: 0.88rem;
+        }
+
+        body.dark-mode .monitor-install-table {
+            background: #101622;
+        }
+
+        body.dark-mode .monitor-install-table thead {
+            background: rgba(16, 185, 129, 0.24);
+        }
+
+        body.dark-mode .monitor-install-table th,
+        body.dark-mode .monitor-install-table td {
+            border-bottom-color: rgba(16, 185, 129, 0.24);
+        }
+
         .monitor-table-wrap {
             overflow-x: auto;
             border-radius: 12px;
@@ -173,6 +211,32 @@
                     <span class="monitor-kpi-label">Última atualização</span>
                     <strong id="kpiUltimaAtualizacao" class="monitor-kpi-value">-</strong>
                 </article>
+                <article class="monitor-kpi">
+                    <span class="monitor-kpi-label">Alunos com app instalado</span>
+                    <strong id="kpiInstalados" class="monitor-kpi-value">0</strong>
+                </article>
+            </div>
+
+            <div>
+                <h3>📱 Instalações de App no Celular</h3>
+                <div class="monitor-install-wrap">
+                    <table class="monitor-install-table">
+                        <thead>
+                            <tr>
+                                <th>Aluno</th>
+                                <th>Data da Instalação</th>
+                                <th>Plataforma</th>
+                                <th>Detecção</th>
+                                <th>Última atividade no app</th>
+                            </tr>
+                        </thead>
+                        <tbody id="monitorInstaladosBody">
+                            <tr>
+                                <td colspan="5">Nenhuma instalação registrada.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             <div class="monitor-table-wrap">

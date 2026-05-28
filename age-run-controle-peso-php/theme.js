@@ -2,6 +2,8 @@
     const THEME_STORAGE_KEY = 'agerun-theme';
     const DARK_CLASS = 'dark-mode';
     const PWA_DISMISSED_KEY = 'agerun-pwa-install-dismissed';
+    const PWA_STATUS_LAST_REPORT_KEY = 'agerun-pwa-status-last-report';
+    const PWA_STATUS_REPORT_INTERVAL_MS = 6 * 60 * 60 * 1000;
     const PWA_BANNER_ID = 'agerun-pwa-banner';
     const PWA_STYLE_ID = 'agerun-pwa-banner-style';
     let deferredInstallPrompt = null;
@@ -145,6 +147,63 @@
             localStorage.removeItem(PWA_DISMISSED_KEY);
         } catch (error) {
             // Ignora falha de armazenamento.
+        }
+    }
+
+    function getApiBasePath() {
+        const pathname = window.location.pathname || '';
+        if (pathname === '/dev' || pathname.startsWith('/dev/')) {
+            return '/dev/api';
+        }
+        if (pathname === '/controle' || pathname.startsWith('/controle/')) {
+            return '/controle/api';
+        }
+        return '/api';
+    }
+
+    async function reportPwaInstallStatus(source, force = false) {
+        if (!isMobileInstallDevice()) {
+            return;
+        }
+
+        const standalone = isStandaloneMode();
+        const now = Date.now();
+
+        if (!force) {
+            try {
+                const last = Number(localStorage.getItem(PWA_STATUS_LAST_REPORT_KEY) || 0);
+                if (last > 0 && (now - last) < PWA_STATUS_REPORT_INTERVAL_MS) {
+                    return;
+                }
+            } catch (error) {
+                // Ignora falha de storage.
+            }
+        }
+
+        try {
+            localStorage.setItem(PWA_STATUS_LAST_REPORT_KEY, String(now));
+        } catch (error) {
+            // Ignora falha de storage.
+        }
+
+        const platform = isIosDevice() ? 'ios' : (/android/i.test(window.navigator.userAgent) ? 'android' : 'mobile');
+
+        try {
+            await fetch(`${getApiBasePath()}/monitoramento/pwa-status`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    installed: standalone,
+                    standalone,
+                    source: source || 'heartbeat',
+                    platform
+                })
+            });
+        } catch (error) {
+            // Endpoint de telemetria opcional; não impacta UX.
         }
     }
 
@@ -364,12 +423,13 @@
     }
 
     function initPwa() {
+        ensurePwaHeadTags();
+        registerServiceWorker();
+        reportPwaInstallStatus(isStandaloneMode() ? 'standalone' : 'heartbeat');
+
         if (isStandaloneMode()) {
             return;
         }
-
-        ensurePwaHeadTags();
-        registerServiceWorker();
 
         if (!isMobileInstallDevice()) {
             return;
@@ -421,6 +481,7 @@
     });
 
     window.addEventListener('appinstalled', () => {
+        reportPwaInstallStatus('appinstalled', true);
         deferredInstallPrompt = null;
         clearPwaBannerDismissed();
         removePwaBanner();

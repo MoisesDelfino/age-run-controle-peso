@@ -99,6 +99,11 @@ function monitorEventsFilePath(): string
     return dirname(__DIR__) . '/storage/monitor_events.jsonl';
 }
 
+function monitorPwaStatusFilePath(): string
+{
+    return dirname(__DIR__) . '/storage/monitor_pwa_status.json';
+}
+
 function appendMonitorEvent(array $event): void
 {
     $path = monitorEventsFilePath();
@@ -117,6 +122,107 @@ function appendMonitorEvent(array $event): void
         json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . PHP_EOL,
         FILE_APPEND | LOCK_EX
     );
+}
+
+function loadMonitorPwaStatuses(): array
+{
+    $path = monitorPwaStatusFilePath();
+    if (!is_file($path)) {
+        return [];
+    }
+
+    $raw = @file_get_contents($path);
+    if ($raw === false || trim($raw) === '') {
+        return [];
+    }
+
+    $decoded = json_decode($raw, true);
+    return is_array($decoded) ? $decoded : [];
+}
+
+function saveMonitorPwaStatuses(array $items): void
+{
+    $path = monitorPwaStatusFilePath();
+    $dir = dirname($path);
+    if (!is_dir($dir)) {
+        @mkdir($dir, 0775, true);
+    }
+
+    @file_put_contents(
+        $path,
+        json_encode(array_values($items), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT),
+        LOCK_EX
+    );
+}
+
+function upsertMonitorPwaStatus(array $snapshot, array $status): bool
+{
+    $userId = (int) ($snapshot['id'] ?? 0);
+    if ($userId <= 0) {
+        return false;
+    }
+
+    $items = loadMonitorPwaStatuses();
+    $index = null;
+    foreach ($items as $i => $item) {
+        if ((int) ($item['user_id'] ?? 0) === $userId) {
+            $index = $i;
+            break;
+        }
+    }
+
+    $existing = $index === null ? [] : (array) ($items[$index] ?? []);
+    $wasInstalled = (int) ($existing['installed_at_unix'] ?? 0) > 0;
+    $now = time();
+    $isInstalledNow = !empty($status['installed']);
+
+    $merged = [
+        'user_id' => $userId,
+        'user_nome' => (string) ($snapshot['nome'] ?? ''),
+        'user_email' => normalizeEmail((string) ($snapshot['email'] ?? '')),
+        'last_source' => (string) ($status['source'] ?? 'heartbeat'),
+        'last_platform' => (string) ($status['platform'] ?? 'mobile'),
+        'last_user_agent' => (string) ($status['user_agent'] ?? ''),
+        'last_seen_unix' => $now,
+        'last_seen_iso' => gmdate('c', $now),
+        'installed_at_unix' => (int) ($existing['installed_at_unix'] ?? 0),
+        'installed_at_iso' => (string) ($existing['installed_at_iso'] ?? ''),
+        'install_detected_by' => (string) ($existing['install_detected_by'] ?? ''),
+    ];
+
+    if ($isInstalledNow && !$wasInstalled) {
+        $merged['installed_at_unix'] = $now;
+        $merged['installed_at_iso'] = gmdate('c', $now);
+        $merged['install_detected_by'] = (string) ($status['source'] ?? 'heartbeat');
+    }
+
+    if ($isInstalledNow && $wasInstalled && $merged['install_detected_by'] === '') {
+        $merged['install_detected_by'] = (string) ($status['source'] ?? 'heartbeat');
+    }
+
+    if ($index === null) {
+        $items[] = $merged;
+    } else {
+        $items[$index] = $merged;
+    }
+
+    saveMonitorPwaStatuses($items);
+
+    return $isInstalledNow && !$wasInstalled;
+}
+
+function getMonitorInstalledUsers(): array
+{
+    $items = loadMonitorPwaStatuses();
+    $installed = array_values(array_filter($items, static function ($item) {
+        return (int) ($item['installed_at_unix'] ?? 0) > 0;
+    }));
+
+    usort($installed, static function ($a, $b) {
+        return (int) ($b['installed_at_unix'] ?? 0) <=> (int) ($a['installed_at_unix'] ?? 0);
+    });
+
+    return $installed;
 }
 
 function getUserSnapshotById(int $userId): ?array
@@ -201,7 +307,7 @@ function trackAlunoApiActivity(string $method, string $path): void
         return;
     }
 
-    if ($path === '/api/auth/session' || str_starts_with($path, '/api/admin/monitoramento')) {
+    if ($path === '/api/auth/session' || str_starts_with($path, '/api/admin/monitoramento') || str_starts_with($path, '/api/monitoramento/pwa-status')) {
         return;
     }
 
@@ -1822,6 +1928,7 @@ if ($method === 'GET' && $path === '/api/admin/monitoramento/feed') {
 
     $sinceUnix = (int) ($_GET['since'] ?? 0);
     $events = readMonitorEvents($limit, $sinceUnix);
+    $installedUsers = getMonitorInstalledUsers();
     $fiveMinutesAgo = time() - 300;
 
     $activeUsers = [];
@@ -1836,12 +1943,62 @@ if ($method === 'GET' && $path === '/api/admin/monitoramento/feed') {
     jsonResponse([
         'success' => true,
         'events' => $events,
+        'installed_users' => $installedUsers,
         'summary' => [
             'total' => count($events),
             'ativos_5_min' => count($activeUsers),
+            'instalados_total' => count($installedUsers),
             'ultima_atividade_ts' => count($events) > 0 ? (int) ($events[count($events) - 1]['ts_unix'] ?? 0) : null,
         ],
         'server_time' => time(),
+    ]);
+}
+
+if ($method === 'POST' && $path === '/api/monitoramento/pwa-status') {
+    $userId = requireAuth();
+    $snapshot = getUserSnapshotById($userId);
+
+    if (!$snapshot || !isAlunoSnapshot($snapshot)) {
+        jsonResponse(['success' => true, 'ignored' => true]);
+    }
+
+    $input = jsonInput();
+    $source = strtolower(trim((string) ($input['source'] ?? 'heartbeat')));
+    if (!in_array($source, ['heartbeat', 'appinstalled', 'standalone'], true)) {
+        $source = 'heartbeat';
+    }
+
+    $platform = strtolower(trim((string) ($input['platform'] ?? 'mobile')));
+    $platform = preg_replace('/[^a-z0-9_-]/', '', $platform) ?: 'mobile';
+    $platform = substr($platform, 0, 24);
+
+    $standalone = !empty($input['standalone']);
+    $installed = !empty($input['installed']) || $standalone;
+    $userAgent = substr(trim((string) ($_SERVER['HTTP_USER_AGENT'] ?? '')), 0, 260);
+
+    $newInstall = upsertMonitorPwaStatus($snapshot, [
+        'installed' => $installed,
+        'source' => $source,
+        'platform' => $platform,
+        'user_agent' => $userAgent,
+    ]);
+
+    if ($newInstall) {
+        appendMonitorEvent([
+            'event_type' => 'pwa_installed',
+            'method' => 'POST',
+            'path' => '/api/monitoramento/pwa-status',
+            'user_id' => (int) ($snapshot['id'] ?? 0),
+            'user_nome' => (string) ($snapshot['nome'] ?? ''),
+            'user_email' => normalizeEmail((string) ($snapshot['email'] ?? '')),
+            'ip' => currentClientIp(),
+        ]);
+    }
+
+    jsonResponse([
+        'success' => true,
+        'installed' => $installed,
+        'new_install' => $newInstall,
     ]);
 }
 
