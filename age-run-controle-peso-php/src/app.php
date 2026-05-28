@@ -11,6 +11,7 @@ set_exception_handler(static function (Throwable $e): void {
     $cfg = appConfig();
     $isDebug = ($cfg['app_env'] ?? 'production') !== 'production';
     $uriPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
+    $isDevPath = str_starts_with($uriPath, '/dev/');
     $accept = (string) ($_SERVER['HTTP_ACCEPT'] ?? '');
     $isApi = str_contains($uriPath, '/api/');
 
@@ -20,7 +21,7 @@ set_exception_handler(static function (Throwable $e): void {
         http_response_code(500);
         header('Content-Type: application/json; charset=utf-8');
         $payload = ['error' => 'Erro interno do servidor'];
-        if ($isDebug) {
+        if ($isDebug || $isDevPath) {
             $payload['debug'] = $e->getMessage();
         }
         echo json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
@@ -29,7 +30,7 @@ set_exception_handler(static function (Throwable $e): void {
 
     http_response_code(500);
     header('Content-Type: text/plain; charset=utf-8');
-    echo $isDebug ? ('Erro interno do servidor: ' . $e->getMessage()) : 'Erro interno do servidor';
+    echo ($isDebug || $isDevPath) ? ('Erro interno do servidor: ' . $e->getMessage()) : 'Erro interno do servidor';
 });
 
 setupSession();
@@ -859,8 +860,10 @@ if ($method === 'POST' && $path === '/api/auth/login') {
         error_log('[AgeRun PHP] Erro no login: ' . $e->getMessage());
         $cfg = appConfig();
         $isDebug = ($cfg['app_env'] ?? 'production') !== 'production';
+        $uriPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
+        $isDevPath = str_starts_with($uriPath, '/dev/');
         $payload = ['error' => 'Erro interno do servidor'];
-        if ($isDebug) {
+        if ($isDebug || $isDevPath) {
             $payload['debug'] = $e->getMessage();
         }
         jsonResponse($payload, 500);
@@ -884,17 +887,23 @@ if ($method === 'GET' && $path === '/api/auth/session') {
     }
 
     try {
-        $usuario = dbFetchOne(
-            'SELECT id, nome, email, altura, sexo, perfil FROM usuarios WHERE id = :id LIMIT 1',
-            [':id' => $userId]
-        );
-    } catch (PDOException) {
-        $usuario = dbFetchOne('SELECT id, nome, email FROM usuarios WHERE id = :id LIMIT 1', [':id' => $userId]);
-        if ($usuario) {
-            $usuario['altura'] = null;
-            $usuario['sexo'] = 'masculino';
-            $usuario['perfil'] = 'aluno';
+        try {
+            $usuario = dbFetchOne(
+                'SELECT id, nome, email, altura, sexo, perfil FROM usuarios WHERE id = :id LIMIT 1',
+                [':id' => $userId]
+            );
+        } catch (PDOException) {
+            $usuario = dbFetchOne('SELECT id, nome, email FROM usuarios WHERE id = :id LIMIT 1', [':id' => $userId]);
+            if ($usuario) {
+                $usuario['altura'] = null;
+                $usuario['sexo'] = 'masculino';
+                $usuario['perfil'] = 'aluno';
+            }
         }
+    } catch (Throwable $e) {
+        error_log('[AgeRun PHP] Erro em /api/auth/session: ' . $e->getMessage());
+        $_SESSION = [];
+        jsonResponse(['authenticated' => false]);
     }
 
     if (!$usuario) {
