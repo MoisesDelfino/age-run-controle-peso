@@ -1410,48 +1410,75 @@ if ($method === 'GET' && $path === '/api/performance/grupos-tiro') {
 if ($method === 'GET' && $path === '/api/treinador/usuarios-ativos') {
     requireTrainerAuth();
 
-    $query = '
+    $usuarioColumns = [
+        'altura',
+        'rp_5k', 'rp_10k', 'rp_21k', 'rp_42k',
+        'rp_5k_status', 'rp_10k_status', 'rp_21k_status', 'rp_42k_status',
+    ];
+    $pesagemColumns = [
+        'gordura_percentual', 'massa_muscular_percentual', 'agua_percentual',
+        'massa_ossea', 'metabolismo_basal', 'idade_metabolica', 'gordura_visceral',
+        'excluido',
+    ];
+
+    $select = static function (string $tableAlias, string $tableName, string $column): string {
+        if (dbColumnExists($tableName, $column)) {
+            return sprintf('%s.%s AS %s', $tableAlias, $column, $column);
+        }
+
+        return sprintf('NULL AS %s', $column);
+    };
+
+    $usuarioSelectParts = [];
+    foreach ($usuarioColumns as $column) {
+        $usuarioSelectParts[] = $select('u', 'usuarios', $column);
+    }
+
+    $pesagemSelectParts = [];
+    foreach ($pesagemColumns as $column) {
+        if ($column === 'excluido') {
+            continue;
+        }
+        $pesagemSelectParts[] = $select('p', 'pesagens', $column);
+    }
+
+    $excluidoPredicate = dbColumnExists('pesagens', 'excluido')
+        ? '(p2.excluido IS NULL OR p2.excluido = 0)'
+        : '1=1';
+
+    $query = sprintf('
         SELECT
           u.id,
           u.nome,
           u.email,
-          u.altura,
-          u.rp_5k,
-          u.rp_10k,
-          u.rp_21k,
-          u.rp_42k,
-          u.rp_5k_status,
-          u.rp_10k_status,
-          u.rp_21k_status,
-          u.rp_42k_status,
+          %s,
           p.peso AS peso_atual,
           p.data_pesagem,
-          p.gordura_percentual,
-          p.massa_muscular_percentual,
-          p.agua_percentual,
-          p.massa_ossea,
-          p.metabolismo_basal,
-          p.idade_metabolica,
-          p.gordura_visceral
+          %s
         FROM usuarios u
         LEFT JOIN pesagens p ON p.id = (
           SELECT p2.id
           FROM pesagens p2
-          WHERE p2.usuario_id = u.id AND (p2.excluido IS NULL OR p2.excluido = 0)
+          WHERE p2.usuario_id = u.id AND %s
           ORDER BY p2.data_pesagem DESC, p2.id DESC
           LIMIT 1
         )
         WHERE EXISTS (
           SELECT 1
           FROM pesagens p3
-          WHERE p3.usuario_id = u.id AND (p3.excluido IS NULL OR p3.excluido = 0)
+          WHERE p3.usuario_id = u.id AND %s
         )
         ORDER BY u.nome ASC
-    ';
+    ', implode(",\n          ", $usuarioSelectParts), implode(",\n          ", $pesagemSelectParts), $excluidoPredicate, str_replace('p2.', 'p3.', $excluidoPredicate));
 
     $rows = dbFetchAll($query);
 
-    $historicoMap = buildRpTestesHistoricoMap(array_map(static fn ($row) => (int) ($row['id'] ?? 0), $rows));
+    try {
+        $historicoMap = buildRpTestesHistoricoMap(array_map(static fn ($row) => (int) ($row['id'] ?? 0), $rows));
+    } catch (Throwable $e) {
+        // Ambiente legado pode não ter tabela/colunas de histórico ainda.
+        $historicoMap = [];
+    }
 
     $usuarios = array_map(static function ($row) use ($historicoMap) {
         $altura = isset($row['altura']) && $row['altura'] !== null ? (float) $row['altura'] : null;
