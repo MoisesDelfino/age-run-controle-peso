@@ -2025,7 +2025,7 @@ if ($method === 'POST' && preg_match('#^/api/treinador/usuarios/(\d+)/testes$#',
 }
 
 if ($method === 'PUT' && preg_match('#^/api/treinador/usuarios/(\d+)/testes/(\d+)$#', $path, $matches) === 1) {
-    $treinadorId = requireTrainerAuth();
+    requireTrainerAuth();
 
     $alvoUsuarioId = (int) $matches[1];
     $testeId = (int) $matches[2];
@@ -2041,18 +2041,29 @@ if ($method === 'PUT' && preg_match('#^/api/treinador/usuarios/(\d+)/testes/(\d+
         jsonResponse(['error' => 'Distância do teste inválida'], 400);
     }
 
-    $teste = dbFetchOne(
-        'SELECT id, usuario_id FROM rp_testes_historico WHERE id = :id LIMIT 1',
-        [':id' => $testeId]
-    );
+    try {
+        $teste = dbFetchOne(
+            'SELECT id, usuario_id FROM rp_testes_historico WHERE id = :id LIMIT 1',
+            [':id' => $testeId]
+        );
 
-    if (!$teste || (int) ($teste['usuario_id'] ?? 0) !== $alvoUsuarioId) {
-        jsonResponse(['error' => 'Teste não encontrado para este usuário'], 404);
+        if (!$teste || (int) ($teste['usuario_id'] ?? 0) !== $alvoUsuarioId) {
+            jsonResponse(['error' => 'Teste não encontrado para este usuário'], 404);
+        }
+    } catch (Throwable $e) {
+        // Compatibilidade com schema legado sem coluna usuario_id.
+        $teste = dbFetchOne(
+            'SELECT id FROM rp_testes_historico WHERE id = :id LIMIT 1',
+            [':id' => $testeId]
+        );
+
+        if (!$teste) {
+            jsonResponse(['error' => 'Teste não encontrado para este usuário'], 404);
+        }
     }
 
     $paceSegundosKm = $tempoSegundos / $distanciaKm;
 
-    $hasTreinador = safeDbColumnExists('rp_testes_historico', 'treinador_id');
     $hasProva = safeDbColumnExists('rp_testes_historico', 'prova');
     $hasDistancia = safeDbColumnExists('rp_testes_historico', 'distancia_km');
     $hasPace = safeDbColumnExists('rp_testes_historico', 'pace_segundos_km');
@@ -2062,11 +2073,6 @@ if ($method === 'PUT' && preg_match('#^/api/treinador/usuarios/(\d+)/testes/(\d+
         ':tempo_segundos' => $tempoSegundos,
         ':id' => $testeId,
     ];
-
-    if ($hasTreinador) {
-        $setParts[] = 'treinador_id = :treinador_id';
-        $params[':treinador_id'] = $treinadorId;
-    }
 
     if ($hasProva) {
         $setParts[] = 'prova = :prova';
