@@ -259,6 +259,58 @@ function tryInsertRpTesteHistoricoByMetadata(array $baseValues): ?int
     }
 }
 
+function fallbackTestsFilePath(): string
+{
+    return dirname(__DIR__) . '/storage/rp_testes_fallback.json';
+}
+
+function loadFallbackTests(): array
+{
+    $path = fallbackTestsFilePath();
+    if (!is_file($path)) {
+        return [];
+    }
+
+    $raw = @file_get_contents($path);
+    if ($raw === false || trim($raw) === '') {
+        return [];
+    }
+
+    $decoded = json_decode($raw, true);
+    return is_array($decoded) ? $decoded : [];
+}
+
+function saveFallbackTests(array $items): void
+{
+    $path = fallbackTestsFilePath();
+    $dir = dirname($path);
+    if (!is_dir($dir)) {
+        @mkdir($dir, 0775, true);
+    }
+
+    @file_put_contents(
+        $path,
+        json_encode(array_values($items), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT),
+        LOCK_EX
+    );
+}
+
+function appendFallbackTeste(array $payload): int
+{
+    $items = loadFallbackTests();
+    $maxId = 0;
+    foreach ($items as $item) {
+        $maxId = max($maxId, (int) ($item['id'] ?? 0));
+    }
+
+    $nextId = $maxId + 1;
+    $payload['id'] = $nextId;
+    $items[] = $payload;
+    saveFallbackTests($items);
+
+    return $nextId;
+}
+
 function insertRpTesteHistoricoCompat(
     int $alvoUsuarioId,
     int $treinadorId,
@@ -339,7 +391,18 @@ function insertRpTesteHistoricoCompat(
         error_log('[AgeRun PHP] Fallback metadata insert falhou: ' . $e->getMessage());
     }
 
-    throw ($lastError ?? new RuntimeException('Falha ao inserir teste no histórico'));
+    $fallbackId = appendFallbackTeste([
+        'usuario_id' => $alvoUsuarioId,
+        'treinador_id' => $treinadorId,
+        'prova' => 'teste',
+        'tempo_segundos' => $tempoSegundos,
+        'distancia_km' => $distanciaKm,
+        'pace_segundos_km' => $paceSegundosKm,
+        'criado_em' => date('Y-m-d H:i:s'),
+        'treinador_nome' => null,
+        'source' => 'file-fallback',
+    ]);
+    return $fallbackId;
 }
 
 function ensureUsuariosCompatibilityColumns(): void
@@ -628,20 +691,33 @@ function buildRpTestesHistoricoMap(array $usuarioIds): array
     $hasDistancia = safeDbColumnExists('rp_testes_historico', 'distancia_km');
     $hasPace = safeDbColumnExists('rp_testes_historico', 'pace_segundos_km');
 
-    $rows = dbFetchAll(
-        'SELECT h.id, h.usuario_id, h.treinador_id, '
-            . ($hasProva ? 'h.prova' : 'NULL AS prova') . ', '
-            . 'h.tempo_segundos, '
-            . ($hasDistancia ? 'h.distancia_km' : 'NULL AS distancia_km') . ', '
-            . ($hasPace ? 'h.pace_segundos_km' : 'NULL AS pace_segundos_km') . ', '
-            . 'h.criado_em, '
-            . 't.nome AS treinador_nome '
-        . 'FROM rp_testes_historico h '
-        . 'LEFT JOIN usuarios t ON t.id = h.treinador_id '
-        . 'WHERE h.usuario_id IN (' . implode(', ', $placeholders) . ') '
-        . 'ORDER BY h.criado_em DESC, h.id DESC',
-        $params
-    );
+    try {
+        $rows = dbFetchAll(
+            'SELECT h.id, h.usuario_id, h.treinador_id, '
+                . ($hasProva ? 'h.prova' : 'NULL AS prova') . ', '
+                . 'h.tempo_segundos, '
+                . ($hasDistancia ? 'h.distancia_km' : 'NULL AS distancia_km') . ', '
+                . ($hasPace ? 'h.pace_segundos_km' : 'NULL AS pace_segundos_km') . ', '
+                . 'h.criado_em, '
+                . 't.nome AS treinador_nome '
+            . 'FROM rp_testes_historico h '
+            . 'LEFT JOIN usuarios t ON t.id = h.treinador_id '
+            . 'WHERE h.usuario_id IN (' . implode(', ', $placeholders) . ') '
+            . 'ORDER BY h.criado_em DESC, h.id DESC',
+            $params
+        );
+    } catch (Throwable $e) {
+        $rows = [];
+    }
+
+    $fallbackRows = array_values(array_filter(loadFallbackTests(), static function ($item) use ($ids) {
+        $uid = (int) ($item['usuario_id'] ?? 0);
+        return $uid > 0 && in_array($uid, $ids, true);
+    }));
+
+    if ($fallbackRows) {
+        $rows = array_merge($rows, $fallbackRows);
+    }
 
     $historico = [];
     foreach ($rows as $row) {
@@ -1837,7 +1913,9 @@ if ($method === 'POST' && preg_match('#^/api/treinador/usuarios/(\d+)/testes$#',
         $testeId = insertRpTesteHistoricoCompat($alvoUsuarioId, $treinadorId, $tempoSegundos, $distanciaKm, $paceSegundosKm);
     } catch (Throwable $e) {
         error_log('[AgeRun PHP] Falha ao salvar teste: ' . $e->getMessage());
-        jsonResponse(['error' => 'Erro ao salvar teste'], 500);
+        jsonResponse([
+            'error' => 'Erro ao salvar teste: ' . $e->getMessage(),
+        ], 500);
     }
 
     jsonResponse([
