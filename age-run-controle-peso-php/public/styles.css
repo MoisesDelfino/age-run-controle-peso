@@ -639,7 +639,6 @@ main {
     padding: 6px 12px;
     font-size: 0.75rem;
 }
-
 .coach-rp-test-panel {
     margin: 12px 0 14px;
     padding: 14px;
@@ -647,7 +646,6 @@ main {
     border-radius: 12px;
     background: linear-gradient(180deg, rgba(139, 195, 74, 0.08), rgba(255, 255, 255, 0.96));
 }
-
 .coach-rp-test-panel-header {
     display: flex;
     align-items: flex-start;
@@ -655,14 +653,12 @@ main {
     gap: 12px;
     margin-bottom: 12px;
 }
-
 .coach-rp-test-title {
     display: block;
     font-size: 1rem;
     color: var(--dark-color);
     margin-bottom: 2px;
 }
-
 .coach-rp-test-mode {
     padding: 4px 10px;
     border-radius: 999px;
@@ -671,7 +667,6 @@ main {
     font-size: 0.78rem;
     font-weight: 600;
 }
-
 .coach-rp-test-controls {
     display: grid;
     grid-template-columns: minmax(120px, 160px) minmax(120px, 160px) minmax(140px, 1fr) auto;
@@ -679,13 +674,11 @@ main {
     align-items: end;
     margin-bottom: 14px;
 }
-
 .coach-rp-test-field {
     display: flex;
     flex-direction: column;
     gap: 6px;
 }
-
 .coach-rp-test-input {
     width: 100%;
     min-height: 42px;
@@ -695,13 +688,11 @@ main {
     background: #fff;
     color: #1f1f1f;
 }
-
 .coach-rp-test-input:focus {
     outline: none;
     border-color: #8bc34a;
     box-shadow: 0 0 0 3px rgba(139, 195, 74, 0.18);
 }
-
 .coach-rp-test-preview {
     display: flex;
     flex-direction: column;
@@ -712,18 +703,15 @@ main {
     border-radius: 10px;
     background: rgba(33, 150, 243, 0.08);
 }
-
 .coach-rp-test-pace {
     color: #0d47a1;
     font-size: 0.95rem;
 }
-
 .coach-rp-test-buttons {
     display: flex;
     gap: 8px;
     align-items: center;
 }
-
 .coach-rp-test-buttons .btn,
 .coach-rp-test-history-actions .btn {
     width: auto;
@@ -731,24 +719,20 @@ main {
     padding: 9px 14px;
     font-size: 0.8rem;
 }
-
 .coach-rp-test-cancel,
 .coach-rp-test-delete {
     background: transparent;
     border: 1px solid #d16b6b;
     color: #c62828;
 }
-
 .coach-rp-test-cancel:hover,
 .coach-rp-test-delete:hover {
     background: rgba(198, 40, 40, 0.08);
 }
-
 .coach-rp-test-history-list {
     display: grid;
     gap: 10px;
 }
-
 .coach-rp-test-history-item {
     display: flex;
     align-items: center;
@@ -759,14 +743,12 @@ main {
     border-radius: 12px;
     background: rgba(255, 255, 255, 0.92);
 }
-
 .coach-rp-test-history-main {
     display: flex;
     flex-direction: column;
     gap: 8px;
     min-width: 0;
 }
-
 .coach-rp-test-chip-row,
 .coach-rp-test-meta-row,
 .coach-rp-test-history-actions {
@@ -775,7 +757,6 @@ main {
     gap: 8px;
     align-items: center;
 }
-
 .coach-rp-test-chip {
     display: inline-flex;
     align-items: center;
@@ -787,17 +768,14 @@ main {
     font-size: 0.82rem;
     font-weight: 600;
 }
-
 .coach-rp-test-chip-accent {
     background: rgba(33, 150, 243, 0.12);
     color: #1458b2;
 }
-
 .coach-rp-test-meta-row {
     color: #667085;
     font-size: 0.82rem;
 }
-
 .coach-rp-test-empty {
     padding: 10px 0 4px;
 }
@@ -1019,54 +997,43 @@ body.dark-mode .coach-rp-item {
     background: #121212;
     border-color: #2e2e2e;
 }
-
 body.dark-mode .coach-rp-test-panel {
     background: linear-gradient(180deg, rgba(61, 87, 33, 0.22), rgba(18, 18, 18, 0.92));
     border-color: #415028;
 }
-
 body.dark-mode .coach-rp-test-title {
     color: #eef8dc;
 }
-
 body.dark-mode .coach-rp-test-mode {
     background: rgba(100, 181, 246, 0.16);
     color: #bbdefb;
 }
-
 body.dark-mode .coach-rp-test-input {
     background: #101010;
     color: #f0f0f0;
     border-color: #3a3a3a;
 }
-
 body.dark-mode .coach-rp-test-preview {
     background: rgba(100, 181, 246, 0.12);
 }
-
 body.dark-mode .coach-rp-test-pace {
     color: #d4e7ff;
 }
-
 body.dark-mode .coach-rp-test-history-item {
     background: #151515;
     border-color: #2f2f2f;
 }
-
 body.dark-mode .coach-rp-test-chip {
     background: #263126;
     color: #d9efc2;
 }
-
 body.dark-mode .coach-rp-test-chip-accent {
     background: rgba(100, 181, 246, 0.18);
     color: #d6eaff;
 }
-
 body.dark-mode .coach-rp-test-meta-row {
     color: #b7b7b7;
 }
-
 body.dark-mode .coach-rp-test-cancel,
 body.dark-mode .coach-rp-test-delete {
     border-color: #a85a5a;
@@ -1121,11 +1088,9 @@ body.dark-mode .coach-metrics {
         flex-direction: column;
         align-items: flex-start;
     }
-
     .coach-rp-test-controls {
         grid-template-columns: 1fr;
     }
-
     .coach-rp-test-buttons,
     .coach-rp-test-history-item {
         flex-direction: column;
