@@ -1962,6 +1962,14 @@ body.dark-mode .nav-link.active {
     color: #203745;
 }
 
+.home-rp-pace {
+    display: block;
+    margin-top: 2px;
+    font-size: 0.78rem;
+    color: #4a677b;
+    font-weight: 600;
+}
+
 .home-levels-section {
     border: 1px solid #dce7f1;
     border-radius: 12px;
@@ -2089,6 +2097,10 @@ body.dark-mode .home-rp-distance {
 
 body.dark-mode .home-rp-time {
     color: #e4f1ff;
+}
+
+body.dark-mode .home-rp-pace {
+    color: #93c5fd;
 }
 
 body.dark-mode .home-levels-section {

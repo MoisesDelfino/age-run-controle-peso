@@ -72,19 +72,51 @@ function formatPeso(value) {
     return `${parsed.toFixed(2).replace('.', ',')} kg`;
 }
 
+function formatPaceFromRace(totalSeconds, distanceKm) {
+    const total = Number(totalSeconds);
+    const distance = Number(distanceKm);
+
+    if (!Number.isFinite(total) || !Number.isFinite(distance) || total <= 0 || distance <= 0) {
+        return '-';
+    }
+
+    const paceSeconds = Math.round(total / distance);
+    const minutes = Math.floor(paceSeconds / 60);
+    const seconds = paceSeconds % 60;
+
+    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}/km`;
+}
+
 function formatRpsResumo(rpsData) {
     const blocos = [
-        ['5K', rpsData?.rp_5k_formatado || '-'],
-        ['10K', rpsData?.rp_10k_formatado || '-'],
-        ['21K', rpsData?.rp_21k_formatado || '-'],
-        ['42K', rpsData?.rp_42k_formatado || '-']
+        {
+            label: '5K',
+            tempo: rpsData?.rp_5k_formatado || '-',
+            pace: formatPaceFromRace(rpsData?.rp_5k, 5)
+        },
+        {
+            label: '10K',
+            tempo: rpsData?.rp_10k_formatado || '-',
+            pace: formatPaceFromRace(rpsData?.rp_10k, 10)
+        },
+        {
+            label: '21K',
+            tempo: rpsData?.rp_21k_formatado || '-',
+            pace: formatPaceFromRace(rpsData?.rp_21k, 21.0975)
+        },
+        {
+            label: '42K',
+            tempo: rpsData?.rp_42k_formatado || '-',
+            pace: formatPaceFromRace(rpsData?.rp_42k, 42.195)
+        }
     ];
 
     return blocos
-        .map(([label, value]) => `
+        .map((bloco) => `
             <div class="home-rp-item">
-                <span class="home-rp-distance">${label}</span>
-                <strong class="home-rp-time">${value}</strong>
+                <span class="home-rp-distance">${bloco.label}</span>
+                <strong class="home-rp-time">${bloco.tempo}</strong>
+                <span class="home-rp-pace">Pace: ${bloco.pace}</span>
             </div>
         `)
         .join('');
