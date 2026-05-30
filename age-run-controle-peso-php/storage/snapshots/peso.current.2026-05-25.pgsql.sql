@@ -6,7 +6,7 @@ INSERT INTO usuarios (id,nome,email,senha,sexo,altura,data_cadastro,codigo_recup
 (1,'MOISES DELFINO CAMPOS','moisescamposdelfino@gmail.com','$2b$10$lg9wc8iFZhXzUxKzANcKW.F/oz6Yey6EEPF49bCiknPdMa6Njow/y','masculino',1.72,'2026-05-17T04:49:56.896Z',NULL,NULL),
 (2,'Luiz Fernando rosa ismael','luizfernandoismael171@gmail.com','$2b$10$apMdseQkk1zVsmT/CVDTzu6733b0nMsAsH4PJ618XeRXwd6n8n4Oy','masculino',NULL,'2026-05-17T05:06:40.549Z',NULL,NULL),
 (3,'Marcelo de Souza Alves','desouzaalvesmarcelo@gmail.com','$2b$10$8OqA4ybM4RnH0/1JDT2ms.5sVqpRuT8Eex9DE3t9dwZ4svG/mGN6m','masculino',NULL,'2026-05-17T18:25:50.029Z',NULL,NULL),
-(4,'Lucas N','luccanoventa@gmail.com','$2b$10$Pf5ZjiaSJcXOfEhBS1gTee.Sr4NSzb6IvujrlGQL6TYk/H33md84e','masculino',NULL,'2026-05-18T01:20:03.167Z',NULL,NULL),
+(4,'LUCAS DO NASCIMENTO PACHECO','luccanoventa@gmail.com','$2b$12$BI8WtR9ihCDRVGPso4YlYu55d8vCgz9uzTHiifTjBNig1YX112aUu','masculino',NULL,'2026-05-18T01:20:03.167Z',NULL,NULL),
 (5,'Victor dos Santos Pocomaier','victordossantos200425@gmail.com','$2b$10$JEJJOa7MaVhQk5eljUYJmOEFKwo1QV2Ifv9eKmMJF6vvnD6dFk/RC','masculino',NULL,'2026-05-19T13:07:35.931Z',NULL,NULL),
 (6,'Cristian Dagostim','cdagostim69@gmail.com','$2b$10$PTYxg.9vY2KKfp83APEDceXyEnIahJqK7U8grBXmyKN.Bv9Copai2','masculino',NULL,'2026-05-19T18:42:47.954Z',NULL,NULL),
 (7,'Arthur Salazar Netto','arthursalazarn@gmail.com','$2b$10$i8fhPD4g8VEjmvEU9oXb5Oil8gUj9lEfRUoKGkcstRlHqYqpcc.lG','masculino',NULL,'2026-05-19T22:01:23.081Z',NULL,NULL),
