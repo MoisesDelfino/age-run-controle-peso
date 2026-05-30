@@ -1746,6 +1746,14 @@ if ($method === 'POST' && $path === '/api/auth/cadastro') {
         jsonResponse(['error' => 'Sexo inválido'], 400);
     }
 
+    $usuarioExistente = dbFetchOne(
+        'SELECT id FROM usuarios WHERE LOWER(email) = LOWER(:email) LIMIT 1',
+        [':email' => $email]
+    );
+    if ($usuarioExistente) {
+        jsonResponse(['error' => 'E-mail já cadastrado'], 400);
+    }
+
     try {
         dbExecute(
             'INSERT INTO usuarios (nome, email, senha, sexo) VALUES (:nome, :email, :senha, :sexo)',
