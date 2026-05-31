@@ -3230,6 +3230,7 @@ $pages = [
     '/grupos-treino' => 'grupos-treino.html',
     '/treinador' => 'treinador.html',
     '/monitoramento' => 'monitoramento.html',
+    '/monitoramento-acessos' => 'monitoramento-acessos.html',
 ];
 
 if ($path === '/' || $path === '') {
@@ -3240,7 +3241,7 @@ if ($path === '/' || $path === '') {
 }
 
 if (array_key_exists($path, $pages)) {
-    $protectedPages = ['/home', '/pesagem', '/ranking', '/bioimpedancia', '/grupos-treino', '/treinador', '/monitoramento'];
+    $protectedPages = ['/home', '/pesagem', '/ranking', '/bioimpedancia', '/grupos-treino', '/treinador', '/monitoramento', '/monitoramento-acessos'];
     if (in_array($path, $protectedPages, true) && empty($_SESSION['userId'])) {
         redirectTo('/login');
     }
@@ -3257,7 +3258,7 @@ if (array_key_exists($path, $pages)) {
         redirectTo('/home');
     }
 
-    if ($path === '/monitoramento') {
+    if ($path === '/monitoramento' || $path === '/monitoramento-acessos') {
         $snapshot = getUserSnapshotById((int) ($_SESSION['userId'] ?? 0));
         if (!$snapshot || !isMonitorOwnerEmail((string) ($snapshot['email'] ?? ''))) {
             redirectTo('/home');

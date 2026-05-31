@@ -127,6 +127,56 @@
             align-items: center;
         }
 
+        .db-user-picker {
+            position: relative;
+            min-width: 0;
+        }
+
+        .db-user-dropdown {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: calc(100% + 6px);
+            max-height: 240px;
+            overflow-y: auto;
+            border-radius: 12px;
+            border: 1px solid rgba(51, 65, 85, 0.8);
+            background: rgba(2, 6, 23, 0.97);
+            box-shadow: 0 16px 34px rgba(2, 6, 23, 0.42);
+            z-index: 20;
+            display: none;
+        }
+
+        .db-user-dropdown.is-open {
+            display: block;
+        }
+
+        .db-user-option {
+            padding: 9px 12px;
+            border-bottom: 1px solid rgba(51, 65, 85, 0.7);
+            cursor: pointer;
+            color: #e2e8f0;
+            font-size: 0.86rem;
+            line-height: 1.35;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .db-user-option:last-child {
+            border-bottom: none;
+        }
+
+        .db-user-option.active,
+        .db-user-option:hover {
+            background: rgba(14, 165, 233, 0.2);
+        }
+
+        .db-user-option.empty {
+            color: #93c5fd;
+            cursor: default;
+        }
+
         .db-reset-output {
             display: grid;
             gap: 8px;
@@ -375,6 +425,11 @@
             color: #dbeafe;
         }
 
+        body.dark-mode .db-user-dropdown {
+            border-color: rgba(56, 189, 248, 0.45);
+            background: rgba(11, 18, 32, 0.97);
+        }
+
         body.dark-mode .db-tool-select {
             color: #e2e8f0;
             border-color: rgba(56, 189, 248, 0.35);
@@ -560,8 +615,10 @@
                         <p class="db-reset-title">Reset de senha para usuário ativo</p>
                         <p class="db-caption">Digite o nome e selecione no dropdown para gerar senha temporária com hash.</p>
                         <div class="db-reset-controls">
-                            <input id="resetUserSelect" class="db-tool-select" type="text" list="resetUserOptions" placeholder="Pesquisar e selecionar usuário..." autocomplete="off">
-                            <datalist id="resetUserOptions"></datalist>
+                            <div class="db-user-picker">
+                                <input id="resetUserSelect" class="db-tool-select" type="text" placeholder="Pesquisar e selecionar usuário..." autocomplete="off">
+                                <div id="resetUserDropdown" class="db-user-dropdown" role="listbox" aria-label="Usuários ativos"></div>
+                            </div>
                             <input id="resetUserId" type="hidden" value="">
                             <button id="btnGenerateReset" type="button" class="btn btn-primary">Resetar senha</button>
                         </div>
