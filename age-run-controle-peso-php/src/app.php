@@ -1962,6 +1962,111 @@ if ($method === 'GET' && $path === '/api/admin/monitoramento/feed') {
     ]);
 }
 
+if ($method === 'GET' && $path === '/api/admin/db-structure') {
+    requireMonitorOwnerAuth();
+
+    $driver = strtolower((string) (appConfig()['db']['driver'] ?? 'mysql'));
+    $tables = [];
+
+    try {
+        if ($driver === 'sqlite') {
+            $tables = dbFetchAll("SELECT name AS table_name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name");
+        } elseif ($driver === 'pgsql' || $driver === 'postgres' || $driver === 'postgresql') {
+            $tables = dbFetchAll(
+                'SELECT table_name FROM information_schema.tables WHERE table_schema = CURRENT_SCHEMA() ORDER BY table_name'
+            );
+        } else {
+            $tables = dbFetchAll('SHOW TABLES');
+        }
+    } catch (Throwable $e) {
+        jsonResponse(['error' => 'Falha ao listar tabelas: ' . $e->getMessage()], 500);
+    }
+
+    $normalizedTables = array_values(array_filter(array_map(static function (array $row) use ($driver): ?string {
+        if ($driver === 'sqlite') {
+            $value = (string) ($row['table_name'] ?? $row['name'] ?? '');
+        } elseif ($driver === 'pgsql' || $driver === 'postgres' || $driver === 'postgresql') {
+            $value = (string) ($row['table_name'] ?? '');
+        } else {
+            $values = array_values($row);
+            $value = (string) ($values[0] ?? '');
+        }
+
+        $value = trim($value);
+        return $value === '' ? null : $value;
+    }, $tables)));
+
+    $schemas = [];
+    foreach ($normalizedTables as $table) {
+        try {
+            if ($driver === 'sqlite') {
+                $schemas[$table] = dbFetchAll("PRAGMA table_info({$table})");
+            } elseif ($driver === 'pgsql' || $driver === 'postgres' || $driver === 'postgresql') {
+                $schemas[$table] = dbFetchAll(
+                    'SELECT column_name, data_type, is_nullable, column_default FROM information_schema.columns WHERE table_name = :table ORDER BY ordinal_position',
+                    [':table' => $table]
+                );
+            } else {
+                $schemas[$table] = dbFetchAll(
+                    'SHOW COLUMNS FROM `' . str_replace('`', '``', $table) . '`'
+                );
+            }
+        } catch (Throwable) {
+            $schemas[$table] = [];
+        }
+    }
+
+    jsonResponse([
+        'success' => true,
+        'driver' => $driver,
+        'tables' => $normalizedTables,
+        'schemas' => $schemas,
+    ]);
+}
+
+if ($method === 'POST' && $path === '/api/admin/db-query') {
+    requireMonitorOwnerAuth();
+
+    $input = jsonInput();
+    $sql = trim((string) ($input['sql'] ?? ''));
+
+    if ($sql === '') {
+        jsonResponse(['error' => 'SQL é obrigatório'], 400);
+    }
+
+    if (preg_match('/;\s*\S/', $sql) === 1) {
+        jsonResponse(['error' => 'Envie apenas uma instrução SQL por vez'], 400);
+    }
+
+    $operation = dbOperationFromSql($sql);
+    if ($operation === 'unknown') {
+        jsonResponse(['error' => 'Instrução SQL não suportada'], 400);
+    }
+
+    try {
+        if (in_array($operation, ['select', 'show', 'pragma', 'describe', 'desc', 'with'], true)) {
+            $rows = dbFetchAll($sql);
+            jsonResponse([
+                'success' => true,
+                'type' => 'select',
+                'row_count' => count($rows),
+                'rows' => $rows,
+            ]);
+        }
+
+        $affected = dbExecute($sql);
+        jsonResponse([
+            'success' => true,
+            'type' => 'write',
+            'affected_rows' => $affected,
+        ]);
+    } catch (Throwable $e) {
+        jsonResponse([
+            'error' => 'Falha ao executar SQL: ' . $e->getMessage(),
+        ], 500);
+    }
+}
+
 if ($method === 'POST' && $path === '/api/monitoramento/pwa-status') {
     $userId = requireAuth();
     $snapshot = getUserSnapshotById($userId);

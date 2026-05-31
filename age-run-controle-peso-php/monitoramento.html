@@ -132,6 +132,151 @@
             font-size: 0.82rem;
         }
 
+        .db-tool-grid {
+            display: grid;
+            gap: 16px;
+            grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
+        }
+
+        .db-tool-panel {
+            background: #fff;
+            border: 1px solid rgba(107, 114, 128, 0.18);
+            border-radius: 14px;
+            padding: 16px;
+            display: grid;
+            gap: 12px;
+        }
+
+        .db-tool-panel h3,
+        .db-tool-panel h4 {
+            margin: 0;
+        }
+
+        .db-tool-meta {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
+        .db-tool-editor {
+            width: 100%;
+            min-height: 180px;
+            resize: vertical;
+            font-family: "SFMono-Regular", Menlo, Monaco, Consolas, monospace;
+            font-size: 0.92rem;
+            line-height: 1.45;
+            border-radius: 12px;
+            border: 1px solid rgba(107, 114, 128, 0.2);
+            padding: 12px;
+            background: #0b1220;
+            color: #e5e7eb;
+        }
+
+        .db-tool-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .db-tool-select {
+            min-width: 220px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(107, 114, 128, 0.2);
+            background: #fff;
+        }
+
+        .db-tool-result {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid rgba(107, 114, 128, 0.2);
+        }
+
+        .db-tool-result table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 760px;
+            background: #fff;
+        }
+
+        .db-tool-result th,
+        .db-tool-result td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid rgba(107, 114, 128, 0.14);
+            font-size: 0.88rem;
+            vertical-align: top;
+        }
+
+        .db-tool-result thead {
+            background: #f3f4f6;
+        }
+
+        .db-schema-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .db-schema-card {
+            border: 1px solid rgba(107, 114, 128, 0.16);
+            border-radius: 12px;
+            padding: 12px;
+            background: rgba(243, 244, 246, 0.72);
+        }
+
+        .db-schema-card h4 {
+            margin-bottom: 8px;
+        }
+
+        .db-schema-columns {
+            margin: 0;
+            padding-left: 18px;
+            display: grid;
+            gap: 6px;
+            color: #4b5563;
+        }
+
+        body.dark-mode .db-tool-panel,
+        body.dark-mode .db-tool-result table,
+        body.dark-mode .db-tool-select {
+            background: #101622;
+        }
+
+        body.dark-mode .db-schema-card {
+            background: rgba(17, 24, 39, 0.72);
+            border-color: rgba(148, 163, 184, 0.16);
+        }
+
+        body.dark-mode .db-schema-columns,
+        body.dark-mode .db-tool-meta {
+            color: #cbd5e1;
+        }
+
+        body.dark-mode .db-tool-result thead {
+            background: #1a2333;
+        }
+
+        body.dark-mode .db-tool-result th,
+        body.dark-mode .db-tool-result td {
+            border-bottom-color: rgba(148, 163, 184, 0.18);
+        }
+
+        body.dark-mode .db-tool-editor {
+            background: #0b1220;
+            color: #e2e8f0;
+            border-color: rgba(148, 163, 184, 0.18);
+        }
+
+        @media (max-width: 960px) {
+            .db-tool-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
         body.dark-mode .monitor-table {
             background: #101622;
         }
@@ -256,6 +401,72 @@
                         </tr>
                     </tbody>
                 </table>
+            </div>
+
+            <div class="db-tool-grid">
+                <section class="db-tool-panel">
+                    <div>
+                        <h3>🧪 Query Tool do Banco</h3>
+                        <p class="monitor-status">Execute consultas no banco de produção sem sair desta tela. Útil para inspeção e ajustes pontuais.</p>
+                    </div>
+
+                    <div class="db-tool-meta">
+                        <span id="dbDriverLabel">Driver: -</span>
+                        <span id="dbTablesCountLabel">Tabelas: -</span>
+                    </div>
+
+                    <label for="dbTableSelect">Tabela rápida</label>
+                    <div class="db-tool-controls">
+                        <select id="dbTableSelect" class="db-tool-select">
+                            <option value="">Carregando tabelas...</option>
+                        </select>
+                        <button id="btnLoadTableSql" type="button" class="btn btn-secondary">Montar SELECT</button>
+                    </div>
+
+                    <label for="dbSqlEditor">SQL</label>
+                    <textarea id="dbSqlEditor" class="db-tool-editor" spellcheck="false">SELECT * FROM usuarios ORDER BY id DESC LIMIT 50;</textarea>
+
+                    <div class="db-tool-controls">
+                        <button id="btnRunSql" type="button" class="btn btn-primary">Executar SQL</button>
+                        <button id="btnRefreshSchema" type="button" class="btn btn-secondary">Atualizar schema</button>
+                    </div>
+
+                    <div id="dbToolMessage" class="message"></div>
+                </section>
+
+                <aside class="db-tool-panel">
+                    <div>
+                        <h3>📚 Estrutura</h3>
+                        <p class="monitor-status">Resumo das tabelas disponíveis no banco atual.</p>
+                    </div>
+                    <div id="dbSchemaList" class="db-schema-list">
+                        <div class="db-schema-card">
+                            <p class="monitor-status">Carregando schema...</p>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+
+            <div class="db-tool-panel">
+                <div>
+                    <h3>🧾 Resultado da Query</h3>
+                    <p class="monitor-status">As linhas retornadas aparecem abaixo. Em comandos de alteração, é exibido o número de linhas afetadas.</p>
+                </div>
+                <div class="db-tool-meta">
+                    <span id="dbResultMeta">Nenhuma query executada ainda.</span>
+                </div>
+                <div id="dbResultWrap" class="db-tool-result">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Resultado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dbResultBody">
+                            <tr><td>Execute uma query para ver os dados aqui.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </section>
     </main>
