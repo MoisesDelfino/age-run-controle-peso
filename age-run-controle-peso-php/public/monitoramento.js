@@ -38,6 +38,15 @@ let autocompleteState = {
     tokenEnd: 0
 };
 
+let resultState = {
+    sql: '',
+    table: '',
+    primaryKey: '',
+    rows: [],
+    columns: [],
+    editingRowIndex: -1
+};
+
 function isOwnerEmail(email) {
     return String(email || '').trim().toLowerCase() === MONITOR_OWNER_EMAIL;
 }
@@ -145,22 +154,115 @@ function renderDbSchema(driver, tables, schemas) {
     }).join('');
 }
 
-function renderResultRows(rows) {
+function parsePrimaryTableFromSql(sql) {
+    const raw = String(sql || '');
+    const fromMatch = raw.match(/\bfrom\s+(["`\[]?[a-zA-Z0-9_.]+["`\]]?)/i);
+    if (!fromMatch) return '';
+
+    const token = String(fromMatch[1] || '').replace(/["`\[\]]/g, '');
+    if (!token) return '';
+
+    const parts = token.split('.').filter(Boolean);
+    return parts.length ? parts[parts.length - 1] : token;
+}
+
+function inferPrimaryKeyColumn(columns) {
+    const list = Array.isArray(columns) ? columns : [];
+    if (!list.length) return '';
+
+    const exactId = list.find((col) => String(col).toLowerCase() === 'id');
+    if (exactId) return exactId;
+
+    const anyId = list.find((col) => String(col).toLowerCase().endsWith('_id'));
+    return anyId || '';
+}
+
+function quoteSqlIdentifier(identifier) {
+    const name = String(identifier || '').trim();
+    if (!name) return '';
+
+    if (schemaState.driver === 'pgsql' || schemaState.driver === 'postgres' || schemaState.driver === 'postgresql' || schemaState.driver === 'sqlite') {
+        return `"${name.replace(/"/g, '""')}"`;
+    }
+
+    return `\`${name.replace(/`/g, '``')}\``;
+}
+
+function toSqlLiteral(value) {
+    if (value === null || value === undefined) return 'NULL';
+
+    const raw = String(value);
+    if (raw.trim() === '') return "''";
+
+    if (/^-?\d+(\.\d+)?$/.test(raw.trim())) {
+        return raw.trim();
+    }
+
+    const escaped = raw.replace(/'/g, "''");
+    return `'${escaped}'`;
+}
+
+function resetRowEditing() {
+    resultState.editingRowIndex = -1;
+}
+
+function renderResultRows(rows, sqlSource) {
     if (!dbResultHeadEl || !dbResultBodyEl) return;
 
     const list = Array.isArray(rows) ? rows : [];
     if (!list.length) {
         dbResultHeadEl.innerHTML = '<tr><th>Resultado</th></tr>';
         dbResultBodyEl.innerHTML = '<tr><td>Query executada com sucesso, sem linhas retornadas.</td></tr>';
+        resultState = {
+            sql: String(sqlSource || ''),
+            table: '',
+            primaryKey: '',
+            rows: [],
+            columns: [],
+            editingRowIndex: -1
+        };
         return;
     }
 
     const columns = Array.from(new Set(list.flatMap((row) => Object.keys(row || {}))));
+    const tableName = parsePrimaryTableFromSql(sqlSource || resultState.sql);
+    const primaryKey = inferPrimaryKeyColumn(columns);
 
-    dbResultHeadEl.innerHTML = `<tr>${columns.map((col) => `<th>${escapeHtml(col)}</th>`).join('')}</tr>`;
-    dbResultBodyEl.innerHTML = list.map((row) => {
-        return `<tr>${columns.map((col) => `<td>${escapeHtml(formatDbValue(row?.[col]))}</td>`).join('')}</tr>`;
+    resultState.sql = String(sqlSource || resultState.sql || '');
+    resultState.table = tableName;
+    resultState.primaryKey = primaryKey;
+    resultState.rows = list;
+    resultState.columns = columns;
+
+    const editable = Boolean(tableName && primaryKey);
+    const actionHead = editable ? '<th class="db-row-actions">Ações</th>' : '';
+
+    dbResultHeadEl.innerHTML = `<tr>${actionHead}${columns.map((col) => `<th>${escapeHtml(col)}</th>`).join('')}</tr>`;
+    dbResultBodyEl.innerHTML = list.map((row, rowIndex) => {
+        const isEditing = rowIndex === resultState.editingRowIndex;
+        const actionCell = editable
+            ? (isEditing
+                ? `<td class="db-row-actions"><div class="db-row-buttons"><button type="button" class="btn btn-primary btn-row-save" data-row="${rowIndex}">Salvar</button><button type="button" class="btn btn-secondary btn-row-cancel" data-row="${rowIndex}">Cancelar</button></div></td>`
+                : `<td class="db-row-actions"><div class="db-row-buttons"><button type="button" class="btn btn-secondary btn-row-edit" data-row="${rowIndex}">Editar</button></div></td>`)
+            : '';
+
+        const cells = columns.map((col) => {
+            const colValue = row?.[col];
+            const isPk = String(col) === String(primaryKey);
+
+            if (isEditing && !isPk) {
+                return `<td><input class="db-cell-input" data-row="${rowIndex}" data-col="${escapeHtml(col)}" value="${escapeHtml(formatDbValue(colValue))}"></td>`;
+            }
+
+            return `<td>${escapeHtml(formatDbValue(colValue))}</td>`;
+        }).join('');
+
+        return `<tr class="${isEditing ? 'db-row-editing' : ''}">${actionCell}${cells}</tr>`;
     }).join('');
+
+    if (editable) {
+        setDbResultMeta(`${Number(list.length)} linha(s) retornada(s). Clique em Editar para alterar e salvar.`);
+    }
 }
 
 function renderResultAffected(affectedRows) {
@@ -250,9 +352,11 @@ async function executarSqlDb() {
     }
 
     if (Array.isArray(data?.rows)) {
-        renderResultRows(data.rows);
+        resetRowEditing();
+        renderResultRows(data.rows, sql);
         setDbResultMeta(`${Number(data.row_count || data.rows.length)} linha(s) retornada(s).`);
     } else {
+        resetRowEditing();
         renderResultAffected(data?.affected_rows || 0);
         setDbResultMeta(`${Number(data?.affected_rows || 0)} linha(s) afetada(s).`);
         await carregarEstruturaDb();
@@ -442,6 +546,99 @@ function applyAutocompleteItem(item) {
     hideAutocomplete();
 }
 
+function getEditableRowData(rowIndex) {
+    const row = resultState.rows[rowIndex];
+    if (!row) return null;
+
+    const snapshot = { ...row };
+    const inputs = document.querySelectorAll(`.db-cell-input[data-row="${rowIndex}"]`);
+    inputs.forEach((input) => {
+        const col = input.getAttribute('data-col') || '';
+        if (!col) return;
+        snapshot[col] = input.value;
+    });
+    return snapshot;
+}
+
+async function saveRowEdit(rowIndex) {
+    const row = getEditableRowData(rowIndex);
+    if (!row) return;
+
+    const table = resultState.table;
+    const pk = resultState.primaryKey;
+    if (!table || !pk) {
+        setDbMessage('Esta query não suporta edição inline automática.', 'error');
+        return;
+    }
+
+    const pkValue = row[pk];
+    const setParts = resultState.columns
+        .filter((col) => col !== pk)
+        .map((col) => `${quoteSqlIdentifier(col)} = ${toSqlLiteral(row[col])}`);
+
+    if (!setParts.length) {
+        setDbMessage('Não há campos editáveis nesta linha.', 'error');
+        return;
+    }
+
+    const sql = `UPDATE ${quoteSqlIdentifier(table)} SET ${setParts.join(', ')} WHERE ${quoteSqlIdentifier(pk)} = ${toSqlLiteral(pkValue)}`;
+
+    try {
+        setDbMessage('Salvando alteração...', 'info');
+        const response = await fetch(`${API_BASE}/admin/db-query`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ sql })
+        });
+
+        const data = await response.json();
+        if (!response.ok || data?.error) {
+            throw new Error(data?.error || 'Falha ao salvar edição');
+        }
+
+        setDbMessage('Registro atualizado com sucesso.', 'success');
+        resetRowEditing();
+        await executarSqlDb();
+    } catch (error) {
+        setDbMessage(error.message || 'Falha ao salvar edição.', 'error');
+    }
+}
+
+function bindResultEditingEvents() {
+    if (!dbResultBodyEl) return;
+
+    dbResultBodyEl.addEventListener('click', (event) => {
+        const editBtn = event.target.closest('.btn-row-edit');
+        if (editBtn) {
+            const rowIndex = Number(editBtn.getAttribute('data-row'));
+            if (Number.isFinite(rowIndex)) {
+                resultState.editingRowIndex = rowIndex;
+                renderResultRows(resultState.rows, resultState.sql);
+            }
+            return;
+        }
+
+        const cancelBtn = event.target.closest('.btn-row-cancel');
+        if (cancelBtn) {
+            resetRowEditing();
+            renderResultRows(resultState.rows, resultState.sql);
+            setDbMessage('Edição cancelada.', 'info');
+            return;
+        }
+
+        const saveBtn = event.target.closest('.btn-row-save');
+        if (saveBtn) {
+            const rowIndex = Number(saveBtn.getAttribute('data-row'));
+            if (Number.isFinite(rowIndex)) {
+                saveRowEdit(rowIndex);
+            }
+        }
+    });
+}
+
 function bindAutocompleteEvents() {
     if (!dbSqlEditorEl || !dbAutocompleteEl) return;
 
@@ -555,6 +752,7 @@ function initDbTool() {
     }
 
     bindAutocompleteEvents();
+    bindResultEditingEvents();
 }
 
 async function handleLogout() {

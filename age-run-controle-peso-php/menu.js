@@ -81,7 +81,7 @@ function ensureOwnerMonitorLink(isOwner) {
     const a = document.createElement('a');
     a.className = `nav-link${isActive ? ' active' : ''}`;
     a.href = href;
-    a.textContent = '📡 Monitoramento';
+    a.textContent = '🧪 Query Tool';
 
     li.appendChild(a);
     navList.appendChild(li);

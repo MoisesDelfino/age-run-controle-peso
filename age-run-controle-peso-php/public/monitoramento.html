@@ -19,19 +19,6 @@
             gap: 18px;
         }
 
-        .query-hero {
-            border-radius: 16px;
-            padding: 18px;
-            border: 1px solid rgba(11, 109, 130, 0.3);
-            background:
-                radial-gradient(circle at top right, rgba(16, 185, 129, 0.18), transparent 48%),
-                linear-gradient(130deg, rgba(15, 118, 110, 0.08), rgba(14, 165, 233, 0.08));
-        }
-
-        .query-hero h2 {
-            margin-bottom: 8px;
-        }
-
         .query-meta {
             display: flex;
             gap: 12px;
@@ -202,6 +189,14 @@
             background: #fff;
         }
 
+        .db-result-table tbody tr:nth-child(even) {
+            background: rgba(15, 23, 42, 0.03);
+        }
+
+        .db-result-table tbody tr:hover {
+            background: rgba(14, 165, 233, 0.08);
+        }
+
         .db-tool-result th,
         .db-tool-result td {
             padding: 10px;
@@ -209,6 +204,38 @@
             border-bottom: 1px solid rgba(107, 114, 128, 0.14);
             font-size: 0.88rem;
             vertical-align: top;
+        }
+
+        .db-row-actions {
+            width: 132px;
+            min-width: 132px;
+        }
+
+        .db-row-buttons {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .db-row-buttons .btn {
+            padding: 6px 10px;
+            font-size: 0.78rem;
+            border-radius: 8px;
+        }
+
+        .db-cell-input {
+            width: 100%;
+            box-sizing: border-box;
+            border-radius: 8px;
+            border: 1px solid rgba(148, 163, 184, 0.42);
+            padding: 6px 8px;
+            background: #ffffff;
+            color: #0f172a;
+            font-size: 0.85rem;
+        }
+
+        .db-row-editing td {
+            background: rgba(14, 165, 233, 0.11);
         }
 
         .db-tool-result thead {
@@ -301,13 +328,6 @@
             border-color: rgba(148, 163, 184, 0.35);
         }
 
-        body.dark-mode .query-hero {
-            border-color: rgba(14, 165, 233, 0.3);
-            background:
-                radial-gradient(circle at top right, rgba(16, 185, 129, 0.2), transparent 48%),
-                linear-gradient(130deg, rgba(15, 23, 42, 0.72), rgba(14, 165, 233, 0.12));
-        }
-
         body.dark-mode .query-meta,
         body.dark-mode .db-caption,
         body.dark-mode .db-shortcuts {
@@ -331,6 +351,20 @@
         body.dark-mode .db-tool-result th,
         body.dark-mode .db-tool-result td {
             border-bottom-color: rgba(148, 163, 184, 0.18);
+        }
+
+        body.dark-mode .db-result-table tbody tr:nth-child(even) {
+            background: rgba(30, 41, 59, 0.35);
+        }
+
+        body.dark-mode .db-result-table tbody tr:hover {
+            background: rgba(14, 165, 233, 0.16);
+        }
+
+        body.dark-mode .db-cell-input {
+            background: #0b1325;
+            color: #e2e8f0;
+            border-color: rgba(56, 189, 248, 0.35);
         }
 
         body.dark-mode .db-tool-editor {
@@ -414,21 +448,17 @@
 
     <main class="container home-content">
         <section class="card query-layout">
-            <div class="query-hero">
-                <h2>🧪 SQL Console</h2>
-                <p class="welcome-text">Console para inspeção e manipulação do banco com acesso exclusivo ao administrador.</p>
-                <div class="query-meta">
-                    <span id="dbDriverLabel">Driver: -</span>
-                    <span id="dbTablesCountLabel">Tabelas: -</span>
-                    <span>Dica: <strong>Ctrl+Enter</strong> executa a query</span>
-                </div>
-            </div>
-
             <div class="db-tool-grid">
                 <section class="db-tool-panel">
                     <div>
                         <h3>Editor SQL</h3>
                         <p class="db-caption">Autocomplete para palavras-chave, tabelas e colunas. Setas navegam nas sugestões, `Enter` aplica e `Ctrl+Enter` executa.</p>
+                    </div>
+
+                    <div class="query-meta">
+                        <span id="dbDriverLabel">Driver: -</span>
+                        <span id="dbTablesCountLabel">Tabelas: -</span>
+                        <span>Dica: <strong>Ctrl+Enter</strong> executa a query</span>
                     </div>
 
                     <div class="db-toolbar">
@@ -474,7 +504,7 @@
                     <span id="dbResultMeta">Nenhuma query executada ainda.</span>
                 </div>
                 <div id="dbResultWrap" class="db-tool-result">
-                    <table>
+                    <table class="db-result-table">
                         <thead id="dbResultHead">
                             <tr><th>Resultado</th></tr>
                         </thead>
