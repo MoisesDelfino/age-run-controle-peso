@@ -61,8 +61,8 @@ const TRAINER_OVERRIDE_EMAILS = [
     'moisescamposdelfino@gmail.com',
     'filipe.sul@gmail.com',
 ];
-const MONITOR_OWNER_EMAIL = 'moisescamposdelfino@gmail.com';
-const MONITOR_STAGING_OWNER_EMAILS = [
+const MONITOR_OWNER_EMAILS = [
+    'moisescamposdelfino@gmail.com',
     'testemoises@gmail.com',
     'moisesteste@gmail.com',
 ];
@@ -133,11 +133,7 @@ function isStagingLikeContext(): bool
 function isMonitorOwnerEmail(?string $email): bool
 {
     $normalized = normalizeEmail((string) $email);
-    if ($normalized === MONITOR_OWNER_EMAIL) {
-        return true;
-    }
-
-    return isStagingLikeContext() && in_array($normalized, MONITOR_STAGING_OWNER_EMAILS, true);
+    return in_array($normalized, MONITOR_OWNER_EMAILS, true);
 }
 
 function monitorEventsFilePath(): string

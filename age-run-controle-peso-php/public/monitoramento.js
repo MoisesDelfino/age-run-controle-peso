@@ -1,7 +1,6 @@
 var API_BASE = API_BASE || (window.location.pathname.startsWith('/dev') ? '/dev/api' : (window.location.pathname.startsWith('/controle') ? '/controle/api' : '/api'));
 
-const MONITOR_OWNER_EMAIL = 'moisescamposdelfino@gmail.com';
-const MONITOR_STAGING_OWNER_EMAILS = ['testemoises@gmail.com', 'moisesteste@gmail.com'];
+const MONITOR_OWNER_EMAILS = ['moisescamposdelfino@gmail.com', 'testemoises@gmail.com', 'moisesteste@gmail.com'];
 const SQL_KEYWORDS = [
     'SELECT', 'FROM', 'WHERE', 'ORDER BY', 'GROUP BY', 'HAVING', 'LIMIT', 'OFFSET',
     'INSERT INTO', 'VALUES', 'UPDATE', 'SET', 'DELETE', 'JOIN', 'LEFT JOIN',
@@ -85,20 +84,7 @@ function renderResetOutput(data) {
 
 function isOwnerEmail(email) {
     const normalized = String(email || '').trim().toLowerCase();
-    if (normalized === MONITOR_OWNER_EMAIL) {
-        return true;
-    }
-
-    const path = String(window.location.pathname || '').toLowerCase();
-    const host = String(window.location.hostname || '').toLowerCase();
-    const isStagingLike = window.location.pathname.startsWith('/dev')
-        || path.includes('/staging')
-        || path.includes('/homolog')
-        || path.includes('/hml')
-        || host.includes('staging')
-        || host.includes('homolog')
-        || host.includes('hml');
-    return isStagingLike && MONITOR_STAGING_OWNER_EMAILS.includes(normalized);
+    return MONITOR_OWNER_EMAILS.includes(normalized);
 }
 
 function setDbMessage(text, type) {
@@ -358,6 +344,11 @@ async function carregarUsuariosAtivos() {
         return;
     }
 
+    if (response.status === 403) {
+        resetUserSelectEl.innerHTML = '<option value="">Sem permissão para listar usuários</option>';
+        throw new Error('Acesso negado para listar usuários ativos');
+    }
+
     const data = await response.json();
     if (!response.ok || data?.error) {
         throw new Error(data?.error || 'Falha ao carregar usuários ativos');
@@ -421,6 +412,12 @@ async function carregarEstruturaDb() {
 
     if (response.status === 403) {
         setDbMessage('Acesso negado para esta área.', 'error');
+        if (dbTableSelectEl) {
+            dbTableSelectEl.innerHTML = '<option value="">Sem permissão para carregar tabelas</option>';
+        }
+        if (dbSchemaListEl) {
+            dbSchemaListEl.innerHTML = '<div class="db-schema-card"><p class="db-caption">Sem permissão para carregar schema.</p></div>';
+        }
         return;
     }
 
