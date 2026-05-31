@@ -1,19 +1,14 @@
 var API_BASE = API_BASE || (window.location.pathname.startsWith('/dev') ? '/dev/api' : (window.location.pathname.startsWith('/controle') ? '/controle/api' : '/api'));
 
 const MONITOR_OWNER_EMAIL = 'moisescamposdelfino@gmail.com';
-const FEED_POLL_MS = 4000;
+const SQL_KEYWORDS = [
+    'SELECT', 'FROM', 'WHERE', 'ORDER BY', 'GROUP BY', 'HAVING', 'LIMIT', 'OFFSET',
+    'INSERT INTO', 'VALUES', 'UPDATE', 'SET', 'DELETE', 'JOIN', 'LEFT JOIN',
+    'RIGHT JOIN', 'INNER JOIN', 'ON', 'AND', 'OR', 'IN', 'NOT IN', 'IS NULL',
+    'IS NOT NULL', 'CREATE TABLE', 'ALTER TABLE', 'DROP TABLE', 'TRUNCATE TABLE',
+    'SHOW TABLES', 'DESCRIBE', 'PRAGMA table_info', 'WITH'
+];
 
-let monitorSession = null;
-let monitorInterval = null;
-let monitorLastTs = 0;
-
-const statusEl = document.getElementById('monitorStatus');
-const totalEl = document.getElementById('kpiTotalEventos');
-const ativosEl = document.getElementById('kpiAtivos');
-const ultimaEl = document.getElementById('kpiUltimaAtualizacao');
-const instaladosEl = document.getElementById('kpiInstalados');
-const bodyEl = document.getElementById('monitorEventosBody');
-const installedBodyEl = document.getElementById('monitorInstaladosBody');
 const btnLogout = document.getElementById('btnLogout');
 const dbDriverLabel = document.getElementById('dbDriverLabel');
 const dbTablesCountLabel = document.getElementById('dbTablesCountLabel');
@@ -22,55 +17,35 @@ const dbTableSelectEl = document.getElementById('dbTableSelect');
 const dbSqlEditorEl = document.getElementById('dbSqlEditor');
 const dbToolMessageEl = document.getElementById('dbToolMessage');
 const dbResultMetaEl = document.getElementById('dbResultMeta');
+const dbResultHeadEl = document.getElementById('dbResultHead');
 const dbResultBodyEl = document.getElementById('dbResultBody');
+const dbAutocompleteEl = document.getElementById('dbAutocomplete');
 const btnRunSql = document.getElementById('btnRunSql');
 const btnRefreshSchema = document.getElementById('btnRefreshSchema');
 const btnLoadTableSql = document.getElementById('btnLoadTableSql');
+
+let schemaState = {
+    driver: '-',
+    tables: [],
+    columnsByTable: {}
+};
+
+let autocompleteState = {
+    items: [],
+    selectedIndex: 0,
+    open: false,
+    tokenStart: 0,
+    tokenEnd: 0
+};
 
 function isOwnerEmail(email) {
     return String(email || '').trim().toLowerCase() === MONITOR_OWNER_EMAIL;
 }
 
-function formatDateTimeFromUnix(tsUnix) {
-    const ts = Number(tsUnix || 0);
-    if (!ts) return '-';
-    const d = new Date(ts * 1000);
-    return d.toLocaleString('pt-BR', {
-        hour12: false,
-        year: '2-digit',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-    });
-}
-
-function describeEvent(event) {
-    const type = String(event?.event_type || 'api_action');
-    if (type === 'login') return 'Login';
-    if (type === 'logout') return 'Logout';
-    if (type === 'page_access') return 'Acesso de página';
-    return 'Ação API';
-}
-
-function formatDbValue(value) {
-    if (value === null || value === undefined) return '-';
-    if (typeof value === 'object') {
-        try {
-            return JSON.stringify(value);
-        } catch (error) {
-            return String(value);
-        }
-    }
-    if (typeof value === 'string' && value.trim() === '') return '-';
-    return String(value);
-}
-
-function setDbMessage(text, type = '') {
+function setDbMessage(text, type) {
     if (!dbToolMessageEl) return;
-    dbToolMessageEl.textContent = text;
-    dbToolMessageEl.className = type ? `message ${type} show` : 'message';
+    dbToolMessageEl.textContent = text || '';
+    dbToolMessageEl.className = type ? `db-message ${type} show` : 'db-message';
 }
 
 function setDbResultMeta(text) {
@@ -79,69 +54,139 @@ function setDbResultMeta(text) {
     }
 }
 
+function formatDbValue(value) {
+    if (value === null || value === undefined) return 'NULL';
+    if (typeof value === 'object') {
+        try {
+            return JSON.stringify(value);
+        } catch (error) {
+            return String(value);
+        }
+    }
+    return String(value);
+}
+
+function escapeHtml(value) {
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function normalizeColumnName(column) {
+    return String(
+        column.column_name ||
+        column.name ||
+        column.Field ||
+        column.cid ||
+        ''
+    ).trim();
+}
+
+function normalizeColumnType(column) {
+    return String(
+        column.data_type ||
+        column.type ||
+        column.Type ||
+        ''
+    ).trim();
+}
+
 function renderDbSchema(driver, tables, schemas) {
+    schemaState.driver = driver || '-';
+    schemaState.tables = Array.isArray(tables) ? tables : [];
+    schemaState.columnsByTable = {};
+
+    schemaState.tables.forEach((table) => {
+        const cols = Array.isArray(schemas?.[table]) ? schemas[table] : [];
+        schemaState.columnsByTable[table] = cols
+            .map((c) => normalizeColumnName(c))
+            .filter((name) => name !== '');
+    });
+
     if (dbDriverLabel) {
-        dbDriverLabel.textContent = `Driver: ${driver || '-'}`;
+        dbDriverLabel.textContent = `Driver: ${schemaState.driver}`;
     }
+
     if (dbTablesCountLabel) {
-        dbTablesCountLabel.textContent = `Tabelas: ${Array.isArray(tables) ? tables.length : 0}`;
+        dbTablesCountLabel.textContent = `Tabelas: ${schemaState.tables.length}`;
     }
+
     if (dbTableSelectEl) {
-        const list = Array.isArray(tables) ? tables : [];
-        dbTableSelectEl.innerHTML = list.length
-            ? list.map((table) => `<option value="${table}">${table}</option>`).join('')
+        dbTableSelectEl.innerHTML = schemaState.tables.length
+            ? schemaState.tables.map((table) => `<option value="${escapeHtml(table)}">${escapeHtml(table)}</option>`).join('')
             : '<option value="">Nenhuma tabela encontrada</option>';
     }
 
     if (!dbSchemaListEl) return;
-    const list = Array.isArray(tables) ? tables : [];
-    if (!list.length) {
-        dbSchemaListEl.innerHTML = '<div class="db-schema-card"><p class="monitor-status">Nenhuma tabela encontrada.</p></div>';
+
+    if (!schemaState.tables.length) {
+        dbSchemaListEl.innerHTML = '<div class="db-schema-card"><p class="db-caption">Nenhuma tabela encontrada.</p></div>';
         return;
     }
 
-    dbSchemaListEl.innerHTML = list.map((table) => {
-        const columns = Array.isArray(schemas?.[table]) ? schemas[table] : [];
-        const columnHtml = columns.length
-            ? `<ul class="db-schema-columns">${columns.map((column) => {
-                const name = column.column_name || column.name || column.Field || column.cid || 'coluna';
-                const type = column.data_type || column.type || column.Type || '';
-                const nullable = column.is_nullable || '';
-                const key = column.column_key || column.Key || '';
-                return `<li><strong>${formatDbValue(name)}</strong>${type ? ` - ${formatDbValue(type)}` : ''}${nullable ? ` - ${formatDbValue(nullable)}` : ''}${key ? ` - ${formatDbValue(key)}` : ''}</li>`;
-            }).join('')}</ul>`
-            : '<p class="monitor-status">Sem colunas detalhadas.</p>';
+    dbSchemaListEl.innerHTML = schemaState.tables.map((table) => {
+        const cols = Array.isArray(schemas?.[table]) ? schemas[table] : [];
 
-        return `
-            <div class="db-schema-card">
-                <h4>${table}</h4>
-                ${columnHtml}
-            </div>
-        `;
+        const colList = cols.length
+            ? `<ul class="db-schema-columns">${cols.map((col) => {
+                const name = normalizeColumnName(col) || 'coluna';
+                const type = normalizeColumnType(col);
+                const nullable = String(col.is_nullable || '').trim();
+                const key = String(col.column_key || col.Key || '').trim();
+                const parts = [type, nullable, key].filter(Boolean).map((part) => escapeHtml(part));
+                return `<li><strong>${escapeHtml(name)}</strong>${parts.length ? ` - ${parts.join(' - ')}` : ''}</li>`;
+            }).join('')}</ul>`
+            : '<p class="db-caption">Sem colunas detectadas.</p>';
+
+        return `<div class="db-schema-card"><h4>${escapeHtml(table)}</h4>${colList}</div>`;
     }).join('');
 }
 
-function renderDbRows(rows) {
-    if (!dbResultBodyEl) return;
+function renderResultRows(rows) {
+    if (!dbResultHeadEl || !dbResultBodyEl) return;
 
     const list = Array.isArray(rows) ? rows : [];
     if (!list.length) {
-        dbResultBodyEl.innerHTML = '<tr><td>Query executada com sucesso, mas sem linhas retornadas.</td></tr>';
+        dbResultHeadEl.innerHTML = '<tr><th>Resultado</th></tr>';
+        dbResultBodyEl.innerHTML = '<tr><td>Query executada com sucesso, sem linhas retornadas.</td></tr>';
         return;
     }
 
     const columns = Array.from(new Set(list.flatMap((row) => Object.keys(row || {}))));
-    if (!columns.length) {
-        dbResultBodyEl.innerHTML = '<tr><td>Query executada, mas sem colunas detectáveis.</td></tr>';
-        return;
+
+    dbResultHeadEl.innerHTML = `<tr>${columns.map((col) => `<th>${escapeHtml(col)}</th>`).join('')}</tr>`;
+    dbResultBodyEl.innerHTML = list.map((row) => {
+        return `<tr>${columns.map((col) => `<td>${escapeHtml(formatDbValue(row?.[col]))}</td>`).join('')}</tr>`;
+    }).join('');
+}
+
+function renderResultAffected(affectedRows) {
+    if (!dbResultHeadEl || !dbResultBodyEl) return;
+    dbResultHeadEl.innerHTML = '<tr><th>Resultado</th></tr>';
+    dbResultBodyEl.innerHTML = `<tr><td>${Number(affectedRows || 0)} linha(s) afetada(s).</td></tr>`;
+}
+
+async function verificarSessao() {
+    const response = await fetch(`${API_BASE}/auth/session`, {
+        credentials: 'include'
+    });
+
+    const data = await response.json();
+
+    if (!data?.authenticated) {
+        window.location.href = (window.location.pathname.startsWith('/dev') ? '/dev/login' : '/controle/login');
+        return false;
     }
 
-    dbResultBodyEl.innerHTML = `
-        <tr>${columns.map((column) => `<th>${column}</th>`).join('')}</tr>
-        ${list.map((row) => `
-            <tr>${columns.map((column) => `<td>${formatDbValue(row?.[column])}</td>`).join('')}</tr>
-        `).join('')}
-    `;
+    if (!isOwnerEmail(data?.email)) {
+        window.location.href = (window.location.pathname.startsWith('/dev') ? '/dev/home' : '/controle/home');
+        return false;
+    }
+
+    return true;
 }
 
 async function carregarEstruturaDb() {
@@ -161,11 +206,12 @@ async function carregarEstruturaDb() {
 
     const data = await response.json();
     if (!response.ok || data?.error) {
-        throw new Error(data?.error || 'Falha ao carregar schema do banco');
+        throw new Error(data?.error || 'Falha ao carregar estrutura do banco');
     }
 
     renderDbSchema(data?.driver || '-', data?.tables || [], data?.schemas || {});
-    setDbMessage('Schema carregado.', 'success');
+    updateAutocompleteSuggestions();
+    setDbMessage('Schema atualizado.', 'success');
 }
 
 function buildSelectSql(tableName) {
@@ -176,11 +222,12 @@ function buildSelectSql(tableName) {
 async function executarSqlDb() {
     const sql = String(dbSqlEditorEl?.value || '').trim();
     if (!sql) {
-        setDbMessage('Digite uma query SQL.', 'error');
+        setDbMessage('Digite uma query SQL para executar.', 'error');
         return;
     }
 
-    setDbMessage('Executando query...', '');
+    hideAutocomplete();
+    setDbMessage('Executando query...', 'info');
     setDbResultMeta('Processando query...');
 
     const response = await fetch(`${API_BASE}/admin/db-query`, {
@@ -203,153 +250,248 @@ async function executarSqlDb() {
     }
 
     if (Array.isArray(data?.rows)) {
-        renderDbRows(data.rows);
-        setDbResultMeta(`${data.row_count ?? data.rows.length} linha(s) retornada(s).`);
+        renderResultRows(data.rows);
+        setDbResultMeta(`${Number(data.row_count || data.rows.length)} linha(s) retornada(s).`);
     } else {
-        if (dbResultBodyEl) {
-            dbResultBodyEl.innerHTML = `<tr><td>${data?.affected_rows ?? 0} linha(s) afetada(s).</td></tr>`;
-        }
-        setDbResultMeta(`${data?.affected_rows ?? 0} linha(s) afetada(s).`);
+        renderResultAffected(data?.affected_rows || 0);
+        setDbResultMeta(`${Number(data?.affected_rows || 0)} linha(s) afetada(s).`);
+        await carregarEstruturaDb();
     }
 
     setDbMessage('Query executada com sucesso.', 'success');
 }
 
-function setStatus(text) {
-    if (statusEl) {
-        statusEl.textContent = text;
+function getCurrentTokenInfo() {
+    if (!dbSqlEditorEl) return null;
+
+    const text = dbSqlEditorEl.value;
+    const caret = dbSqlEditorEl.selectionStart;
+    let start = caret;
+    let end = caret;
+
+    while (start > 0 && /[a-zA-Z0-9_.]/.test(text[start - 1])) {
+        start -= 1;
     }
+
+    while (end < text.length && /[a-zA-Z0-9_.]/.test(text[end])) {
+        end += 1;
+    }
+
+    const token = text.slice(start, caret);
+    const lineStart = text.lastIndexOf('\n', start - 1) + 1;
+    const context = text.slice(lineStart, start).toUpperCase();
+
+    return { token, start, end, context };
 }
 
-async function verificarSessao() {
-    const response = await fetch(`${API_BASE}/auth/session`, {
-        credentials: 'include'
+function dedupeSuggestions(items) {
+    const map = new Map();
+    items.forEach((item) => {
+        const key = `${item.type}::${item.value}`;
+        if (!map.has(key)) {
+            map.set(key, item);
+        }
+    });
+    return Array.from(map.values());
+}
+
+function collectSuggestions(prefix, context) {
+    const normalizedPrefix = String(prefix || '').toLowerCase();
+    const contextUpper = String(context || '').toUpperCase();
+    const out = [];
+
+    const tableContext = /(FROM|JOIN|UPDATE|INTO|TABLE|DESCRIBE|TRUNCATE)\s*$/i.test(contextUpper);
+
+    if (normalizedPrefix.includes('.')) {
+        const [tablePart, columnPart] = normalizedPrefix.split('.', 2);
+        const table = schemaState.tables.find((t) => t.toLowerCase() === tablePart);
+        if (table) {
+            (schemaState.columnsByTable[table] || []).forEach((column) => {
+                if (!columnPart || column.toLowerCase().startsWith(columnPart)) {
+                    out.push({ label: `${table}.${column}`, value: `${table}.${column}`, type: 'column' });
+                }
+            });
+        }
+        return dedupeSuggestions(out).slice(0, 12);
+    }
+
+    if (!tableContext) {
+        SQL_KEYWORDS.forEach((keyword) => {
+            if (!normalizedPrefix || keyword.toLowerCase().startsWith(normalizedPrefix)) {
+                out.push({ label: keyword, value: keyword, type: 'keyword' });
+            }
+        });
+    }
+
+    schemaState.tables.forEach((table) => {
+        if (!normalizedPrefix || table.toLowerCase().startsWith(normalizedPrefix)) {
+            out.push({ label: table, value: table, type: 'table' });
+        }
     });
 
-    const data = await response.json();
-
-    if (!data?.authenticated) {
-        window.location.href = (window.location.pathname.startsWith('/dev') ? '/dev/login' : '/controle/login');
-        return false;
+    if (!tableContext) {
+        Object.entries(schemaState.columnsByTable).forEach(([table, columns]) => {
+            columns.forEach((column) => {
+                if (!normalizedPrefix || column.toLowerCase().startsWith(normalizedPrefix)) {
+                    out.push({ label: `${column} (${table})`, value: column, type: 'column' });
+                }
+            });
+        });
     }
 
-    if (!isOwnerEmail(data?.email)) {
-        window.location.href = (window.location.pathname.startsWith('/dev') ? '/dev/home' : '/controle/home');
-        return false;
-    }
-
-    monitorSession = data;
-    return true;
+    return dedupeSuggestions(out)
+        .sort((a, b) => {
+            const aStarts = a.value.toLowerCase().startsWith(normalizedPrefix) ? 0 : 1;
+            const bStarts = b.value.toLowerCase().startsWith(normalizedPrefix) ? 0 : 1;
+            if (aStarts !== bStarts) return aStarts - bStarts;
+            return a.value.localeCompare(b.value);
+        })
+        .slice(0, 12);
 }
 
-function renderEvents(events) {
-    if (!bodyEl) return;
+function renderAutocomplete() {
+    if (!dbAutocompleteEl) return;
 
-    const list = Array.isArray(events) ? [...events].reverse() : [];
-
-    if (!list.length) {
-        bodyEl.innerHTML = '<tr><td colspan="5">Nenhum evento ainda.</td></tr>';
+    if (!autocompleteState.open || !autocompleteState.items.length) {
+        dbAutocompleteEl.classList.remove('is-open');
+        dbAutocompleteEl.innerHTML = '';
         return;
     }
 
-    bodyEl.innerHTML = list.map((event) => {
-        const ts = formatDateTimeFromUnix(event?.ts_unix);
-        const nome = String(event?.user_nome || '-');
-        const email = String(event?.user_email || '-');
-        const method = String(event?.method || '-').toUpperCase();
-        const path = String(event?.path || '-');
-        const ip = String(event?.ip || '-');
-        const acao = describeEvent(event);
-
+    dbAutocompleteEl.innerHTML = autocompleteState.items.map((item, index) => {
+        const activeClass = index === autocompleteState.selectedIndex ? ' active' : '';
         return `
-            <tr>
-                <td>${ts}</td>
-                <td>${nome}<br><small>${email}</small></td>
-                <td>${acao}</td>
-                <td><code>${method} ${path}</code></td>
-                <td>${ip}</td>
-            </tr>
+            <div class="db-autocomplete-item${activeClass}" data-index="${index}">
+                <span>${escapeHtml(item.label)}</span>
+                <span class="db-autocomplete-type">${escapeHtml(item.type)}</span>
+            </div>
         `;
     }).join('');
+
+    dbAutocompleteEl.classList.add('is-open');
 }
 
-function renderInstalledUsers(installedUsers) {
-    if (!installedBodyEl) return;
+function hideAutocomplete() {
+    autocompleteState.open = false;
+    autocompleteState.items = [];
+    autocompleteState.selectedIndex = 0;
+    renderAutocomplete();
+}
 
-    const list = Array.isArray(installedUsers) ? installedUsers : [];
-    if (!list.length) {
-        installedBodyEl.innerHTML = '<tr><td colspan="5">Nenhuma instalação registrada.</td></tr>';
+function updateAutocompleteSuggestions() {
+    if (!dbSqlEditorEl) return;
+
+    const tokenInfo = getCurrentTokenInfo();
+    if (!tokenInfo) return;
+
+    autocompleteState.tokenStart = tokenInfo.start;
+    autocompleteState.tokenEnd = tokenInfo.end;
+
+    const token = tokenInfo.token || '';
+    const items = collectSuggestions(token, tokenInfo.context);
+
+    if (!items.length) {
+        hideAutocomplete();
         return;
     }
 
-    installedBodyEl.innerHTML = list.map((item) => {
-        const nome = String(item?.user_nome || '-');
-        const email = String(item?.user_email || '-');
-        const instaladoEm = formatDateTimeFromUnix(item?.installed_at_unix);
-        const plataforma = String(item?.last_platform || '-').toUpperCase();
-        const detectadoPor = String(item?.install_detected_by || '-');
-        const ultimaAtividade = formatDateTimeFromUnix(item?.last_seen_unix);
-
-        return `
-            <tr>
-                <td>${nome}<br><small>${email}</small></td>
-                <td>${instaladoEm}</td>
-                <td>${plataforma}</td>
-                <td>${detectadoPor}</td>
-                <td>${ultimaAtividade}</td>
-            </tr>
-        `;
-    }).join('');
+    autocompleteState.items = items;
+    autocompleteState.selectedIndex = 0;
+    autocompleteState.open = true;
+    renderAutocomplete();
 }
 
-function updateSummary(summary, events) {
-    if (totalEl) {
-        totalEl.textContent = String(summary?.total ?? events?.length ?? 0);
-    }
-    if (ativosEl) {
-        ativosEl.textContent = String(summary?.ativos_5_min ?? 0);
-    }
+function selectAutocompleteIndex(index) {
+    if (!autocompleteState.items.length) return;
 
-    const latestTs = summary?.ultima_atividade_ts || 0;
-    if (ultimaEl) {
-        ultimaEl.textContent = formatDateTimeFromUnix(latestTs);
-    }
+    const max = autocompleteState.items.length - 1;
+    if (index < 0) index = max;
+    if (index > max) index = 0;
 
-    if (instaladosEl) {
-        instaladosEl.textContent = String(summary?.instalados_total ?? 0);
-    }
+    autocompleteState.selectedIndex = index;
+    renderAutocomplete();
 }
 
-async function carregarFeed() {
-    const since = Math.max(0, monitorLastTs - 2);
-    const response = await fetch(`${API_BASE}/admin/monitoramento/feed?limit=200&since=${since}`, {
-        credentials: 'include'
+function applyAutocompleteItem(item) {
+    if (!dbSqlEditorEl || !item) return;
+
+    const text = dbSqlEditorEl.value;
+    const before = text.slice(0, autocompleteState.tokenStart);
+    const after = text.slice(autocompleteState.tokenEnd);
+    const insertValue = item.value;
+
+    const nextText = `${before}${insertValue}${after}`;
+    dbSqlEditorEl.value = nextText;
+
+    const caret = before.length + insertValue.length;
+    dbSqlEditorEl.focus();
+    dbSqlEditorEl.setSelectionRange(caret, caret);
+
+    hideAutocomplete();
+}
+
+function bindAutocompleteEvents() {
+    if (!dbSqlEditorEl || !dbAutocompleteEl) return;
+
+    dbSqlEditorEl.addEventListener('input', () => {
+        updateAutocompleteSuggestions();
     });
 
-    if (response.status === 401) {
-        window.location.href = (window.location.pathname.startsWith('/dev') ? '/dev/login' : '/controle/login');
-        return;
-    }
+    dbSqlEditorEl.addEventListener('click', () => {
+        updateAutocompleteSuggestions();
+    });
 
-    if (response.status === 403) {
-        setStatus('Acesso negado para este usuário.');
-        return;
-    }
+    dbSqlEditorEl.addEventListener('keydown', (event) => {
+        if (event.ctrlKey && event.key === 'Enter') {
+            event.preventDefault();
+            executarSqlDb().catch((error) => {
+                console.error('Erro ao executar SQL:', error);
+                setDbMessage(error.message || 'Falha ao executar SQL.', 'error');
+                setDbResultMeta('Erro ao executar query.');
+            });
+            return;
+        }
 
-    const data = await response.json();
-    const events = Array.isArray(data?.events) ? data.events : [];
-    const installedUsers = Array.isArray(data?.installed_users) ? data.installed_users : [];
+        if (!autocompleteState.open) return;
 
-    if (events.length > 0) {
-        monitorLastTs = Math.max(monitorLastTs, Number(events[events.length - 1]?.ts_unix || 0));
-    }
+        if (event.key === 'ArrowDown') {
+            event.preventDefault();
+            selectAutocompleteIndex(autocompleteState.selectedIndex + 1);
+            return;
+        }
 
-    renderEvents(events);
-    renderInstalledUsers(installedUsers);
-    updateSummary(data?.summary || {}, events);
+        if (event.key === 'ArrowUp') {
+            event.preventDefault();
+            selectAutocompleteIndex(autocompleteState.selectedIndex - 1);
+            return;
+        }
 
-    const now = new Date();
-    setStatus(`Feed ativo. Última leitura às ${now.toLocaleTimeString('pt-BR')}.`);
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            hideAutocomplete();
+            return;
+        }
+
+        if (event.key === 'Tab' || event.key === 'Enter') {
+            event.preventDefault();
+            applyAutocompleteItem(autocompleteState.items[autocompleteState.selectedIndex]);
+        }
+    });
+
+    dbAutocompleteEl.addEventListener('mousedown', (event) => {
+        const target = event.target.closest('.db-autocomplete-item');
+        if (!target) return;
+
+        event.preventDefault();
+        const index = Number(target.dataset.index || 0);
+        applyAutocompleteItem(autocompleteState.items[index]);
+    });
+
+    document.addEventListener('click', (event) => {
+        if (!dbAutocompleteEl.contains(event.target) && event.target !== dbSqlEditorEl) {
+            hideAutocomplete();
+        }
+    });
 }
 
 function initDbTool() {
@@ -367,6 +509,7 @@ function initDbTool() {
             const tableName = String(dbTableSelectEl?.value || '').trim();
             if (!tableName || !dbSqlEditorEl) return;
             dbSqlEditorEl.value = buildSelectSql(tableName);
+            updateAutocompleteSuggestions();
             setDbMessage(`Query montada para ${tableName}.`, 'success');
         });
     }
@@ -386,28 +529,11 @@ function initDbTool() {
             const tableName = String(dbTableSelectEl.value || '').trim();
             if (!tableName || !dbSqlEditorEl) return;
             dbSqlEditorEl.value = buildSelectSql(tableName);
+            updateAutocompleteSuggestions();
         });
     }
-}
 
-async function initMonitoramento() {
-    try {
-        const ok = await verificarSessao();
-        if (!ok) return;
-
-        initDbTool();
-        await carregarEstruturaDb();
-        await carregarFeed();
-        monitorInterval = window.setInterval(() => {
-            carregarFeed().catch((error) => {
-                console.error('Erro ao atualizar feed:', error);
-                setStatus('Falha ao atualizar feed em tempo real. Tentando novamente...');
-            });
-        }, FEED_POLL_MS);
-    } catch (error) {
-        console.error('Erro ao iniciar monitoramento:', error);
-        setStatus('Não foi possível iniciar o monitoramento em tempo real.');
-    }
+    bindAutocompleteEvents();
 }
 
 async function handleLogout() {
@@ -428,10 +554,19 @@ if (btnLogout) {
     });
 }
 
-window.addEventListener('beforeunload', () => {
-    if (monitorInterval) {
-        window.clearInterval(monitorInterval);
-    }
-});
+async function initPage() {
+    try {
+        const ok = await verificarSessao();
+        if (!ok) return;
 
-document.addEventListener('DOMContentLoaded', initMonitoramento);
+        initDbTool();
+        await carregarEstruturaDb();
+        setDbResultMeta('Pronto para executar queries.');
+        setDbMessage('Console SQL pronto. Use Ctrl+Enter para executar.', 'info');
+    } catch (error) {
+        console.error('Erro ao iniciar Query Tool:', error);
+        setDbMessage(error.message || 'Não foi possível iniciar a Query Tool.', 'error');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', initPage);
