@@ -27,6 +27,7 @@ function normalizarLinksMenu() {
         '/bioimpedancia',
         '/treinador',
         '/monitoramento',
+        '/monitoramento-acessos',
         '/login',
         '/cadastro',
         '/recuperar-senha'
@@ -51,14 +52,27 @@ function normalizarLinksMenu() {
     });
 }
 
-function ensureOwnerMonitorLink(isOwner) {
+function ensureOwnerMonitorLinks(isOwner) {
     const navList = document.querySelector('.nav-list');
     if (!navList) return;
 
-    const legacyMonitorLink = navList.querySelector('a[href$="/monitoramento"], a[href="./monitoramento"]');
-    const existing = navList.querySelector('.owner-monitor-link') || (legacyMonitorLink ? legacyMonitorLink.closest('li') : null);
+    const ownerEntries = [
+        {
+            key: 'owner-monitor-link',
+            href: withBasePath('/monitoramento'),
+            label: '🧪 Query Tool',
+            legacySelector: 'a[href$="/monitoramento"], a[href="./monitoramento"]',
+        },
+        {
+            key: 'owner-access-link',
+            href: withBasePath('/monitoramento-acessos'),
+            label: '🛰️ Últimos Acessos',
+            legacySelector: 'a[href$="/monitoramento-acessos"], a[href="./monitoramento-acessos"]',
+        },
+    ];
+
     if (!isOwner) {
-        const staleLinks = navList.querySelectorAll('.owner-monitor-link, li.owner-only a[href$="/monitoramento"], li.owner-only a[href="./monitoramento"]');
+        const staleLinks = navList.querySelectorAll('.owner-monitor-link, .owner-access-link, li.owner-only a[href$="/monitoramento"], li.owner-only a[href="./monitoramento"], li.owner-only a[href$="/monitoramento-acessos"], li.owner-only a[href="./monitoramento-acessos"]');
         staleLinks.forEach((node) => {
             const item = node.tagName === 'LI' ? node : node.closest('li');
             if (item) item.remove();
@@ -66,31 +80,34 @@ function ensureOwnerMonitorLink(isOwner) {
         return;
     }
 
-    const href = withBasePath('/monitoramento');
-    const isActive = window.location.pathname === href || window.location.pathname.endsWith('/monitoramento');
+    ownerEntries.forEach((entry) => {
+        const legacyNode = navList.querySelector(entry.legacySelector);
+        const existing = navList.querySelector(`.${entry.key}`) || (legacyNode ? legacyNode.closest('li') : null);
+        const isActive = window.location.pathname === entry.href || window.location.pathname.endsWith(entry.href.replace(/^\/controle|^\/dev/, ''));
 
-    if (existing) {
-        existing.classList.add('owner-monitor-link');
-        existing.classList.add('owner-only');
-        const link = existing.querySelector('a');
-        if (link) {
-            link.setAttribute('href', href);
-            link.classList.toggle('active', isActive);
-            link.textContent = '🧪 Query Tool';
+        if (existing) {
+            existing.classList.add(entry.key);
+            existing.classList.add('owner-only');
+            const link = existing.querySelector('a');
+            if (link) {
+                link.setAttribute('href', entry.href);
+                link.classList.toggle('active', isActive);
+                link.textContent = entry.label;
+            }
+            return;
         }
-        return;
-    }
 
-    const li = document.createElement('li');
-    li.className = 'owner-only owner-monitor-link';
+        const li = document.createElement('li');
+        li.className = `owner-only ${entry.key}`;
 
-    const a = document.createElement('a');
-    a.className = `nav-link${isActive ? ' active' : ''}`;
-    a.href = href;
-    a.textContent = '🧪 Query Tool';
+        const a = document.createElement('a');
+        a.className = `nav-link${isActive ? ' active' : ''}`;
+        a.href = entry.href;
+        a.textContent = entry.label;
 
-    li.appendChild(a);
-    navList.appendChild(li);
+        li.appendChild(a);
+        navList.appendChild(li);
+    });
 }
 
 function ativarFallbackRotasNovas(closeMenu) {
@@ -150,7 +167,7 @@ async function aplicarPermissoesMenu() {
             item.style.display = isTreinador ? '' : 'none';
         });
 
-        ensureOwnerMonitorLink(isOwner);
+        ensureOwnerMonitorLinks(isOwner);
 
         if (!isMulher) return;
 

@@ -24,7 +24,7 @@ const btnRunSql = document.getElementById('btnRunSql');
 const btnRefreshSchema = document.getElementById('btnRefreshSchema');
 const btnLoadTableSql = document.getElementById('btnLoadTableSql');
 const resetUserSelectEl = document.getElementById('resetUserSelect');
-const resetUserOptionsEl = document.getElementById('resetUserOptions');
+const resetUserDropdownEl = document.getElementById('resetUserDropdown');
 const resetUserIdEl = document.getElementById('resetUserId');
 const btnGenerateResetEl = document.getElementById('btnGenerateReset');
 const resetOutputEl = document.getElementById('resetOutput');
@@ -34,6 +34,11 @@ const resetUpdateSqlEl = document.getElementById('resetUpdateSql');
 const resetOutputNoteEl = document.getElementById('resetOutputNote');
 
 let activeUsersState = [];
+let resetUserDropdownState = {
+    open: false,
+    selectedIndex: 0,
+    visibleUsers: []
+};
 
 let schemaState = {
     driver: '-',
@@ -103,8 +108,57 @@ function syncResetUserIdByInput() {
     resetUserIdEl.value = '';
 }
 
+function closeResetUserDropdown() {
+    if (!resetUserDropdownEl) return;
+    resetUserDropdownState.open = false;
+    resetUserDropdownEl.classList.remove('is-open');
+}
+
+function openResetUserDropdown() {
+    if (!resetUserDropdownEl) return;
+    resetUserDropdownState.open = true;
+    resetUserDropdownEl.classList.add('is-open');
+}
+
+function selectResetUser(usuario) {
+    if (!resetUserSelectEl || !resetUserIdEl) return;
+
+    if (!usuario) {
+        resetUserSelectEl.value = '';
+        resetUserIdEl.value = '';
+        closeResetUserDropdown();
+        return;
+    }
+
+    resetUserSelectEl.value = formatResetUserLabel(usuario);
+    resetUserIdEl.value = String(Number(usuario?.id || 0));
+    closeResetUserDropdown();
+}
+
+function setResetUserDropdownSelection(index) {
+    const max = resetUserDropdownState.visibleUsers.length - 1;
+    if (max < 0) {
+        resetUserDropdownState.selectedIndex = 0;
+        return;
+    }
+
+    if (index < 0) {
+        index = max;
+    }
+    if (index > max) {
+        index = 0;
+    }
+    resetUserDropdownState.selectedIndex = index;
+
+    if (!resetUserDropdownEl) return;
+    const nodes = resetUserDropdownEl.querySelectorAll('.db-user-option');
+    nodes.forEach((node, nodeIndex) => {
+        node.classList.toggle('active', nodeIndex === resetUserDropdownState.selectedIndex);
+    });
+}
+
 function renderUsuariosAtivosOptions(filterValue) {
-    if (!resetUserOptionsEl) return;
+    if (!resetUserDropdownEl) return;
 
     const filter = normalizeSearchText(filterValue);
     const usuariosFiltrados = activeUsersState.filter((usuario) => {
@@ -113,16 +167,21 @@ function renderUsuariosAtivosOptions(filterValue) {
         return nome.includes(filter);
     });
 
+    resetUserDropdownState.visibleUsers = usuariosFiltrados;
+    resetUserDropdownState.selectedIndex = 0;
+
     if (!usuariosFiltrados.length) {
-        resetUserOptionsEl.innerHTML = '';
+        resetUserDropdownEl.innerHTML = '<div class="db-user-option empty">Nenhum usuário encontrado</div>';
+        openResetUserDropdown();
         return;
     }
 
-    resetUserOptionsEl.innerHTML = usuariosFiltrados.map((usuario) => {
-        const id = Number(usuario?.id || 0);
+    resetUserDropdownEl.innerHTML = usuariosFiltrados.map((usuario, index) => {
         const label = escapeHtml(formatResetUserLabel(usuario));
-        return `<option value="${label}" data-user-id="${id}"></option>`;
+        return `<div class="db-user-option${index === 0 ? ' active' : ''}" data-index="${index}" role="option">${label}</div>`;
     }).join('');
+
+    openResetUserDropdown();
 }
 
 function renderResetOutput(data) {
@@ -398,7 +457,7 @@ async function verificarSessao() {
 }
 
 async function carregarUsuariosAtivos() {
-    if (!resetUserSelectEl || !resetUserOptionsEl) return;
+    if (!resetUserSelectEl || !resetUserDropdownEl) return;
 
     const response = await fetch(`${API_BASE}/admin/query-tool/usuarios-ativos`, {
         credentials: 'include'
@@ -418,7 +477,7 @@ async function carregarUsuariosAtivos() {
     if (!activeUsersState.length) {
         resetUserSelectEl.value = '';
         resetUserSelectEl.placeholder = 'Nenhum usuário encontrado';
-        resetUserOptionsEl.innerHTML = '';
+        resetUserDropdownEl.innerHTML = '';
         if (resetUserIdEl) {
             resetUserIdEl.value = '';
         }
@@ -922,17 +981,72 @@ function initDbTool() {
     if (resetUserSelectEl) {
         resetUserSelectEl.addEventListener('input', () => {
             renderUsuariosAtivosOptions(resetUserSelectEl.value || '');
-            syncResetUserIdByInput();
+            if (resetUserIdEl) {
+                resetUserIdEl.value = '';
+            }
             hideResetOutput();
         });
 
         resetUserSelectEl.addEventListener('change', () => {
             syncResetUserIdByInput();
+            closeResetUserDropdown();
             hideResetOutput();
         });
 
         resetUserSelectEl.addEventListener('focus', () => {
             renderUsuariosAtivosOptions(resetUserSelectEl.value || '');
+        });
+
+        resetUserSelectEl.addEventListener('keydown', (event) => {
+            if (!resetUserDropdownState.open) return;
+
+            if (event.key === 'ArrowDown') {
+                event.preventDefault();
+                setResetUserDropdownSelection(resetUserDropdownState.selectedIndex + 1);
+                return;
+            }
+
+            if (event.key === 'ArrowUp') {
+                event.preventDefault();
+                setResetUserDropdownSelection(resetUserDropdownState.selectedIndex - 1);
+                return;
+            }
+
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                closeResetUserDropdown();
+                return;
+            }
+
+            if (event.key === 'Enter') {
+                const selectedUser = resetUserDropdownState.visibleUsers[resetUserDropdownState.selectedIndex];
+                if (selectedUser) {
+                    event.preventDefault();
+                    selectResetUser(selectedUser);
+                    hideResetOutput();
+                }
+            }
+        });
+    }
+
+    if (resetUserDropdownEl) {
+        resetUserDropdownEl.addEventListener('mousedown', (event) => {
+            const option = event.target.closest('.db-user-option');
+            if (!option || option.classList.contains('empty')) return;
+
+            event.preventDefault();
+            const index = Number(option.getAttribute('data-index') || 0);
+            const user = resetUserDropdownState.visibleUsers[index];
+            if (!user) return;
+
+            selectResetUser(user);
+            hideResetOutput();
+        });
+
+        document.addEventListener('click', (event) => {
+            if (!resetUserDropdownEl.contains(event.target) && event.target !== resetUserSelectEl) {
+                closeResetUserDropdown();
+            }
         });
     }
 
