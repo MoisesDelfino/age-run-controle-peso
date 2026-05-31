@@ -103,6 +103,8 @@ php scripts/repair_usuario_email.php luccanoventa@gmail.com "LUCAS DO NASCIMENTO
 
 Antes de aplicar, você pode testar sem gravar nada com `--dry-run`.
 
+Se o servidor não oferecer CLI no Plesk, use a página temporária em `/controle/repair-usuario-email.php?token=SEU_TOKEN`, depois de configurar `IMPORT_TOKEN` ou `REPAIR_TOKEN` no ambiente. Acesse primeiro em modo simulação, depois desmarque a opção de dry-run e remova o arquivo após o uso.
+
 ## PostgreSQL sem phpPgAdmin/Webadmin
 
 Se o painel nao oferecer interface web para importar SQL no PostgreSQL:
