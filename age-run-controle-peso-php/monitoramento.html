@@ -40,6 +40,7 @@
             padding: 16px;
             display: grid;
             gap: 12px;
+            min-width: 0;
         }
 
         .db-tool-panel h3,
@@ -134,6 +135,12 @@
             background: rgba(255, 255, 255, 0.7);
             border: 1px solid rgba(14, 116, 144, 0.18);
             font-size: 0.84rem;
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .db-reset-output > div {
+            min-width: 0;
         }
 
         .db-reset-output[hidden] {
@@ -147,7 +154,10 @@
             background: #0b1220;
             color: #e2e8f0;
             overflow-x: auto;
-            white-space: pre;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+            max-width: 100%;
         }
 
         .db-tool-editor {
@@ -453,12 +463,27 @@
             border-color: rgba(56, 189, 248, 0.45);
         }
 
+        @media (max-width: 1260px) {
+            .db-toolbar {
+                grid-template-columns: minmax(0, 1fr) auto;
+            }
+
+            #btnRefreshSchema {
+                grid-column: 1 / -1;
+                justify-self: start;
+            }
+        }
+
         @media (max-width: 960px) {
             .db-tool-grid {
                 grid-template-columns: 1fr;
             }
 
             .db-toolbar {
+                grid-template-columns: 1fr;
+            }
+
+            .db-reset-controls {
                 grid-template-columns: 1fr;
             }
         }
