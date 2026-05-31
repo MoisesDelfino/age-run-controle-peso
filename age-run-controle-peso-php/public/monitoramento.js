@@ -1,6 +1,6 @@
 var API_BASE = API_BASE || (window.location.pathname.startsWith('/dev') ? '/dev/api' : (window.location.pathname.startsWith('/controle') ? '/controle/api' : '/api'));
 
-const MONITOR_OWNER_EMAILS = ['moisescamposdelfino@gmail.com', 'testemoises@gmail.com', 'moisesteste@gmail.com'];
+const MONITOR_QUERY_OWNER_EMAILS = ['moisescamposdelfino@gmail.com', 'testemoises@gmail.com', 'moisesteste@gmail.com'];
 const SQL_KEYWORDS = [
     'SELECT', 'FROM', 'WHERE', 'ORDER BY', 'GROUP BY', 'HAVING', 'LIMIT', 'OFFSET',
     'INSERT INTO', 'VALUES', 'UPDATE', 'SET', 'DELETE', 'JOIN', 'LEFT JOIN',
@@ -84,7 +84,7 @@ function renderResetOutput(data) {
 
 function isOwnerEmail(email) {
     const normalized = String(email || '').trim().toLowerCase();
-    return MONITOR_OWNER_EMAILS.includes(normalized);
+    return MONITOR_QUERY_OWNER_EMAILS.includes(normalized);
 }
 
 function setDbMessage(text, type) {
