@@ -400,6 +400,27 @@ function requireMonitorOwnerAuth(): int
     return $userId;
 }
 
+function sessionRequiresPasswordChange(): bool
+{
+    return !empty($_SESSION['requirePasswordChange']);
+}
+
+function generateTemporaryPassword(int $length = 10): string
+{
+    $alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789@#';
+    $maxIndex = strlen($alphabet) - 1;
+    if ($maxIndex < 1) {
+        return 'Temp#1234';
+    }
+
+    $password = '';
+    for ($i = 0; $i < $length; $i++) {
+        $password .= $alphabet[random_int(0, $maxIndex)];
+    }
+
+    return $password;
+}
+
 function dbColumnExists(string $table, string $column): bool
 {
     $driver = strtolower((string) (appConfig()['db']['driver'] ?? 'mysql'));
@@ -916,6 +937,7 @@ function ensureUsuariosCompatibilityColumns(): void
         $missing = [];
         $targetColumns = [
             'perfil' => "VARCHAR(20) DEFAULT 'aluno'",
+            'senha_temporaria' => 'INTEGER DEFAULT 0',
             'rp_5k' => 'INTEGER DEFAULT NULL',
             'rp_10k' => 'INTEGER DEFAULT NULL',
             'rp_21k' => 'INTEGER DEFAULT NULL',
@@ -971,6 +993,7 @@ function ensureCoreTables(): void
                     sexo TEXT DEFAULT "masculino",
                     altura REAL NULL,
                     data_cadastro DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    senha_temporaria INTEGER DEFAULT 0,
                     codigo_recuperacao TEXT NULL,
                     codigo_expiracao DATETIME NULL
                 )'
@@ -1008,6 +1031,7 @@ function ensureCoreTables(): void
                     sexo TEXT DEFAULT \'masculino\',
                     altura DOUBLE PRECISION NULL,
                     data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    senha_temporaria INTEGER DEFAULT 0,
                     codigo_recuperacao TEXT NULL,
                     codigo_expiracao TIMESTAMP NULL
                 )'
@@ -1044,6 +1068,7 @@ function ensureCoreTables(): void
                 sexo VARCHAR(20) DEFAULT \'masculino\',
                 altura DECIMAL(4,2) NULL,
                 data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                senha_temporaria TINYINT(1) DEFAULT 0,
                 codigo_recuperacao VARCHAR(20) NULL,
                 codigo_expiracao DATETIME NULL
             )'
@@ -1729,6 +1754,16 @@ if (str_starts_with($path, '/api/')) {
     ensureUsuariosCompatibilityColumns();
     ensureRpTestesTable();
     trackAlunoApiActivity($method, $path);
+
+    $passwordChangeAllowedPaths = [
+        '/api/auth/session',
+        '/api/auth/logout',
+        '/api/auth/alterar-senha-primeiro-acesso',
+    ];
+
+    if ((int) ($_SESSION['userId'] ?? 0) > 0 && sessionRequiresPasswordChange() && !in_array($path, $passwordChangeAllowedPaths, true)) {
+        jsonResponse(['error' => 'É necessário trocar a senha temporária antes de continuar'], 403);
+    }
 }
 
 if ($method === 'POST' && $path === '/api/auth/cadastro') {
@@ -1803,6 +1838,7 @@ if ($method === 'POST' && $path === '/api/auth/login') {
         $_SESSION['sexo'] = (string) ($usuario['sexo'] ?? 'masculino');
         $_SESSION['email'] = (string) ($usuario['email'] ?? '');
         $_SESSION['perfil'] = (string) ($usuario['perfil'] ?? 'aluno');
+        $_SESSION['requirePasswordChange'] = !empty($usuario['senha_temporaria']);
 
         if (isAlunoSnapshot([
             'email' => (string) ($usuario['email'] ?? ''),
@@ -1822,6 +1858,7 @@ if ($method === 'POST' && $path === '/api/auth/login') {
         jsonResponse([
             'success' => true,
             'message' => 'Login realizado com sucesso!',
+            'require_password_change' => sessionRequiresPasswordChange(),
             'usuario' => [
                 'id' => (int) $usuario['id'],
                 'nome' => (string) $usuario['nome'],
@@ -1875,7 +1912,7 @@ if ($method === 'GET' && $path === '/api/auth/session') {
     try {
         try {
             $usuario = dbFetchOne(
-                'SELECT id, nome, email, altura, sexo, perfil FROM usuarios WHERE id = :id LIMIT 1',
+                'SELECT id, nome, email, altura, sexo, perfil, senha_temporaria FROM usuarios WHERE id = :id LIMIT 1',
                 [':id' => $userId]
             );
         } catch (PDOException) {
@@ -1884,6 +1921,7 @@ if ($method === 'GET' && $path === '/api/auth/session') {
                 $usuario['altura'] = null;
                 $usuario['sexo'] = 'masculino';
                 $usuario['perfil'] = 'aluno';
+                $usuario['senha_temporaria'] = 0;
             }
         }
     } catch (Throwable $e) {
@@ -1902,8 +1940,36 @@ if ($method === 'GET' && $path === '/api/auth/session') {
     if (isTrainerOverrideEmail((string) ($usuario['email'] ?? ''))) {
         $usuario['perfil'] = 'treinador';
     }
+    $_SESSION['requirePasswordChange'] = !empty($usuario['senha_temporaria']);
+    $usuario['require_password_change'] = sessionRequiresPasswordChange();
     $usuario['authenticated'] = true;
     jsonResponse($usuario);
+}
+
+if ($method === 'POST' && $path === '/api/auth/alterar-senha-primeiro-acesso') {
+    $userId = requireAuth();
+    $input = jsonInput();
+
+    $novaSenha = (string) ($input['novaSenha'] ?? '');
+    if (mb_strlen($novaSenha) < 6) {
+        jsonResponse(['error' => 'A nova senha deve ter no mínimo 6 caracteres'], 400);
+    }
+
+    dbExecute(
+        'UPDATE usuarios
+         SET senha = :senha,
+             senha_temporaria = 0,
+             codigo_recuperacao = NULL,
+             codigo_expiracao = NULL
+         WHERE id = :id',
+        [
+            ':senha' => password_hash($novaSenha, PASSWORD_DEFAULT),
+            ':id' => $userId,
+        ]
+    );
+
+    $_SESSION['requirePasswordChange'] = false;
+    jsonResponse(['success' => true, 'message' => 'Senha alterada com sucesso']);
 }
 
 if ($method === 'GET' && $path === '/api/admin/db-health') {
@@ -2065,6 +2131,65 @@ if ($method === 'POST' && $path === '/api/admin/db-query') {
             'error' => 'Falha ao executar SQL: ' . $e->getMessage(),
         ], 500);
     }
+}
+
+if ($method === 'GET' && $path === '/api/admin/query-tool/usuarios-ativos') {
+    requireMonitorOwnerAuth();
+
+    try {
+        $rows = dbFetchAll(
+            'SELECT u.id, u.nome, u.email, MAX(p.data_pesagem) AS ultima_pesagem
+             FROM usuarios u
+             INNER JOIN pesagens p ON p.usuario_id = u.id AND (p.excluido IS NULL OR p.excluido = 0)
+             GROUP BY u.id, u.nome, u.email
+             ORDER BY u.nome ASC'
+        );
+    } catch (Throwable) {
+        $rows = [];
+    }
+
+    if (!$rows) {
+        $rows = dbFetchAll('SELECT id, nome, email, NULL AS ultima_pesagem FROM usuarios ORDER BY nome ASC');
+    }
+
+    jsonResponse([
+        'success' => true,
+        'usuarios' => $rows,
+    ]);
+}
+
+if ($method === 'POST' && $path === '/api/admin/query-tool/reset-senha-preview') {
+    requireMonitorOwnerAuth();
+
+    $input = jsonInput();
+    $userId = (int) ($input['user_id'] ?? 0);
+
+    if ($userId <= 0) {
+        jsonResponse(['error' => 'Usuário inválido'], 400);
+    }
+
+    $usuario = dbFetchOne('SELECT id, nome, email FROM usuarios WHERE id = :id LIMIT 1', [':id' => $userId]);
+    if (!$usuario) {
+        jsonResponse(['error' => 'Usuário não encontrado'], 404);
+    }
+
+    $senhaTemporaria = generateTemporaryPassword(10);
+    $senhaHash = password_hash($senhaTemporaria, PASSWORD_DEFAULT);
+
+    $sql = "UPDATE usuarios SET senha = '" . str_replace("'", "''", $senhaHash) . "', senha_temporaria = 1, codigo_recuperacao = NULL, codigo_expiracao = NULL WHERE id = " . (int) $userId . ";";
+
+    jsonResponse([
+        'success' => true,
+        'usuario' => [
+            'id' => (int) ($usuario['id'] ?? 0),
+            'nome' => (string) ($usuario['nome'] ?? ''),
+            'email' => (string) ($usuario['email'] ?? ''),
+        ],
+        'senha_temporaria' => $senhaTemporaria,
+        'senha_hash' => $senhaHash,
+        'update_sql' => $sql,
+        'observacao' => 'Após aplicar o UPDATE, no próximo login o usuário será obrigado a trocar a senha.',
+    ]);
 }
 
 if ($method === 'POST' && $path === '/api/monitoramento/pwa-status') {
@@ -3097,6 +3222,7 @@ $pages = [
     '/login' => 'login.html',
     '/cadastro' => 'cadastro.html',
     '/recuperar-senha' => 'recuperar-senha.html',
+    '/primeiro-acesso' => 'primeiro-acesso.html',
     '/home' => 'home.html',
     '/pesagem' => 'pesagem.html',
     '/ranking' => 'ranking.html',
@@ -3117,6 +3243,18 @@ if (array_key_exists($path, $pages)) {
     $protectedPages = ['/home', '/pesagem', '/ranking', '/bioimpedancia', '/grupos-treino', '/treinador', '/monitoramento'];
     if (in_array($path, $protectedPages, true) && empty($_SESSION['userId'])) {
         redirectTo('/login');
+    }
+
+    if (in_array($path, $protectedPages, true) && sessionRequiresPasswordChange()) {
+        redirectTo('/primeiro-acesso');
+    }
+
+    if ($path === '/primeiro-acesso' && empty($_SESSION['userId'])) {
+        redirectTo('/login');
+    }
+
+    if ($path === '/primeiro-acesso' && !sessionRequiresPasswordChange()) {
+        redirectTo('/home');
     }
 
     if ($path === '/monitoramento') {

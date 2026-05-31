@@ -24,6 +24,8 @@ home.html
 home.js
 monitoramento.html
 monitoramento.js
+primeiro-acesso.html
+primeiro-acesso.js
 index.html
 login.html
 menu.js

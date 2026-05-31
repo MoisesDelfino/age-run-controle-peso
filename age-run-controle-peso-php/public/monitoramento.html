@@ -103,6 +103,53 @@
             position: relative;
         }
 
+        .db-reset-panel {
+            border: 1px solid rgba(14, 116, 144, 0.22);
+            background: linear-gradient(120deg, rgba(224, 242, 254, 0.75), rgba(236, 253, 245, 0.7));
+            border-radius: 12px;
+            padding: 12px;
+            display: grid;
+            gap: 10px;
+        }
+
+        .db-reset-title {
+            margin: 0;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .db-reset-controls {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .db-reset-output {
+            display: grid;
+            gap: 8px;
+            padding: 10px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(14, 116, 144, 0.18);
+            font-size: 0.84rem;
+        }
+
+        .db-reset-output[hidden] {
+            display: none;
+        }
+
+        .db-reset-output code {
+            display: block;
+            padding: 8px;
+            border-radius: 8px;
+            background: #0b1220;
+            color: #e2e8f0;
+            overflow-x: auto;
+            white-space: pre;
+        }
+
         .db-tool-editor {
             width: 100%;
             min-height: 220px;
@@ -303,6 +350,21 @@
             background: #101622;
         }
 
+        body.dark-mode .db-reset-panel {
+            border-color: rgba(56, 189, 248, 0.35);
+            background: linear-gradient(120deg, rgba(15, 23, 42, 0.9), rgba(17, 24, 39, 0.85));
+        }
+
+        body.dark-mode .db-reset-title {
+            color: #e2e8f0;
+        }
+
+        body.dark-mode .db-reset-output {
+            background: rgba(11, 18, 32, 0.8);
+            border-color: rgba(56, 189, 248, 0.26);
+            color: #dbeafe;
+        }
+
         body.dark-mode .db-tool-select {
             color: #e2e8f0;
             border-color: rgba(56, 189, 248, 0.35);
@@ -467,6 +529,23 @@
                         </select>
                         <button id="btnLoadTableSql" type="button" class="btn btn-secondary">Montar SELECT</button>
                         <button id="btnRefreshSchema" type="button" class="btn btn-secondary">Atualizar schema</button>
+                    </div>
+
+                    <div class="db-reset-panel">
+                        <p class="db-reset-title">Reset de senha para usuário ativo</p>
+                        <p class="db-caption">Selecione um usuário e gere senha temporária com hash para aplicar no banco via query.</p>
+                        <div class="db-reset-controls">
+                            <select id="resetUserSelect" class="db-tool-select">
+                                <option value="">Carregando usuários ativos...</option>
+                            </select>
+                            <button id="btnGenerateReset" type="button" class="btn btn-primary">Resetar senha</button>
+                        </div>
+                        <div id="resetOutput" class="db-reset-output" hidden>
+                            <div><strong>Senha temporária:</strong> <span id="resetTempPassword">-</span></div>
+                            <div><strong>Hash:</strong> <code id="resetPasswordHash">-</code></div>
+                            <div><strong>UPDATE sugerido:</strong> <code id="resetUpdateSql">-</code></div>
+                            <div id="resetOutputNote" class="db-caption"></div>
+                        </div>
                     </div>
 
                     <div class="db-editor-wrap">
