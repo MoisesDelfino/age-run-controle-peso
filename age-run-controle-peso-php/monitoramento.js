@@ -23,6 +23,7 @@ const dbAutocompleteEl = document.getElementById('dbAutocomplete');
 const btnRunSql = document.getElementById('btnRunSql');
 const btnRefreshSchema = document.getElementById('btnRefreshSchema');
 const btnLoadTableSql = document.getElementById('btnLoadTableSql');
+const resetUserSearchEl = document.getElementById('resetUserSearch');
 const resetUserSelectEl = document.getElementById('resetUserSelect');
 const btnGenerateResetEl = document.getElementById('btnGenerateReset');
 const resetOutputEl = document.getElementById('resetOutput');
@@ -30,6 +31,8 @@ const resetTempPasswordEl = document.getElementById('resetTempPassword');
 const resetPasswordHashEl = document.getElementById('resetPasswordHash');
 const resetUpdateSqlEl = document.getElementById('resetUpdateSql');
 const resetOutputNoteEl = document.getElementById('resetOutputNote');
+
+let activeUsersState = [];
 
 let schemaState = {
     driver: '-',
@@ -57,6 +60,46 @@ let resultState = {
 function hideResetOutput() {
     if (!resetOutputEl) return;
     resetOutputEl.hidden = true;
+}
+
+function normalizeSearchText(value) {
+    return String(value || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .trim();
+}
+
+function renderUsuariosAtivosOptions(nomeFilter) {
+    if (!resetUserSelectEl) return;
+
+    const currentValue = String(resetUserSelectEl.value || '');
+    const filter = normalizeSearchText(nomeFilter);
+    const usuariosFiltrados = activeUsersState.filter((usuario) => {
+        if (!filter) return true;
+        const nome = normalizeSearchText(usuario?.nome || '');
+        return nome.includes(filter);
+    });
+
+    if (!usuariosFiltrados.length) {
+        resetUserSelectEl.innerHTML = '<option value="">Nenhum usuário encontrado para o filtro</option>';
+        resetUserSelectEl.value = '';
+        return;
+    }
+
+    resetUserSelectEl.innerHTML = [
+        '<option value="">Selecione um usuário</option>',
+        ...usuariosFiltrados.map((usuario) => {
+            const id = Number(usuario?.id || 0);
+            const nome = escapeHtml(String(usuario?.nome || 'Sem nome'));
+            const email = escapeHtml(String(usuario?.email || 'sem-email'));
+            const ultimaPesagem = usuario?.ultima_pesagem ? ` | última pesagem: ${escapeHtml(String(usuario.ultima_pesagem))}` : '';
+            return `<option value="${id}">${nome} (${email})${ultimaPesagem}</option>`;
+        })
+    ].join('');
+
+    const hasCurrentValue = usuariosFiltrados.some((usuario) => String(Number(usuario?.id || 0)) === currentValue);
+    resetUserSelectEl.value = hasCurrentValue ? currentValue : '';
 }
 
 function renderResetOutput(data) {
@@ -348,22 +391,13 @@ async function carregarUsuariosAtivos() {
         throw new Error(data?.error || 'Falha ao carregar usuários ativos');
     }
 
-    const usuarios = Array.isArray(data?.usuarios) ? data.usuarios : [];
-    if (!usuarios.length) {
+    activeUsersState = Array.isArray(data?.usuarios) ? data.usuarios : [];
+    if (!activeUsersState.length) {
         resetUserSelectEl.innerHTML = '<option value="">Nenhum usuário encontrado</option>';
         return;
     }
 
-    resetUserSelectEl.innerHTML = [
-        '<option value="">Selecione um usuário</option>',
-        ...usuarios.map((usuario) => {
-            const id = Number(usuario?.id || 0);
-            const nome = escapeHtml(String(usuario?.nome || 'Sem nome'));
-            const email = escapeHtml(String(usuario?.email || 'sem-email'));
-            const ultimaPesagem = usuario?.ultima_pesagem ? ` | última pesagem: ${escapeHtml(String(usuario.ultima_pesagem))}` : '';
-            return `<option value="${id}">${nome} (${email})${ultimaPesagem}</option>`;
-        })
-    ].join('');
+    renderUsuariosAtivosOptions(resetUserSearchEl?.value || '');
 }
 
 async function gerarResetSenhaPreview() {
@@ -856,6 +890,13 @@ function initDbTool() {
 
     if (resetUserSelectEl) {
         resetUserSelectEl.addEventListener('change', () => {
+            hideResetOutput();
+        });
+    }
+
+    if (resetUserSearchEl) {
+        resetUserSearchEl.addEventListener('input', () => {
+            renderUsuariosAtivosOptions(resetUserSearchEl.value || '');
             hideResetOutput();
         });
     }
