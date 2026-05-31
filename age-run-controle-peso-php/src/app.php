@@ -105,12 +105,29 @@ function isStagingLikeContext(): bool
         return true;
     }
 
-    $host = strtolower(trim((string) ($_SERVER['HTTP_HOST'] ?? '')));
-    if ($host === '') {
-        return false;
+    $uriPath = strtolower(trim((string) (parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/')));
+    if (str_contains($uriPath, '/staging') || str_contains($uriPath, '/homolog') || str_contains($uriPath, '/hml')) {
+        return true;
     }
 
-    return str_contains($host, 'staging') || str_contains($host, 'homolog') || str_contains($host, 'hml');
+    $hosts = [
+        strtolower(trim((string) ($_SERVER['HTTP_HOST'] ?? ''))),
+        strtolower(trim((string) ($_SERVER['SERVER_NAME'] ?? ''))),
+        strtolower(trim((string) ($_SERVER['HTTP_X_FORWARDED_HOST'] ?? ''))),
+        strtolower(trim((string) ($_SERVER['HTTP_X_ORIGINAL_HOST'] ?? ''))),
+    ];
+
+    foreach ($hosts as $host) {
+        if ($host === '') {
+            continue;
+        }
+
+        if (str_contains($host, 'staging') || str_contains($host, 'homolog') || str_contains($host, 'hml')) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 function isMonitorOwnerEmail(?string $email): bool

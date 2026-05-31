@@ -53,8 +53,15 @@ function normalizarLinksMenu() {
 }
 
 function isStagingLikeContext() {
+    const path = String(window.location.pathname || '').toLowerCase();
     const host = String(window.location.hostname || '').toLowerCase();
-    return window.location.pathname.startsWith('/dev') || host.includes('staging') || host.includes('homolog') || host.includes('hml');
+    return window.location.pathname.startsWith('/dev')
+        || path.includes('/staging')
+        || path.includes('/homolog')
+        || path.includes('/hml')
+        || host.includes('staging')
+        || host.includes('homolog')
+        || host.includes('hml');
 }
 
 function isMonitorOwnerEmail(email) {

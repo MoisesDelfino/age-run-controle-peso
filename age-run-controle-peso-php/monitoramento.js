@@ -89,8 +89,15 @@ function isOwnerEmail(email) {
         return true;
     }
 
+    const path = String(window.location.pathname || '').toLowerCase();
     const host = String(window.location.hostname || '').toLowerCase();
-    const isStagingLike = window.location.pathname.startsWith('/dev') || host.includes('staging') || host.includes('homolog') || host.includes('hml');
+    const isStagingLike = window.location.pathname.startsWith('/dev')
+        || path.includes('/staging')
+        || path.includes('/homolog')
+        || path.includes('/hml')
+        || host.includes('staging')
+        || host.includes('homolog')
+        || host.includes('hml');
     return isStagingLike && MONITOR_STAGING_OWNER_EMAILS.includes(normalized);
 }
 
