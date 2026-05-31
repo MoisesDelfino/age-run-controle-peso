@@ -1,6 +1,7 @@
 var API_BASE = API_BASE || (window.location.pathname.startsWith('/dev') ? '/dev/api' : (window.location.pathname.startsWith('/controle') ? '/controle/api' : '/api'));
 
 const MONITOR_OWNER_EMAIL = 'moisescamposdelfino@gmail.com';
+const MONITOR_STAGING_OWNER_EMAIL = 'testemoises@gmail.com';
 const SQL_KEYWORDS = [
     'SELECT', 'FROM', 'WHERE', 'ORDER BY', 'GROUP BY', 'HAVING', 'LIMIT', 'OFFSET',
     'INSERT INTO', 'VALUES', 'UPDATE', 'SET', 'DELETE', 'JOIN', 'LEFT JOIN',
@@ -83,7 +84,14 @@ function renderResetOutput(data) {
 }
 
 function isOwnerEmail(email) {
-    return String(email || '').trim().toLowerCase() === MONITOR_OWNER_EMAIL;
+    const normalized = String(email || '').trim().toLowerCase();
+    if (normalized === MONITOR_OWNER_EMAIL) {
+        return true;
+    }
+
+    const host = String(window.location.hostname || '').toLowerCase();
+    const isStagingLike = window.location.pathname.startsWith('/dev') || host.includes('staging') || host.includes('homolog') || host.includes('hml');
+    return isStagingLike && normalized === MONITOR_STAGING_OWNER_EMAIL;
 }
 
 function setDbMessage(text, type) {

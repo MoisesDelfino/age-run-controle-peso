@@ -51,6 +51,20 @@ function normalizarLinksMenu() {
     });
 }
 
+function isStagingLikeContext() {
+    const host = String(window.location.hostname || '').toLowerCase();
+    return window.location.pathname.startsWith('/dev') || host.includes('staging') || host.includes('homolog') || host.includes('hml');
+}
+
+function isMonitorOwnerEmail(email) {
+    const normalized = String(email || '').trim().toLowerCase();
+    if (normalized === 'moisescamposdelfino@gmail.com') {
+        return true;
+    }
+
+    return isStagingLikeContext() && normalized === 'testemoises@gmail.com';
+}
+
 function ensureOwnerMonitorLink(isOwner) {
     const navList = document.querySelector('.nav-list');
     if (!navList) return;
@@ -131,7 +145,7 @@ async function aplicarPermissoesMenu() {
         const data = await response.json();
         const isMulher = (data?.sexo || '').toLowerCase() === 'feminino';
         const isTreinador = (data?.perfil || '').toLowerCase() === 'treinador';
-        const isOwner = (data?.email || '').toLowerCase() === 'moisescamposdelfino@gmail.com';
+        const isOwner = isMonitorOwnerEmail(data?.email || '');
 
         if (isTreinador) {
             document.body.classList.add('is-trainer');

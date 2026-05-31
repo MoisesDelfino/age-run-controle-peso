@@ -62,6 +62,7 @@ const TRAINER_OVERRIDE_EMAILS = [
     'filipe.sul@gmail.com',
 ];
 const MONITOR_OWNER_EMAIL = 'moisescamposdelfino@gmail.com';
+const MONITOR_STAGING_OWNER_EMAIL = 'testemoises@gmail.com';
 
 function isTrainerOverrideEmail(?string $email): bool
 {
@@ -89,9 +90,34 @@ function normalizeEmail(string $email): string
     return strtolower(trim($email));
 }
 
+function isStagingLikeContext(): bool
+{
+    $cfg = appConfig();
+    $env = strtolower(trim((string) ($cfg['app_env'] ?? 'production')));
+    if ($env !== '' && $env !== 'production') {
+        return true;
+    }
+
+    if (function_exists('isDevRequestPath') && isDevRequestPath()) {
+        return true;
+    }
+
+    $host = strtolower(trim((string) ($_SERVER['HTTP_HOST'] ?? '')));
+    if ($host === '') {
+        return false;
+    }
+
+    return str_contains($host, 'staging') || str_contains($host, 'homolog') || str_contains($host, 'hml');
+}
+
 function isMonitorOwnerEmail(?string $email): bool
 {
-    return normalizeEmail((string) $email) === MONITOR_OWNER_EMAIL;
+    $normalized = normalizeEmail((string) $email);
+    if ($normalized === MONITOR_OWNER_EMAIL) {
+        return true;
+    }
+
+    return isStagingLikeContext() && $normalized === MONITOR_STAGING_OWNER_EMAIL;
 }
 
 function monitorEventsFilePath(): string
