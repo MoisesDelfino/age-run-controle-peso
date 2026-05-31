@@ -62,6 +62,10 @@ function hideResetOutput() {
 function renderResetOutput(data) {
     if (!resetOutputEl) return;
 
+    const formattedUpdateSql = String(data?.update_sql || '-')
+        .replace(/\s+SET\s+/i, '\nSET ')
+        .replace(/\s+WHERE\s+/i, '\nWHERE ');
+
     if (resetTempPasswordEl) {
         resetTempPasswordEl.textContent = String(data?.senha_temporaria || '-');
     }
@@ -69,7 +73,7 @@ function renderResetOutput(data) {
         resetPasswordHashEl.textContent = String(data?.senha_hash || '-');
     }
     if (resetUpdateSqlEl) {
-        resetUpdateSqlEl.textContent = String(data?.update_sql || '-');
+        resetUpdateSqlEl.textContent = formattedUpdateSql;
     }
     if (resetOutputNoteEl) {
         resetOutputNoteEl.textContent = String(data?.observacao || 'No primeiro login com a senha temporária, o usuário deverá definir uma nova senha.');
