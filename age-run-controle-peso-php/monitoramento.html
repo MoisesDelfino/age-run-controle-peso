@@ -127,16 +127,6 @@
             align-items: center;
         }
 
-        .db-reset-search {
-            width: 100%;
-            padding: 10px 12px;
-            border-radius: 10px;
-            border: 1px solid rgba(107, 114, 128, 0.2);
-            background: #ffffff;
-            color: #0f172a;
-            font-size: 0.9rem;
-        }
-
         .db-reset-output {
             display: grid;
             gap: 8px;
@@ -385,12 +375,6 @@
             color: #dbeafe;
         }
 
-        body.dark-mode .db-reset-search {
-            color: #e2e8f0;
-            border-color: rgba(56, 189, 248, 0.35);
-            background: linear-gradient(120deg, #0f172a, #0b1325);
-        }
-
         body.dark-mode .db-tool-select {
             color: #e2e8f0;
             border-color: rgba(56, 189, 248, 0.35);
@@ -574,12 +558,11 @@
 
                     <div class="db-reset-panel">
                         <p class="db-reset-title">Reset de senha para usuário ativo</p>
-                        <p class="db-caption">Selecione um usuário e gere senha temporária com hash para aplicar no banco via query.</p>
-                        <input id="resetUserSearch" class="db-reset-search" type="text" placeholder="Pesquisar usuário por nome..." autocomplete="off">
+                        <p class="db-caption">Digite o nome e selecione no dropdown para gerar senha temporária com hash.</p>
                         <div class="db-reset-controls">
-                            <select id="resetUserSelect" class="db-tool-select">
-                                <option value="">Carregando usuários ativos...</option>
-                            </select>
+                            <input id="resetUserSelect" class="db-tool-select" type="text" list="resetUserOptions" placeholder="Pesquisar e selecionar usuário..." autocomplete="off">
+                            <datalist id="resetUserOptions"></datalist>
+                            <input id="resetUserId" type="hidden" value="">
                             <button id="btnGenerateReset" type="button" class="btn btn-primary">Resetar senha</button>
                         </div>
                         <div id="resetOutput" class="db-reset-output" hidden>
