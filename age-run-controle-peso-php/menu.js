@@ -55,11 +55,14 @@ function ensureOwnerMonitorLink(isOwner) {
     const navList = document.querySelector('.nav-list');
     if (!navList) return;
 
-    const existing = navList.querySelector('.owner-monitor-link');
+    const legacyMonitorLink = navList.querySelector('a[href$="/monitoramento"], a[href="./monitoramento"]');
+    const existing = navList.querySelector('.owner-monitor-link') || (legacyMonitorLink ? legacyMonitorLink.closest('li') : null);
     if (!isOwner) {
-        if (existing) {
-            existing.remove();
-        }
+        const staleLinks = navList.querySelectorAll('.owner-monitor-link, li.owner-only a[href$="/monitoramento"], li.owner-only a[href="./monitoramento"]');
+        staleLinks.forEach((node) => {
+            const item = node.tagName === 'LI' ? node : node.closest('li');
+            if (item) item.remove();
+        });
         return;
     }
 
@@ -67,10 +70,13 @@ function ensureOwnerMonitorLink(isOwner) {
     const isActive = window.location.pathname === href || window.location.pathname.endsWith('/monitoramento');
 
     if (existing) {
+        existing.classList.add('owner-monitor-link');
+        existing.classList.add('owner-only');
         const link = existing.querySelector('a');
         if (link) {
             link.setAttribute('href', href);
             link.classList.toggle('active', isActive);
+            link.textContent = '🧪 Query Tool';
         }
         return;
     }
