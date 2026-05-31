@@ -93,6 +93,16 @@ Alternativa para Plesk/phpMyAdmin (sem CLI):
 1. Use o arquivo `storage/snapshots/peso.current.2026-05-25.mysql.sql`.
 2. No phpMyAdmin do banco novo, abra a aba Importar e envie esse arquivo.
 
+## Reparo pontual de usuário
+
+Se for necessário corrigir um cadastro em produção, use o script CLI abaixo no servidor com o `.env` correto carregado:
+
+```
+php scripts/repair_usuario_email.php luccanoventa@gmail.com "LUCAS DO NASCIMENTO PACHECO" "@agerun01"
+```
+
+Antes de aplicar, você pode testar sem gravar nada com `--dry-run`.
+
 ## PostgreSQL sem phpPgAdmin/Webadmin
 
 Se o painel nao oferecer interface web para importar SQL no PostgreSQL:
