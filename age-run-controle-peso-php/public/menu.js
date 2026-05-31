@@ -1,6 +1,7 @@
 // ==================== CONTROLE DO MENU MOBILE ====================
 
 var API_BASE = API_BASE || (window.location.pathname.startsWith('/dev') ? '/dev/api' : (window.location.pathname.startsWith('/controle') ? '/controle/api' : '/api'));
+const MONITOR_STAGING_OWNER_EMAILS = ['testemoises@gmail.com', 'moisesteste@gmail.com'];
 
 function getAppBasePath() {
     if (window.location.pathname === '/dev' || window.location.pathname.startsWith('/dev/')) {
@@ -62,7 +63,7 @@ function isMonitorOwnerEmail(email) {
         return true;
     }
 
-    return isStagingLikeContext() && normalized === 'testemoises@gmail.com';
+    return isStagingLikeContext() && MONITOR_STAGING_OWNER_EMAILS.includes(normalized);
 }
 
 function ensureOwnerMonitorLink(isOwner) {

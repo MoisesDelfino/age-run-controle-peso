@@ -1,7 +1,7 @@
 var API_BASE = API_BASE || (window.location.pathname.startsWith('/dev') ? '/dev/api' : (window.location.pathname.startsWith('/controle') ? '/controle/api' : '/api'));
 
 const MONITOR_OWNER_EMAIL = 'moisescamposdelfino@gmail.com';
-const MONITOR_STAGING_OWNER_EMAIL = 'testemoises@gmail.com';
+const MONITOR_STAGING_OWNER_EMAILS = ['testemoises@gmail.com', 'moisesteste@gmail.com'];
 const SQL_KEYWORDS = [
     'SELECT', 'FROM', 'WHERE', 'ORDER BY', 'GROUP BY', 'HAVING', 'LIMIT', 'OFFSET',
     'INSERT INTO', 'VALUES', 'UPDATE', 'SET', 'DELETE', 'JOIN', 'LEFT JOIN',
@@ -91,7 +91,7 @@ function isOwnerEmail(email) {
 
     const host = String(window.location.hostname || '').toLowerCase();
     const isStagingLike = window.location.pathname.startsWith('/dev') || host.includes('staging') || host.includes('homolog') || host.includes('hml');
-    return isStagingLike && normalized === MONITOR_STAGING_OWNER_EMAIL;
+    return isStagingLike && MONITOR_STAGING_OWNER_EMAILS.includes(normalized);
 }
 
 function setDbMessage(text, type) {
