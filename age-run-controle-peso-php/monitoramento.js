@@ -1,6 +1,6 @@
 var API_BASE = API_BASE || (window.location.pathname.startsWith('/dev') ? '/dev/api' : (window.location.pathname.startsWith('/controle') ? '/controle/api' : '/api'));
 
-const MONITOR_QUERY_OWNER_EMAILS = ['moisescamposdelfino@gmail.com', 'testemoises@gmail.com', 'moisesteste@gmail.com'];
+const MONITOR_OWNER_EMAIL = 'moisescamposdelfino@gmail.com';
 const SQL_KEYWORDS = [
     'SELECT', 'FROM', 'WHERE', 'ORDER BY', 'GROUP BY', 'HAVING', 'LIMIT', 'OFFSET',
     'INSERT INTO', 'VALUES', 'UPDATE', 'SET', 'DELETE', 'JOIN', 'LEFT JOIN',
@@ -83,8 +83,7 @@ function renderResetOutput(data) {
 }
 
 function isOwnerEmail(email) {
-    const normalized = String(email || '').trim().toLowerCase();
-    return MONITOR_QUERY_OWNER_EMAILS.includes(normalized);
+    return String(email || '').trim().toLowerCase() === MONITOR_OWNER_EMAIL;
 }
 
 function setDbMessage(text, type) {
@@ -344,11 +343,6 @@ async function carregarUsuariosAtivos() {
         return;
     }
 
-    if (response.status === 403) {
-        resetUserSelectEl.innerHTML = '<option value="">Sem permissão para listar usuários</option>';
-        throw new Error('Acesso negado para listar usuários ativos');
-    }
-
     const data = await response.json();
     if (!response.ok || data?.error) {
         throw new Error(data?.error || 'Falha ao carregar usuários ativos');
@@ -412,12 +406,6 @@ async function carregarEstruturaDb() {
 
     if (response.status === 403) {
         setDbMessage('Acesso negado para esta área.', 'error');
-        if (dbTableSelectEl) {
-            dbTableSelectEl.innerHTML = '<option value="">Sem permissão para carregar tabelas</option>';
-        }
-        if (dbSchemaListEl) {
-            dbSchemaListEl.innerHTML = '<div class="db-schema-card"><p class="db-caption">Sem permissão para carregar schema.</p></div>';
-        }
         return;
     }
 

@@ -1,7 +1,6 @@
 // ==================== CONTROLE DO MENU MOBILE ====================
 
 var API_BASE = API_BASE || (window.location.pathname.startsWith('/dev') ? '/dev/api' : (window.location.pathname.startsWith('/controle') ? '/controle/api' : '/api'));
-const MONITOR_MENU_OWNER_EMAILS = ['moisescamposdelfino@gmail.com', 'testemoises@gmail.com', 'moisesteste@gmail.com'];
 
 function getAppBasePath() {
     if (window.location.pathname === '/dev' || window.location.pathname.startsWith('/dev/')) {
@@ -50,23 +49,6 @@ function normalizarLinksMenu() {
 
         link.setAttribute('href', withBasePath(semControle));
     });
-}
-
-function isStagingLikeContext() {
-    const path = String(window.location.pathname || '').toLowerCase();
-    const host = String(window.location.hostname || '').toLowerCase();
-    return window.location.pathname.startsWith('/dev')
-        || path.includes('/staging')
-        || path.includes('/homolog')
-        || path.includes('/hml')
-        || host.includes('staging')
-        || host.includes('homolog')
-        || host.includes('hml');
-}
-
-function isMonitorOwnerEmail(email) {
-    const normalized = String(email || '').trim().toLowerCase();
-    return MONITOR_MENU_OWNER_EMAILS.includes(normalized);
 }
 
 function ensureOwnerMonitorLink(isOwner) {
@@ -149,7 +131,7 @@ async function aplicarPermissoesMenu() {
         const data = await response.json();
         const isMulher = (data?.sexo || '').toLowerCase() === 'feminino';
         const isTreinador = (data?.perfil || '').toLowerCase() === 'treinador';
-        const isOwner = isMonitorOwnerEmail(data?.email || '');
+        const isOwner = (data?.email || '').toLowerCase() === 'moisescamposdelfino@gmail.com';
 
         if (isTreinador) {
             document.body.classList.add('is-trainer');
