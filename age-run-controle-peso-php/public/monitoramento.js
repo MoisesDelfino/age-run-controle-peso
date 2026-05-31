@@ -23,6 +23,13 @@ const dbAutocompleteEl = document.getElementById('dbAutocomplete');
 const btnRunSql = document.getElementById('btnRunSql');
 const btnRefreshSchema = document.getElementById('btnRefreshSchema');
 const btnLoadTableSql = document.getElementById('btnLoadTableSql');
+const resetUserSelectEl = document.getElementById('resetUserSelect');
+const btnGenerateResetEl = document.getElementById('btnGenerateReset');
+const resetOutputEl = document.getElementById('resetOutput');
+const resetTempPasswordEl = document.getElementById('resetTempPassword');
+const resetPasswordHashEl = document.getElementById('resetPasswordHash');
+const resetUpdateSqlEl = document.getElementById('resetUpdateSql');
+const resetOutputNoteEl = document.getElementById('resetOutputNote');
 
 let schemaState = {
     driver: '-',
@@ -46,6 +53,30 @@ let resultState = {
     columns: [],
     editingRowIndex: -1
 };
+
+function hideResetOutput() {
+    if (!resetOutputEl) return;
+    resetOutputEl.hidden = true;
+}
+
+function renderResetOutput(data) {
+    if (!resetOutputEl) return;
+
+    if (resetTempPasswordEl) {
+        resetTempPasswordEl.textContent = String(data?.senha_temporaria || '-');
+    }
+    if (resetPasswordHashEl) {
+        resetPasswordHashEl.textContent = String(data?.senha_hash || '-');
+    }
+    if (resetUpdateSqlEl) {
+        resetUpdateSqlEl.textContent = String(data?.update_sql || '-');
+    }
+    if (resetOutputNoteEl) {
+        resetOutputNoteEl.textContent = String(data?.observacao || 'No primeiro login com a senha temporária, o usuário deverá definir uma nova senha.');
+    }
+
+    resetOutputEl.hidden = false;
+}
 
 function isOwnerEmail(email) {
     return String(email || '').trim().toLowerCase() === MONITOR_OWNER_EMAIL;
@@ -288,7 +319,75 @@ async function verificarSessao() {
         return false;
     }
 
+    if (data?.require_password_change) {
+        window.location.href = (window.location.pathname.startsWith('/dev') ? '/dev/primeiro-acesso' : '/controle/primeiro-acesso');
+        return false;
+    }
+
     return true;
+}
+
+async function carregarUsuariosAtivos() {
+    if (!resetUserSelectEl) return;
+
+    const response = await fetch(`${API_BASE}/admin/query-tool/usuarios-ativos`, {
+        credentials: 'include'
+    });
+
+    if (response.status === 401) {
+        window.location.href = (window.location.pathname.startsWith('/dev') ? '/dev/login' : '/controle/login');
+        return;
+    }
+
+    const data = await response.json();
+    if (!response.ok || data?.error) {
+        throw new Error(data?.error || 'Falha ao carregar usuários ativos');
+    }
+
+    const usuarios = Array.isArray(data?.usuarios) ? data.usuarios : [];
+    if (!usuarios.length) {
+        resetUserSelectEl.innerHTML = '<option value="">Nenhum usuário encontrado</option>';
+        return;
+    }
+
+    resetUserSelectEl.innerHTML = [
+        '<option value="">Selecione um usuário</option>',
+        ...usuarios.map((usuario) => {
+            const id = Number(usuario?.id || 0);
+            const nome = escapeHtml(String(usuario?.nome || 'Sem nome'));
+            const email = escapeHtml(String(usuario?.email || 'sem-email'));
+            const ultimaPesagem = usuario?.ultima_pesagem ? ` | última pesagem: ${escapeHtml(String(usuario.ultima_pesagem))}` : '';
+            return `<option value="${id}">${nome} (${email})${ultimaPesagem}</option>`;
+        })
+    ].join('');
+}
+
+async function gerarResetSenhaPreview() {
+    const userId = Number(resetUserSelectEl?.value || 0);
+    if (!Number.isFinite(userId) || userId <= 0) {
+        setDbMessage('Selecione um usuário para gerar o reset de senha.', 'error');
+        return;
+    }
+
+    setDbMessage('Gerando senha temporária...', 'info');
+    hideResetOutput();
+
+    const response = await fetch(`${API_BASE}/admin/query-tool/reset-senha-preview`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ user_id: userId })
+    });
+
+    const data = await response.json();
+    if (!response.ok || data?.error) {
+        throw new Error(data?.error || 'Não foi possível gerar o reset de senha');
+    }
+
+    renderResetOutput(data);
+    setDbMessage('Senha temporária e hash gerados. Execute o UPDATE sugerido para aplicar.', 'success');
 }
 
 async function carregarEstruturaDb() {
@@ -751,6 +850,21 @@ function initDbTool() {
         });
     }
 
+    if (resetUserSelectEl) {
+        resetUserSelectEl.addEventListener('change', () => {
+            hideResetOutput();
+        });
+    }
+
+    if (btnGenerateResetEl) {
+        btnGenerateResetEl.addEventListener('click', () => {
+            gerarResetSenhaPreview().catch((error) => {
+                console.error('Erro ao gerar reset de senha:', error);
+                setDbMessage(error.message || 'Falha ao gerar reset de senha.', 'error');
+            });
+        });
+    }
+
     bindAutocompleteEvents();
     bindResultEditingEvents();
 }
@@ -780,6 +894,7 @@ async function initPage() {
 
         initDbTool();
         await carregarEstruturaDb();
+        await carregarUsuariosAtivos();
         setDbResultMeta('Pronto para executar queries.');
         setDbMessage('Console SQL pronto. Use Ctrl+Enter para executar.', 'info');
     } catch (error) {

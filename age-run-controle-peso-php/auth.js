@@ -76,6 +76,11 @@ if (document.getElementById('loginForm')) {
             mostrarMensagem('✅ Login realizado! Redirecionando...', 'success');
             
             setTimeout(() => {
+                if (data?.require_password_change) {
+                    window.location.href = (window.location.pathname.startsWith('/dev') ? '/dev/primeiro-acesso' : '/controle/primeiro-acesso');
+                    return;
+                }
+
                 window.location.href = (window.location.pathname.startsWith('/dev') ? '/dev/home' : '/controle/home');
             }, 1000);
             

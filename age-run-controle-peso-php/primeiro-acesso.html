@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Primeiro Acesso - Age Run</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="stylesheet" href="styles.css?v=2026053110">
+    <link rel="stylesheet" href="auth.css?v=2026053110">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-box">
+            <div class="auth-header">
+                <img src="logo.png" alt="Age Run" class="auth-logo">
+                <h1>Defina sua nova senha</h1>
+                <p class="subtitle">Você entrou com uma senha temporária. Para continuar, escolha uma senha definitiva.</p>
+            </div>
+
+            <form id="primeiroAcessoForm" class="auth-form">
+                <div class="form-group">
+                    <label for="novaSenha">Nova senha:</label>
+                    <div class="password-input-wrapper">
+                        <input type="password" id="novaSenha" placeholder="Mínimo de 6 caracteres" required autocomplete="new-password">
+                        <button type="button" class="toggle-password" id="toggleNovaSenha" aria-label="Mostrar senha">
+                            <span class="material-icons eye-icon">visibility_off</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmarSenha">Confirmar senha:</label>
+                    <div class="password-input-wrapper">
+                        <input type="password" id="confirmarSenha" placeholder="Repita a nova senha" required autocomplete="new-password">
+                        <button type="button" class="toggle-password" id="toggleConfirmarSenha" aria-label="Mostrar senha">
+                            <span class="material-icons eye-icon">visibility_off</span>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                    <span>Salvar nova senha</span>
+                </button>
+
+                <div id="message" class="message"></div>
+            </form>
+        </div>
+    </div>
+
+    <script src="theme.js?v=2026053110"></script>
+    <script src="primeiro-acesso.js?v=2026053110"></script>
+</body>
+</html>
