@@ -284,6 +284,18 @@ function getCurrentTokenInfo() {
     return { token, start, end, context };
 }
 
+function isExecuteShortcut(event) {
+    const hasModifier = event.ctrlKey || event.metaKey;
+    const isEnter = event.key === 'Enter' || event.code === 'Enter' || event.code === 'NumpadEnter' || event.keyCode === 13;
+    return hasModifier && isEnter;
+}
+
+function isAutocompleteShortcut(event) {
+    const hasModifier = event.ctrlKey || event.metaKey;
+    const isSpace = event.key === ' ' || event.code === 'Space' || event.key === 'Spacebar' || event.keyCode === 32;
+    return hasModifier && isSpace;
+}
+
 function dedupeSuggestions(items) {
     const map = new Map();
     items.forEach((item) => {
@@ -295,7 +307,7 @@ function dedupeSuggestions(items) {
     return Array.from(map.values());
 }
 
-function collectSuggestions(prefix, context) {
+function collectSuggestions(prefix, context, forceAll) {
     const normalizedPrefix = String(prefix || '').toLowerCase();
     const contextUpper = String(context || '').toUpperCase();
     const out = [];
@@ -315,7 +327,7 @@ function collectSuggestions(prefix, context) {
         return dedupeSuggestions(out).slice(0, 12);
     }
 
-    if (!tableContext) {
+    if (!tableContext || forceAll) {
         SQL_KEYWORDS.forEach((keyword) => {
             if (!normalizedPrefix || keyword.toLowerCase().startsWith(normalizedPrefix)) {
                 out.push({ label: keyword, value: keyword, type: 'keyword' });
@@ -329,7 +341,7 @@ function collectSuggestions(prefix, context) {
         }
     });
 
-    if (!tableContext) {
+    if (!tableContext || forceAll) {
         Object.entries(schemaState.columnsByTable).forEach(([table, columns]) => {
             columns.forEach((column) => {
                 if (!normalizedPrefix || column.toLowerCase().startsWith(normalizedPrefix)) {
@@ -378,7 +390,7 @@ function hideAutocomplete() {
     renderAutocomplete();
 }
 
-function updateAutocompleteSuggestions() {
+function updateAutocompleteSuggestions(forceAll) {
     if (!dbSqlEditorEl) return;
 
     const tokenInfo = getCurrentTokenInfo();
@@ -388,7 +400,7 @@ function updateAutocompleteSuggestions() {
     autocompleteState.tokenEnd = tokenInfo.end;
 
     const token = tokenInfo.token || '';
-    const items = collectSuggestions(token, tokenInfo.context);
+    const items = collectSuggestions(token, tokenInfo.context, Boolean(forceAll));
 
     if (!items.length) {
         hideAutocomplete();
@@ -442,13 +454,22 @@ function bindAutocompleteEvents() {
     });
 
     dbSqlEditorEl.addEventListener('keydown', (event) => {
-        if (event.ctrlKey && event.key === 'Enter') {
+        if (isExecuteShortcut(event)) {
             event.preventDefault();
             executarSqlDb().catch((error) => {
                 console.error('Erro ao executar SQL:', error);
                 setDbMessage(error.message || 'Falha ao executar SQL.', 'error');
                 setDbResultMeta('Erro ao executar query.');
             });
+            return;
+        }
+
+        if (isAutocompleteShortcut(event)) {
+            event.preventDefault();
+            updateAutocompleteSuggestions(true);
+            if (!autocompleteState.open) {
+                setDbMessage('Sem sugestões para o contexto atual.', 'info');
+            }
             return;
         }
 

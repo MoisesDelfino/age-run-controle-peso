@@ -79,6 +79,37 @@
             border-radius: 10px;
             border: 1px solid rgba(107, 114, 128, 0.2);
             background: #fff;
+            color: #0f172a;
+            font-weight: 500;
+        }
+
+        .db-toolbar .btn,
+        .db-tool-controls .btn {
+            border-radius: 10px;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+            border: 1px solid transparent;
+            transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+        }
+
+        .db-toolbar .btn:hover,
+        .db-tool-controls .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.16);
+        }
+
+        .db-toolbar .btn.btn-primary,
+        .db-tool-controls .btn.btn-primary {
+            background: linear-gradient(120deg, #0ea5e9, #0284c7);
+            color: #ecfeff;
+            border-color: rgba(2, 132, 199, 0.9);
+        }
+
+        .db-toolbar .btn.btn-secondary,
+        .db-tool-controls .btn.btn-secondary {
+            background: linear-gradient(120deg, #0f172a, #1e293b);
+            color: #e2e8f0;
+            border-color: rgba(51, 65, 85, 0.9);
         }
 
         .db-editor-wrap {
@@ -243,6 +274,31 @@
         body.dark-mode .db-tool-result table,
         body.dark-mode .db-tool-select {
             background: #101622;
+        }
+
+        body.dark-mode .db-tool-select {
+            color: #e2e8f0;
+            border-color: rgba(56, 189, 248, 0.35);
+            background: linear-gradient(120deg, #0f172a, #0b1325);
+        }
+
+        body.dark-mode .db-tool-select option {
+            color: #e2e8f0;
+            background: #0f172a;
+        }
+
+        body.dark-mode .db-toolbar .btn.btn-primary,
+        body.dark-mode .db-tool-controls .btn.btn-primary {
+            background: linear-gradient(120deg, #06b6d4, #0284c7);
+            color: #f0fdfa;
+            border-color: rgba(34, 211, 238, 0.55);
+        }
+
+        body.dark-mode .db-toolbar .btn.btn-secondary,
+        body.dark-mode .db-tool-controls .btn.btn-secondary {
+            background: linear-gradient(120deg, #1f2937, #111827);
+            color: #e2e8f0;
+            border-color: rgba(148, 163, 184, 0.35);
         }
 
         body.dark-mode .query-hero {
