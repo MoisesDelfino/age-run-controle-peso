@@ -2400,10 +2400,15 @@ if ($method === 'POST' && $path === '/api/auth/solicitar-recuperacao') {
         jsonResponse(['success' => true, 'message' => 'Código enviado para seu e-mail com sucesso!']);
     }
 
+    $emailWarning = getLastEmailError();
+    if ($emailWarning === '') {
+        $emailWarning = 'Falha ao enviar o e-mail de recuperação.';
+    }
+
     jsonResponse([
         'success' => true,
         'message' => 'Código gerado. Verifique o console do servidor.',
-        'warning' => 'Serviço de e-mail não configurado',
+        'warning' => $emailWarning,
     ]);
 }
 

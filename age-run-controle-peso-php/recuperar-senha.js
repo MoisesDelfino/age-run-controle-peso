@@ -36,12 +36,12 @@ solicitarCodigoForm.addEventListener('submit', async (e) => {
             let mensagem = data.message || 'Código enviado com sucesso!';
             
             if (data.warning) {
-                // Se email não estiver configurado
+                // Se o envio falhar por configuração ou autenticação SMTP
                 codigoExibicao.innerHTML = `
                     <div class="codigo-box warning-box">
                         <p><strong>⚠️ ${data.warning}</strong></p>
                         <p class="codigo-info">O código foi gerado mas não pôde ser enviado por e-mail.</p>
-                        <p class="codigo-info">Verifique o <strong>console do servidor</strong> para ver o código.</p>
+                        <p class="codigo-info">Revise as configurações SMTP no servidor e, se necessário, confira o <strong>console do servidor</strong>.</p>
                     </div>
                 `;
             } else {

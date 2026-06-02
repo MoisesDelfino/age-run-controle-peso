@@ -5,6 +5,21 @@ declare(strict_types=1);
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/helpers.php';
 
+function setLastEmailError(string $message): void
+{
+    $GLOBALS['age_run_last_email_error'] = trim($message);
+}
+
+function getLastEmailError(): string
+{
+    return trim((string) ($GLOBALS['age_run_last_email_error'] ?? ''));
+}
+
+function clearLastEmailError(): void
+{
+    unset($GLOBALS['age_run_last_email_error']);
+}
+
 function emailEncodeHeader(string $value): string
 {
     if ($value === '') {
@@ -122,14 +137,18 @@ function sendEmailViaSmtp(string $to, string $subject, string $message, array $c
     $ehloHost = preg_replace('/[^a-z0-9.-]/i', '', (string) ($_SERVER['HTTP_HOST'] ?? 'localhost')) ?: 'localhost';
 
     if ($host === '' || $fromAddress === '') {
-        error_log('[Age Run] SMTP não configurado: host ou remetente ausente');
+        $error = 'SMTP não configurado: host ou remetente ausente.';
+        setLastEmailError($error);
+        error_log('[Age Run] ' . $error);
         return false;
     }
 
     $remoteHost = $encryption === 'ssl' ? 'ssl://' . $host : $host;
     $socket = @fsockopen($remoteHost, $port, $errorNumber, $errorMessage, $timeout);
     if (!$socket) {
-        error_log("[Age Run] Falha ao conectar SMTP {$host}:{$port} - {$errorMessage} ({$errorNumber})");
+        $error = "Falha ao conectar ao servidor SMTP {$host}:{$port}.";
+        setLastEmailError($error);
+        error_log("[Age Run] {$error} {$errorMessage} ({$errorNumber})");
         return false;
     }
 
@@ -164,6 +183,7 @@ function sendEmailViaSmtp(string $to, string $subject, string $message, array $c
 
         return true;
     } catch (Throwable $e) {
+        setLastEmailError('Falha no envio SMTP. Verifique host, porta, criptografia, usuário e senha da conta de e-mail.');
         error_log('[Age Run] Falha SMTP: ' . $e->getMessage());
         return false;
     } finally {
@@ -173,17 +193,21 @@ function sendEmailViaSmtp(string $to, string $subject, string $message, array $c
 
 function sendAppEmail(string $email, string $subject, string $message): bool
 {
+    clearLastEmailError();
     $config = appConfig()['email'] ?? [];
     $to = trim($email);
     $transport = strtolower(trim((string) ($config['transport'] ?? 'mail')));
     $fromAddress = trim((string) ($config['from_address'] ?? ''));
 
     if ($to === '') {
+        setLastEmailError('Destinatário de e-mail ausente.');
         return false;
     }
 
     if ($fromAddress === '') {
-        error_log("[Age Run] E-mail não configurado. Destino={$to} Assunto={$subject} Conteúdo={$message}");
+        $error = 'Remetente de e-mail não configurado.';
+        setLastEmailError($error);
+        error_log("[Age Run] {$error} Destino={$to} Assunto={$subject} Conteúdo={$message}");
         return false;
     }
 
@@ -191,7 +215,12 @@ function sendAppEmail(string $email, string $subject, string $message): bool
         return sendEmailViaSmtp($to, $subject, $message, $config);
     }
 
-    return mail($to, $subject, $message, implode("\r\n", emailBuildMailHeaders($config)));
+    $ok = mail($to, $subject, $message, implode("\r\n", emailBuildMailHeaders($config)));
+    if (!$ok) {
+        setLastEmailError('Falha ao enviar usando mail() do PHP. Verifique a configuração de e-mail do servidor.');
+    }
+
+    return $ok;
 }
 
 function enviarCodigoRecuperacao(string $email, string $nome, string $codigo): bool
