@@ -3,6 +3,105 @@ var API_BASE = API_BASE || (window.location.pathname.startsWith('/dev') ? '/dev/
 
 // Elementos do DOM
 const messageDiv = document.getElementById('message');
+const resendVerificationBtn = document.getElementById('resendVerificationBtn');
+
+function getAppPath(pagePath) {
+    const basePath = window.location.pathname.startsWith('/dev') ? '/dev' : '/controle';
+    return `${basePath}${pagePath}`;
+}
+
+function hideResendVerificationButton() {
+    if (!resendVerificationBtn) return;
+    resendVerificationBtn.hidden = true;
+    resendVerificationBtn.dataset.email = '';
+}
+
+function showResendVerificationButton(email) {
+    if (!resendVerificationBtn || !email) return;
+    resendVerificationBtn.dataset.email = email;
+    resendVerificationBtn.hidden = false;
+}
+
+async function reenviarEmailConfirmacao(email) {
+    const response = await fetch(`${API_BASE}/auth/reenviar-confirmacao`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({ email })
+    });
+
+    const data = await parseApiResponse(response);
+    if (!response.ok) {
+        throw new Error(data.error || `Erro ao reenviar confirmação (HTTP ${response.status})`);
+    }
+
+    return data;
+}
+
+function mostrarMensagem(texto, tipo, options = {}) {
+    if (!messageDiv) return;
+
+    const persist = Boolean(options.persist);
+    messageDiv.textContent = texto;
+    messageDiv.className = `message ${tipo} show`;
+    
+    if (!persist) {
+        setTimeout(() => {
+            messageDiv.classList.remove('show');
+        }, 5000);
+    }
+}
+
+function applyEmailConfirmationNotice() {
+    if (!messageDiv) return;
+
+    const params = new URLSearchParams(window.location.search);
+    const status = params.get('email_confirmacao');
+    const email = (params.get('email') || '').trim();
+    if (!status) return;
+
+    const notices = {
+        pendente: {
+            text: 'Conta criada. Verifique seu e-mail para confirmar o cadastro.',
+            type: 'success',
+            resend: true,
+        },
+        confirmado: {
+            text: 'E-mail confirmado com sucesso. Faça login para continuar.',
+            type: 'success',
+        },
+        'ja-confirmado': {
+            text: 'Este e-mail já estava confirmado. Faça login normalmente.',
+            type: 'success',
+        },
+        'token-expirado': {
+            text: 'O link de confirmação expirou. Reenvie o e-mail de confirmação.',
+            type: 'error',
+            resend: true,
+        },
+        'token-invalido': {
+            text: 'O link de confirmação é inválido ou já foi usado.',
+            type: 'error',
+        },
+    };
+
+    const notice = notices[status];
+    if (!notice) return;
+
+    mostrarMensagem(notice.text, notice.type, { persist: true });
+    if (notice.resend && email) {
+        showResendVerificationButton(email);
+    } else {
+        hideResendVerificationButton();
+    }
+
+    const emailInput = document.getElementById('email');
+    if (emailInput && email) {
+        emailInput.value = email;
+    }
+}
 
 async function parseApiResponse(response) {
     const raw = await response.text();
@@ -46,6 +145,8 @@ if (document.getElementById('loginForm')) {
     const emailInput = document.getElementById('email');
     const senhaInput = document.getElementById('senha');
 
+    applyEmailConfirmationNotice();
+
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         
@@ -56,6 +157,8 @@ if (document.getElementById('loginForm')) {
             mostrarMensagem('Por favor, preencha todos os campos', 'error');
             return;
         }
+
+        hideResendVerificationButton();
         
         try {
             const response = await fetch(`${API_BASE}/auth/login`, {
@@ -70,6 +173,9 @@ if (document.getElementById('loginForm')) {
             const data = await parseApiResponse(response);
             
             if (!response.ok) {
+                if (response.status === 403 && data?.email_verification_required) {
+                    showResendVerificationButton(email);
+                }
                 throw new Error(data.error || `Erro ao fazer login (HTTP ${response.status})`);
             }
             
@@ -77,11 +183,11 @@ if (document.getElementById('loginForm')) {
             
             setTimeout(() => {
                 if (data?.require_password_change) {
-                    window.location.href = (window.location.pathname.startsWith('/dev') ? '/dev/primeiro-acesso' : '/controle/primeiro-acesso');
+                    window.location.href = getAppPath('/primeiro-acesso');
                     return;
                 }
 
-                window.location.href = (window.location.pathname.startsWith('/dev') ? '/dev/home' : '/controle/home');
+                window.location.href = getAppPath('/home');
             }, 1000);
             
         } catch (error) {
@@ -140,11 +246,15 @@ if (document.getElementById('cadastroForm')) {
                 throw new Error(data.error || `Erro ao criar conta (HTTP ${response.status})`);
             }
             
-            mostrarMensagem('✅ Conta criada! Redirecionando...', 'success');
+            mostrarMensagem('✅ Conta criada! Verifique seu e-mail para confirmar o cadastro.', 'success');
             
             setTimeout(() => {
-                window.location.href = (window.location.pathname.startsWith('/dev') ? '/dev/home' : '/controle/home');
-            }, 1000);
+                const nextUrl = `${getAppPath('/login')}?${new URLSearchParams({
+                    email_confirmacao: 'pendente',
+                    email,
+                }).toString()}`;
+                window.location.href = nextUrl;
+            }, 1200);
             
         } catch (error) {
             console.error('Erro:', error);
@@ -153,13 +263,25 @@ if (document.getElementById('cadastroForm')) {
     });
 }
 
-// ==================== FUNÇÕES AUXILIARES ====================
+if (resendVerificationBtn) {
+    resendVerificationBtn.addEventListener('click', async () => {
+        const emailInput = document.getElementById('email');
+        const email = (resendVerificationBtn.dataset.email || emailInput?.value || '').trim();
+        if (!email) {
+            mostrarMensagem('Informe o e-mail para reenviar a confirmação.', 'error');
+            return;
+        }
 
-function mostrarMensagem(texto, tipo) {
-    messageDiv.textContent = texto;
-    messageDiv.className = `message ${tipo} show`;
-    
-    setTimeout(() => {
-        messageDiv.classList.remove('show');
-    }, 5000);
+        resendVerificationBtn.disabled = true;
+        try {
+            const data = await reenviarEmailConfirmacao(email);
+            mostrarMensagem(`✅ ${data.message || 'E-mail de confirmação reenviado.'}`, 'success', { persist: true });
+            showResendVerificationButton(email);
+        } catch (error) {
+            console.error('Erro:', error);
+            mostrarMensagem(`❌ ${error.message}`, 'error', { persist: true });
+        } finally {
+            resendVerificationBtn.disabled = false;
+        }
+    });
 }

@@ -113,6 +113,39 @@ function redirectTo(string $path): never
     exit;
 }
 
+function appPath(string $path): string
+{
+    $basePath = (string) (appConfig()['app_base_path'] ?? '/controle');
+    $normalized = '/' . ltrim($path, '/');
+
+    if ($basePath === '' || $basePath === '/') {
+        return $normalized;
+    }
+
+    return rtrim($basePath, '/') . $normalized;
+}
+
+function appAbsoluteUrl(string $path, array $query = []): string
+{
+    $config = appConfig();
+    $configuredBase = trim((string) ($config['app_url'] ?? ''));
+    $relativePath = appPath($path);
+
+    if ($configuredBase !== '') {
+        $url = rtrim($configuredBase, '/') . $relativePath;
+    } else {
+        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+        $host = trim((string) ($_SERVER['HTTP_HOST'] ?? 'localhost'));
+        $url = $scheme . '://' . $host . $relativePath;
+    }
+
+    if ($query !== []) {
+        $url .= '?' . http_build_query($query);
+    }
+
+    return $url;
+}
+
 function sendHtml(string $fileName): never
 {
     $candidates = [

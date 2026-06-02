@@ -6,7 +6,7 @@ O alvo deste pacote e rodar no dominio principal em `/controle`.
 ## Estrutura
 
 - `public/`: frontend original copiado (HTML/CSS/JS/imagens) + roteador `index.php`
-- `src/`: backend PHP (rotas, sessão, banco, recuperação de senha)
+- `src/`: backend PHP (rotas, sessão, banco, recuperação de senha, confirmação de e-mail)
 - `database.sql`: schema para MySQL/MariaDB
 - `scripts/migrate_sqlite_to_mysql.php`: migração opcional de dados SQLite para MySQL
 
@@ -21,6 +21,7 @@ O alvo deste pacote e rodar no dominio principal em `/controle`.
 1. Criar banco MySQL/MariaDB no Plesk.
 2. Importar `database.sql` no banco novo.
 3. Copiar `.env.example` para `.env` e preencher dados de conexão.
+4. Criar uma conta de e-mail no Plesk, como `no-reply@seu-dominio.com`, e usar essa conta no SMTP.
 4. No Gerenciador de Arquivos do dominio principal, crie/abra a pasta `controle`.
 5. Publique o conteudo deste projeto dentro de `httpdocs/controle`.
 6. Não é necessario usar subdominio.
@@ -46,6 +47,15 @@ DB_CHARSET=utf8mb4
 
 EMAIL_FROM_NAME=Age Run
 EMAIL_FROM_ADDRESS=no-reply@seu-dominio.com
+EMAIL_REPLY_TO_NAME=Age Run
+EMAIL_REPLY_TO_ADDRESS=suporte@seu-dominio.com
+EMAIL_TRANSPORT=smtp
+SMTP_HOST=mail.seu-dominio.com
+SMTP_PORT=587
+SMTP_ENCRYPTION=tls
+SMTP_USERNAME=no-reply@seu-dominio.com
+SMTP_PASSWORD=troque-esta-senha
+SMTP_TIMEOUT=15
 ```
 
 Para deploy em `/controle`, use:
@@ -55,12 +65,39 @@ APP_BASE_PATH=/controle
 APP_URL=https://seu-dominio.com
 ```
 
+## SMTP no Plesk
+
+Campos que você precisa copiar do painel:
+
+- Conta de e-mail criada em `Mail`: use como `SMTP_USERNAME` e também em `EMAIL_FROM_ADDRESS`
+- Senha da conta: use em `SMTP_PASSWORD`
+- Servidor de saída SMTP: use em `SMTP_HOST`
+- Porta SMTP: normalmente `587` com `TLS` ou `465` com `SSL`
+- Endereço de suporte opcional: use em `EMAIL_REPLY_TO_ADDRESS`
+
+Configuração recomendada:
+
+- `EMAIL_TRANSPORT=smtp`
+- `EMAIL_FROM_ADDRESS=no-reply@seu-dominio.com`
+- `SMTP_PORT=587`
+- `SMTP_ENCRYPTION=tls`
+
+No Plesk, valide também:
+
+- `SPF` ativo para o domínio
+- `DKIM` ativo para o domínio
+- `DMARC` configurado, se disponível
+
+Sem isso, os e-mails podem cair em spam mesmo com SMTP correto.
+
 ## Rotas compatíveis implementadas
 
 - `POST /api/auth/cadastro`
+- `POST /api/auth/reenviar-confirmacao`
 - `POST /api/auth/login`
 - `POST /api/auth/logout`
 - `GET /api/auth/session`
+- `GET /confirmar-email?token=...`
 - `POST /api/auth/solicitar-recuperacao`
 - `POST /api/auth/redefinir-senha`
 - `POST /api/pesagens`
@@ -117,5 +154,7 @@ Se o painel nao oferecer interface web para importar SQL no PostgreSQL:
 ## Observações
 
 - O frontend foi mantido para preservar comportamento visual e chamadas existentes.
+- Cadastro novo agora exige confirmação de e-mail antes do primeiro login.
+- Usuários antigos são preservados como já verificados para evitar bloqueio retroativo.
 - O projeto Node atual permanece intacto.
 - Este pacote já está preparado para coexistir com o sistema atual usando `https://seu-dominio.com/controle`.

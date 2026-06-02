@@ -102,8 +102,19 @@ function appConfig(): array
             'charset' => (string) env($dbPrefix . 'CHARSET', (string) env('DB_CHARSET', 'utf8mb4')),
         ],
         'email' => [
+            'transport' => (string) env('EMAIL_TRANSPORT', 'mail'),
             'from_name' => (string) env('EMAIL_FROM_NAME', 'Age Run'),
             'from_address' => (string) env('EMAIL_FROM_ADDRESS', ''),
+            'reply_to_name' => (string) env('EMAIL_REPLY_TO_NAME', ''),
+            'reply_to_address' => (string) env('EMAIL_REPLY_TO_ADDRESS', ''),
+            'smtp' => [
+                'host' => (string) env('SMTP_HOST', ''),
+                'port' => (int) env('SMTP_PORT', 587),
+                'encryption' => strtolower((string) env('SMTP_ENCRYPTION', 'tls')),
+                'username' => (string) env('SMTP_USERNAME', ''),
+                'password' => (string) env('SMTP_PASSWORD', ''),
+                'timeout' => (int) env('SMTP_TIMEOUT', 15),
+            ],
         ],
     ];
 
