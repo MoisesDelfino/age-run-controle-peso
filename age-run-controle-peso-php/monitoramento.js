@@ -60,7 +60,8 @@ let resultState = {
     primaryKey: '',
     rows: [],
     columns: [],
-    editingRowIndex: -1
+    activeCell: null,
+    savingCell: false
 };
 
 function hideResetOutput() {
@@ -362,8 +363,8 @@ function toSqlLiteral(value) {
     return `'${escaped}'`;
 }
 
-function resetRowEditing() {
-    resultState.editingRowIndex = -1;
+function resetActiveCell() {
+    resultState.activeCell = null;
 }
 
 function renderResultRows(rows, sqlSource) {
@@ -379,7 +380,8 @@ function renderResultRows(rows, sqlSource) {
             primaryKey: '',
             rows: [],
             columns: [],
-            editingRowIndex: -1
+            activeCell: null,
+            savingCell: false
         };
         return;
     }
@@ -395,33 +397,36 @@ function renderResultRows(rows, sqlSource) {
     resultState.columns = columns;
 
     const editable = Boolean(tableName && primaryKey);
-    const actionHead = editable ? '<th class="db-row-actions">Ações</th>' : '';
 
-    dbResultHeadEl.innerHTML = `<tr>${actionHead}${columns.map((col) => `<th>${escapeHtml(col)}</th>`).join('')}</tr>`;
+    dbResultHeadEl.innerHTML = `<tr>${columns.map((col) => `<th>${escapeHtml(col)}</th>`).join('')}</tr>`;
     dbResultBodyEl.innerHTML = list.map((row, rowIndex) => {
-        const isEditing = rowIndex === resultState.editingRowIndex;
-        const actionCell = editable
-            ? (isEditing
-                ? `<td class="db-row-actions"><div class="db-row-buttons"><button type="button" class="btn btn-primary btn-row-save" data-row="${rowIndex}">Salvar</button><button type="button" class="btn btn-secondary btn-row-cancel" data-row="${rowIndex}">Cancelar</button></div></td>`
-                : `<td class="db-row-actions"><div class="db-row-buttons"><button type="button" class="btn btn-secondary btn-row-edit" data-row="${rowIndex}">Editar</button></div></td>`)
-            : '';
-
         const cells = columns.map((col) => {
             const colValue = row?.[col];
             const isPk = String(col) === String(primaryKey);
+            const isEditableCell = editable && !isPk;
+            const isActiveCell = Boolean(
+                resultState.activeCell
+                && resultState.activeCell.rowIndex === rowIndex
+                && resultState.activeCell.column === col
+            );
 
-            if (isEditing && !isPk) {
-                return `<td><input class="db-cell-input" data-row="${rowIndex}" data-col="${escapeHtml(col)}" value="${escapeHtml(formatDbValue(colValue))}"></td>`;
+            if (isActiveCell && isEditableCell) {
+                const inputValue = colValue === null || colValue === undefined ? '' : formatDbValue(colValue);
+                return `<td class="db-result-cell is-editing" data-row="${rowIndex}" data-col="${escapeHtml(col)}"><input class="db-cell-input is-active" data-row="${rowIndex}" data-col="${escapeHtml(col)}" value="${escapeHtml(inputValue)}"></td>`;
             }
 
-            return `<td>${escapeHtml(formatDbValue(colValue))}</td>`;
+            const classes = ['db-result-cell'];
+            if (isEditableCell) classes.push('is-editable');
+            if (isPk) classes.push('is-primary-key');
+
+            return `<td class="${classes.join(' ')}" data-row="${rowIndex}" data-col="${escapeHtml(col)}"${isEditableCell ? ' tabindex="0"' : ''}>${escapeHtml(formatDbValue(colValue))}</td>`;
         }).join('');
 
-        return `<tr class="${isEditing ? 'db-row-editing' : ''}">${actionCell}${cells}</tr>`;
+        return `<tr>${cells}</tr>`;
     }).join('');
 
     if (editable) {
-        setDbResultMeta(`${Number(list.length)} linha(s) retornada(s). Clique em Editar para alterar e salvar.`);
+        setDbResultMeta(`${Number(list.length)} linha(s) retornada(s). Clique em uma célula para editar.`);
     }
 }
 
@@ -579,11 +584,14 @@ async function executarSqlDb() {
     }
 
     if (Array.isArray(data?.rows)) {
-        resetRowEditing();
+        resetActiveCell();
         renderResultRows(data.rows, sql);
-        setDbResultMeta(`${Number(data.row_count || data.rows.length)} linha(s) retornada(s).`);
+        const totalRows = Number(data.row_count || data.rows.length);
+        setDbResultMeta(resultState.table && resultState.primaryKey
+            ? `${totalRows} linha(s) retornada(s). Clique em uma célula para editar.`
+            : `${totalRows} linha(s) retornada(s).`);
     } else {
-        resetRowEditing();
+        resetActiveCell();
         renderResultAffected(data?.affected_rows || 0);
         setDbResultMeta(`${Number(data?.affected_rows || 0)} linha(s) afetada(s).`);
         await carregarEstruturaDb();
@@ -642,6 +650,10 @@ function collectSuggestions(prefix, context, forceAll) {
     const normalizedPrefix = String(prefix || '').toLowerCase();
     const contextUpper = String(context || '').toUpperCase();
     const out = [];
+
+    if (!normalizedPrefix && !forceAll) {
+        return [];
+    }
 
     const tableContext = /(FROM|JOIN|UPDATE|INTO|TABLE|DESCRIBE|TRUNCATE)\s*$/i.test(contextUpper);
 
@@ -711,7 +723,66 @@ function renderAutocomplete() {
         `;
     }).join('');
 
+    const position = getAutocompletePosition();
+    dbAutocompleteEl.style.left = `${position.left}px`;
+    dbAutocompleteEl.style.top = `${position.top}px`;
+    dbAutocompleteEl.style.width = `${position.width}px`;
     dbAutocompleteEl.classList.add('is-open');
+}
+
+function getAutocompletePosition() {
+    if (!dbSqlEditorEl) {
+        return { left: 12, top: 12, width: 320 };
+    }
+
+    const caret = getTextareaCaretCoordinates(dbSqlEditorEl, dbSqlEditorEl.selectionStart || 0);
+    const editorWidth = Math.max(dbSqlEditorEl.clientWidth, 320);
+    const lineHeight = Number.parseFloat(window.getComputedStyle(dbSqlEditorEl).lineHeight) || 22;
+    const left = Math.min(Math.max(caret.left, 12), Math.max(12, editorWidth - 332));
+
+    return {
+        left,
+        top: caret.top + lineHeight + 6,
+        width: Math.min(320, Math.max(220, editorWidth - left - 12))
+    };
+}
+
+function getTextareaCaretCoordinates(textarea, position) {
+    const mirror = document.createElement('div');
+    const computed = window.getComputedStyle(textarea);
+    const properties = [
+        'boxSizing', 'width', 'height', 'overflowX', 'overflowY', 'borderTopWidth', 'borderRightWidth',
+        'borderBottomWidth', 'borderLeftWidth', 'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft',
+        'fontStyle', 'fontVariant', 'fontWeight', 'fontStretch', 'fontSize', 'fontSizeAdjust', 'lineHeight',
+        'fontFamily', 'textAlign', 'textTransform', 'textIndent', 'textDecoration', 'letterSpacing', 'wordSpacing'
+    ];
+
+    mirror.style.position = 'absolute';
+    mirror.style.visibility = 'hidden';
+    mirror.style.whiteSpace = 'pre-wrap';
+    mirror.style.wordWrap = 'break-word';
+    mirror.style.top = '0';
+    mirror.style.left = '-9999px';
+
+    properties.forEach((property) => {
+        mirror.style[property] = computed[property];
+    });
+
+    mirror.textContent = textarea.value.slice(0, position);
+
+    const marker = document.createElement('span');
+    marker.textContent = textarea.value.slice(position, position + 1) || ' ';
+    mirror.appendChild(marker);
+    document.body.appendChild(mirror);
+
+    const left = marker.offsetLeft - textarea.scrollLeft + Number.parseFloat(computed.borderLeftWidth) + Number.parseFloat(computed.paddingLeft);
+    const top = marker.offsetTop - textarea.scrollTop + Number.parseFloat(computed.borderTopWidth) + Number.parseFloat(computed.paddingTop);
+
+    document.body.removeChild(mirror);
+    return {
+        left: Math.max(12, left),
+        top: Math.max(12, top)
+    };
 }
 
 function hideAutocomplete() {
@@ -773,23 +844,45 @@ function applyAutocompleteItem(item) {
     hideAutocomplete();
 }
 
-function getEditableRowData(rowIndex) {
-    const row = resultState.rows[rowIndex];
-    if (!row) return null;
+function focusActiveCellInput() {
+    const input = dbResultBodyEl?.querySelector('.db-cell-input.is-active');
+    if (!input) return;
 
-    const snapshot = { ...row };
-    const inputs = document.querySelectorAll(`.db-cell-input[data-row="${rowIndex}"]`);
-    inputs.forEach((input) => {
-        const col = input.getAttribute('data-col') || '';
-        if (!col) return;
-        snapshot[col] = input.value;
-    });
-    return snapshot;
+    input.focus();
+    input.select();
 }
 
-async function saveRowEdit(rowIndex) {
-    const row = getEditableRowData(rowIndex);
-    if (!row) return;
+function openCellEditor(rowIndex, column) {
+    if (resultState.savingCell) return;
+
+    const row = resultState.rows[rowIndex];
+    if (!row || !column || String(column) === String(resultState.primaryKey)) return;
+
+    resultState.activeCell = { rowIndex, column };
+    renderResultRows(resultState.rows, resultState.sql);
+    focusActiveCellInput();
+}
+
+function cancelActiveCellEdit() {
+    if (!resultState.activeCell) return;
+    resetActiveCell();
+    renderResultRows(resultState.rows, resultState.sql);
+}
+
+function getActiveCellInput() {
+    return dbResultBodyEl?.querySelector('.db-cell-input.is-active') || null;
+}
+
+async function saveActiveCellEdit() {
+    if (resultState.savingCell || !resultState.activeCell) return;
+
+    const activeCell = resultState.activeCell;
+    const input = getActiveCellInput();
+    const row = resultState.rows[activeCell.rowIndex];
+    if (!row) {
+        resetActiveCell();
+        return;
+    }
 
     const table = resultState.table;
     const pk = resultState.primaryKey;
@@ -798,20 +891,24 @@ async function saveRowEdit(rowIndex) {
         return;
     }
 
-    const pkValue = row[pk];
-    const setParts = resultState.columns
-        .filter((col) => col !== pk)
-        .map((col) => `${quoteSqlIdentifier(col)} = ${toSqlLiteral(row[col])}`);
-
-    if (!setParts.length) {
-        setDbMessage('Não há campos editáveis nesta linha.', 'error');
+    const nextValue = input ? input.value : '';
+    const originalValue = row[activeCell.column];
+    const comparableOriginal = originalValue === null || originalValue === undefined ? '' : String(originalValue);
+    if (nextValue === comparableOriginal) {
+        resetActiveCell();
+        renderResultRows(resultState.rows, resultState.sql);
         return;
     }
 
-    const sql = `UPDATE ${quoteSqlIdentifier(table)} SET ${setParts.join(', ')} WHERE ${quoteSqlIdentifier(pk)} = ${toSqlLiteral(pkValue)}`;
+    const normalizedValue = nextValue === '' && (originalValue === null || originalValue === undefined)
+        ? null
+        : nextValue;
+    const sql = `UPDATE ${quoteSqlIdentifier(table)} SET ${quoteSqlIdentifier(activeCell.column)} = ${toSqlLiteral(normalizedValue)} WHERE ${quoteSqlIdentifier(pk)} = ${toSqlLiteral(row[pk])}`;
 
     try {
+        resultState.savingCell = true;
         setDbMessage('Salvando alteração...', 'info');
+
         const response = await fetch(`${API_BASE}/admin/db-query`, {
             method: 'POST',
             credentials: 'include',
@@ -826,11 +923,13 @@ async function saveRowEdit(rowIndex) {
             throw new Error(data?.error || 'Falha ao salvar edição');
         }
 
-        setDbMessage('Registro atualizado com sucesso.', 'success');
-        resetRowEditing();
+        setDbMessage('Campo atualizado com sucesso.', 'success');
+        resetActiveCell();
         await executarSqlDb();
     } catch (error) {
         setDbMessage(error.message || 'Falha ao salvar edição.', 'error');
+    } finally {
+        resultState.savingCell = false;
     }
 }
 
@@ -838,31 +937,48 @@ function bindResultEditingEvents() {
     if (!dbResultBodyEl) return;
 
     dbResultBodyEl.addEventListener('click', (event) => {
-        const editBtn = event.target.closest('.btn-row-edit');
-        if (editBtn) {
-            const rowIndex = Number(editBtn.getAttribute('data-row'));
-            if (Number.isFinite(rowIndex)) {
-                resultState.editingRowIndex = rowIndex;
-                renderResultRows(resultState.rows, resultState.sql);
+        const cell = event.target.closest('.db-result-cell.is-editable');
+        if (!cell) return;
+
+        const rowIndex = Number(cell.getAttribute('data-row'));
+        const column = String(cell.getAttribute('data-col') || '');
+        if (Number.isFinite(rowIndex) && column) {
+            openCellEditor(rowIndex, column);
+        }
+    });
+
+    dbResultBodyEl.addEventListener('keydown', (event) => {
+        if (event.target.classList.contains('db-cell-input')) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                saveActiveCellEdit();
+                return;
+            }
+
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                cancelActiveCellEdit();
             }
             return;
         }
 
-        const cancelBtn = event.target.closest('.btn-row-cancel');
-        if (cancelBtn) {
-            resetRowEditing();
-            renderResultRows(resultState.rows, resultState.sql);
-            setDbMessage('Edição cancelada.', 'info');
-            return;
-        }
+        const cell = event.target.closest('.db-result-cell.is-editable');
+        if (!cell) return;
 
-        const saveBtn = event.target.closest('.btn-row-save');
-        if (saveBtn) {
-            const rowIndex = Number(saveBtn.getAttribute('data-row'));
-            if (Number.isFinite(rowIndex)) {
-                saveRowEdit(rowIndex);
+        if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            const rowIndex = Number(cell.getAttribute('data-row'));
+            const column = String(cell.getAttribute('data-col') || '');
+            if (Number.isFinite(rowIndex) && column) {
+                openCellEditor(rowIndex, column);
             }
         }
+    });
+
+    dbResultBodyEl.addEventListener('focusout', (event) => {
+        if (!event.target.classList.contains('db-cell-input')) return;
+        if (resultState.savingCell) return;
+        saveActiveCellEdit();
     });
 }
 
@@ -874,7 +990,7 @@ function bindAutocompleteEvents() {
     });
 
     dbSqlEditorEl.addEventListener('click', () => {
-        updateAutocompleteSuggestions();
+        hideAutocomplete();
     });
 
     dbSqlEditorEl.addEventListener('keydown', (event) => {
