@@ -159,7 +159,7 @@ body.dark-mode .auth-form .form-group select:focus {
 }
 
 .forgot-password {
-    display: none; /* Oculta temporariamente */
+    display: block;
     text-align: right;
     margin-top: -8px;
     margin-bottom: 16px;
