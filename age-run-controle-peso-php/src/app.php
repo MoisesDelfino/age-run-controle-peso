@@ -938,6 +938,9 @@ function ensureUsuariosCompatibilityColumns(): void
         $targetColumns = [
             'perfil' => "VARCHAR(20) DEFAULT 'aluno'",
             'senha_temporaria' => 'INTEGER DEFAULT 0',
+            'email_verificado' => 'INTEGER DEFAULT 1',
+            'email_verificacao_token' => 'VARCHAR(120) DEFAULT NULL',
+            'email_verificacao_expiracao' => 'DATETIME DEFAULT NULL',
             'rp_5k' => 'INTEGER DEFAULT NULL',
             'rp_10k' => 'INTEGER DEFAULT NULL',
             'rp_21k' => 'INTEGER DEFAULT NULL',
@@ -973,6 +976,12 @@ function ensureUsuariosCompatibilityColumns(): void
         } catch (Throwable $e) {
             // Ignorar em caso de ambientes sem coluna ainda visível.
         }
+
+        try {
+            dbExecute("UPDATE usuarios SET email_verificado = 1 WHERE email_verificado IS NULL OR (email_verificado = 0 AND (email_verificacao_token IS NULL OR TRIM(email_verificacao_token) = ''))");
+        } catch (Throwable $e) {
+            // Ignorar em caso de ambientes sem coluna ainda visível.
+        }
     } catch (Throwable $e) {
         error_log('[AgeRun PHP] ensureUsuariosCompatibilityColumns ignorado: ' . $e->getMessage());
     }
@@ -994,6 +1003,9 @@ function ensureCoreTables(): void
                     altura REAL NULL,
                     data_cadastro DATETIME DEFAULT CURRENT_TIMESTAMP,
                     senha_temporaria INTEGER DEFAULT 0,
+                    email_verificado INTEGER DEFAULT 1,
+                    email_verificacao_token TEXT NULL,
+                    email_verificacao_expiracao DATETIME NULL,
                     codigo_recuperacao TEXT NULL,
                     codigo_expiracao DATETIME NULL
                 )'
@@ -1032,6 +1044,9 @@ function ensureCoreTables(): void
                     altura DOUBLE PRECISION NULL,
                     data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     senha_temporaria INTEGER DEFAULT 0,
+                    email_verificado INTEGER DEFAULT 1,
+                    email_verificacao_token TEXT NULL,
+                    email_verificacao_expiracao TIMESTAMP NULL,
                     codigo_recuperacao TEXT NULL,
                     codigo_expiracao TIMESTAMP NULL
                 )'
@@ -1069,6 +1084,9 @@ function ensureCoreTables(): void
                 altura DECIMAL(4,2) NULL,
                 data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 senha_temporaria TINYINT(1) DEFAULT 0,
+                email_verificado TINYINT(1) DEFAULT 1,
+                email_verificacao_token VARCHAR(120) NULL,
+                email_verificacao_expiracao DATETIME NULL,
                 codigo_recuperacao VARCHAR(20) NULL,
                 codigo_expiracao DATETIME NULL
             )'
@@ -1106,6 +1124,21 @@ function ensureCoreTables(): void
     } catch (Throwable $e) {
         error_log('[AgeRun PHP] ensureCoreTables ignorado: ' . $e->getMessage());
     }
+}
+
+function generateEmailVerificationToken(): string
+{
+    return bin2hex(random_bytes(24));
+}
+
+function buildVerificationRedirectPath(string $status, string $email = ''): string
+{
+    $query = ['email_confirmacao' => $status];
+    if ($email !== '') {
+        $query['email'] = $email;
+    }
+
+    return '/login?' . http_build_query($query);
 }
 
 function ensureRpTestesTable(): void
@@ -1789,31 +1822,51 @@ if ($method === 'POST' && $path === '/api/auth/cadastro') {
         jsonResponse(['error' => 'E-mail já cadastrado'], 400);
     }
 
+    $verificationToken = generateEmailVerificationToken();
+    $verificationExpiresAt = (new DateTimeImmutable('+24 hours'))->format('Y-m-d H:i:s');
+
     try {
+        $pdo = db();
+        $pdo->beginTransaction();
+
         dbExecute(
-            'INSERT INTO usuarios (nome, email, senha, sexo) VALUES (:nome, :email, :senha, :sexo)',
+            'INSERT INTO usuarios (nome, email, senha, sexo, email_verificado, email_verificacao_token, email_verificacao_expiracao) VALUES (:nome, :email, :senha, :sexo, 0, :token, :expiracao)',
             [
                 ':nome' => $nome,
                 ':email' => $email,
                 ':senha' => password_hash($senha, PASSWORD_DEFAULT),
                 ':sexo' => $sexo,
+                ':token' => $verificationToken,
+                ':expiracao' => $verificationExpiresAt,
             ]
         );
         $userId = dbLastInsertId();
+
+        if (!enviarEmailConfirmacaoCadastro($email, $nome, $verificationToken)) {
+            $pdo->rollBack();
+            jsonResponse(['error' => 'Não foi possível enviar o e-mail de confirmação. Verifique a configuração SMTP e tente novamente.'], 500);
+        }
+
+        $pdo->commit();
     } catch (PDOException $e) {
+        if (db()->inTransaction()) {
+            db()->rollBack();
+        }
         if (($e->getCode() ?? '') === '23000') {
             jsonResponse(['error' => 'E-mail já cadastrado'], 400);
         }
         jsonResponse(['error' => 'Erro ao cadastrar usuário'], 500);
+    } catch (Throwable $e) {
+        if (db()->inTransaction()) {
+            db()->rollBack();
+        }
+        jsonResponse(['error' => 'Erro ao cadastrar usuário: ' . $e->getMessage()], 500);
     }
-
-    $_SESSION['userId'] = $userId;
-    $_SESSION['nome'] = $nome;
-    $_SESSION['sexo'] = $sexo;
 
     jsonResponse([
         'success' => true,
-        'message' => 'Cadastro realizado com sucesso!',
+        'message' => 'Cadastro realizado. Verifique seu e-mail para confirmar a conta.',
+        'verification_required' => true,
         'usuario' => ['id' => $userId, 'nome' => $nome, 'email' => $email, 'sexo' => $sexo],
     ]);
 }
@@ -1831,6 +1884,13 @@ if ($method === 'POST' && $path === '/api/auth/login') {
         $usuario = dbFetchOne('SELECT * FROM usuarios WHERE email = :email LIMIT 1', [':email' => $email]);
         if (!$usuario || !password_verify($senha, (string) ($usuario['senha'] ?? ''))) {
             jsonResponse(['error' => 'E-mail ou senha incorretos'], 401);
+        }
+
+        if (empty($usuario['email_verificado'])) {
+            jsonResponse([
+                'error' => 'Seu e-mail ainda não foi confirmado. Verifique sua caixa de entrada ou solicite um novo envio.',
+                'email_verification_required' => true,
+            ], 403);
         }
 
         $_SESSION['userId'] = (int) $usuario['id'];
@@ -1878,6 +1938,79 @@ if ($method === 'POST' && $path === '/api/auth/login') {
         }
         jsonResponse($payload, 500);
     }
+}
+
+if ($method === 'POST' && $path === '/api/auth/reenviar-confirmacao') {
+    $input = jsonInput();
+    $email = strtolower(trim((string) ($input['email'] ?? '')));
+
+    if ($email === '') {
+        jsonResponse(['error' => 'E-mail é obrigatório'], 400);
+    }
+
+    $usuario = dbFetchOne('SELECT id, nome, email, email_verificado FROM usuarios WHERE email = :email LIMIT 1', [':email' => $email]);
+    if (!$usuario) {
+        jsonResponse(['error' => 'E-mail não cadastrado'], 404);
+    }
+
+    if (!empty($usuario['email_verificado'])) {
+        jsonResponse(['success' => true, 'message' => 'Este e-mail já foi confirmado. Faça login normalmente.']);
+    }
+
+    $verificationToken = generateEmailVerificationToken();
+    $verificationExpiresAt = (new DateTimeImmutable('+24 hours'))->format('Y-m-d H:i:s');
+
+    dbExecute(
+        'UPDATE usuarios SET email_verificacao_token = :token, email_verificacao_expiracao = :expiracao WHERE id = :id',
+        [
+            ':token' => $verificationToken,
+            ':expiracao' => $verificationExpiresAt,
+            ':id' => (int) $usuario['id'],
+        ]
+    );
+
+    if (!enviarEmailConfirmacaoCadastro((string) $usuario['email'], (string) $usuario['nome'], $verificationToken)) {
+        jsonResponse(['error' => 'Não foi possível reenviar o e-mail de confirmação no momento.'], 500);
+    }
+
+    jsonResponse(['success' => true, 'message' => 'E-mail de confirmação reenviado com sucesso.']);
+}
+
+if ($method === 'GET' && $path === '/confirmar-email') {
+    $token = trim((string) ($_GET['token'] ?? ''));
+    if ($token === '') {
+        redirectTo(buildVerificationRedirectPath('token-invalido'));
+    }
+
+    $usuario = dbFetchOne(
+        'SELECT id, email, email_verificado, email_verificacao_expiracao FROM usuarios WHERE email_verificacao_token = :token LIMIT 1',
+        [':token' => $token]
+    );
+
+    if (!$usuario) {
+        redirectTo(buildVerificationRedirectPath('token-invalido'));
+    }
+
+    if (!empty($usuario['email_verificado'])) {
+        redirectTo(buildVerificationRedirectPath('ja-confirmado', (string) ($usuario['email'] ?? '')));
+    }
+
+    $expiresAtRaw = (string) ($usuario['email_verificacao_expiracao'] ?? '');
+    if ($expiresAtRaw === '') {
+        redirectTo(buildVerificationRedirectPath('token-invalido', (string) ($usuario['email'] ?? '')));
+    }
+
+    $expiresAt = new DateTimeImmutable($expiresAtRaw);
+    if (new DateTimeImmutable('now') > $expiresAt) {
+        redirectTo(buildVerificationRedirectPath('token-expirado', (string) ($usuario['email'] ?? '')));
+    }
+
+    dbExecute(
+        'UPDATE usuarios SET email_verificado = 1, email_verificacao_token = NULL, email_verificacao_expiracao = NULL WHERE id = :id',
+        [':id' => (int) $usuario['id']]
+    );
+
+    redirectTo(buildVerificationRedirectPath('confirmado', (string) ($usuario['email'] ?? '')));
 }
 
 if ($method === 'POST' && $path === '/api/auth/logout') {
