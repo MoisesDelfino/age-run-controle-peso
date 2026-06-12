@@ -245,15 +245,16 @@ if (document.getElementById('cadastroForm')) {
             if (!response.ok) {
                 throw new Error(data.error || `Erro ao criar conta (HTTP ${response.status})`);
             }
-            
-            mostrarMensagem('✅ Conta criada! Verifique seu e-mail para confirmar o cadastro.', 'success');
-            
+
+            mostrarMensagem('✅ Conta criada! Entrando na sua conta...', 'success');
+
             setTimeout(() => {
-                const nextUrl = `${getAppPath('/login')}?${new URLSearchParams({
-                    email_confirmacao: 'pendente',
-                    email,
-                }).toString()}`;
-                window.location.href = nextUrl;
+                if (data?.require_password_change) {
+                    window.location.href = getAppPath('/primeiro-acesso');
+                    return;
+                }
+
+                window.location.href = getAppPath('/home');
             }, 1200);
             
         } catch (error) {
