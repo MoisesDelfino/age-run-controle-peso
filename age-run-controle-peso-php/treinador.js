@@ -1155,16 +1155,15 @@ async function atualizarStatusRpTreinador(usuarioId, prova, status) {
     }
 }
 
-async function registrarTesteTreinador(usuarioId, tempo, distanciaKm) {
-    async function registrarTesteTreinador(usuarioId, tempo, distanciaKm, dataTeste) {
+async function registrarTesteTreinador(usuarioId, tempo, distanciaKm, dataTeste) {
     try {
         const response = await fetch(`${API_BASE}/treinador/usuarios/${usuarioId}/testes`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            credentials: 'include',
-               body: JSON.stringify({ tempo, distancia_km: distanciaKm, criado_em: dataTeste || null })
+                credentials: 'include',
+                body: JSON.stringify({ tempo, distancia_km: distanciaKm, criado_em: dataTeste || null })
         });
 
         const data = await response.json();
@@ -1187,8 +1186,7 @@ async function registrarTesteTreinador(usuarioId, tempo, distanciaKm) {
     }
 }
 
-async function atualizarTesteTreinador(usuarioId, testeId, tempo, distanciaKm) {
-    async function atualizarTesteTreinador(usuarioId, testeId, tempo, distanciaKm, dataTeste) {
+async function atualizarTesteTreinador(usuarioId, testeId, tempo, distanciaKm, dataTeste) {
     try {
         const response = await fetch(`${API_BASE}/treinador/usuarios/${usuarioId}/testes/${testeId}`, {
             method: 'PUT',
@@ -1196,7 +1194,7 @@ async function atualizarTesteTreinador(usuarioId, testeId, tempo, distanciaKm) {
                 'Content-Type': 'application/json'
             },
             credentials: 'include',
-               body: JSON.stringify({ tempo, distancia_km: distanciaKm, criado_em: dataTeste || null })
+            body: JSON.stringify({ tempo, distancia_km: distanciaKm, criado_em: dataTeste || null })
         });
 
         const data = await response.json();
