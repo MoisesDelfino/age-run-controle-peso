@@ -2175,6 +2175,11 @@ if ($method === 'GET' && $path === '/api/admin/monitoramento/feed') {
 if ($method === 'GET' && $path === '/api/admin/db-structure') {
     requireMonitorOwnerAuth();
 
+    ensureCoreTables();
+    ensureUsuariosCompatibilityColumns();
+    ensureRpTestesTable();
+    ensureDbHealthChecksTable();
+
     $driver = strtolower((string) (appConfig()['db']['driver'] ?? 'mysql'));
     $tables = [];
 
