@@ -1145,6 +1145,7 @@ function ensureRpTestesTable(): void
 {
     try {
         $driver = strtolower((string) (appConfig()['db']['driver'] ?? 'mysql'));
+        error_log("[AgeRun] ensureRpTestesTable called with driver: {$driver}");
 
         if ($driver === 'sqlite') {
             dbExecute(
@@ -1170,25 +1171,34 @@ function ensureRpTestesTable(): void
         }
 
         if ($driver === 'pgsql' || $driver === 'postgres' || $driver === 'postgresql') {
-            dbExecute(
-                'CREATE TABLE IF NOT EXISTS rp_testes_historico (
-                    id BIGSERIAL PRIMARY KEY,
-                    usuario_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
-                    treinador_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
-                    prova VARCHAR(20) NULL,
-                    tempo_segundos INTEGER NOT NULL,
-                    distancia_km DOUBLE PRECISION NOT NULL,
-                    pace_segundos_km DOUBLE PRECISION NOT NULL,
-                    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )'
-            );
+            try {
+                dbExecute(
+                    'CREATE TABLE IF NOT EXISTS rp_testes_historico (
+                        id BIGSERIAL PRIMARY KEY,
+                        usuario_id INTEGER NOT NULL,
+                        treinador_id INTEGER NOT NULL,
+                        prova VARCHAR(20) NULL,
+                        tempo_segundos INTEGER NOT NULL,
+                        distancia_km DOUBLE PRECISION NOT NULL,
+                        pace_segundos_km DOUBLE PRECISION NOT NULL,
+                        criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )'
+                );
+            } catch (Throwable $e) {
+                error_log('[AgeRun] ensureRpTestesTable PostgreSQL CREATE failed: ' . $e->getMessage());
+                throw $e;
+            }
             if (!dbColumnExists('rp_testes_historico', 'prova')) {
                 dbExecute('ALTER TABLE rp_testes_historico ADD COLUMN IF NOT EXISTS prova VARCHAR(20)');
             }
             if (!dbColumnExists('rp_testes_historico', 'distancia_km')) {
                 dbExecute('ALTER TABLE rp_testes_historico ADD COLUMN IF NOT EXISTS distancia_km DOUBLE PRECISION');
             }
-            dbExecute('CREATE INDEX IF NOT EXISTS idx_rp_testes_usuario_data ON rp_testes_historico(usuario_id, criado_em DESC)');
+            try {
+                dbExecute('CREATE INDEX IF NOT EXISTS idx_rp_testes_usuario_data ON rp_testes_historico(usuario_id, criado_em DESC)');
+            } catch (Throwable $e) {
+                error_log('[AgeRun] ensureRpTestesTable index creation failed: ' . $e->getMessage());
+            }
             return;
         }
 
@@ -1229,7 +1239,7 @@ function ensureRpTestesTable(): void
             // Índice já pode existir.
         }
     } catch (Throwable $e) {
-        error_log('[AgeRun PHP] ensureRpTestesTable ignorado: ' . $e->getMessage());
+        error_log('[AgeRun PHP] ensureRpTestesTable FATAL error: ' . $e->getMessage() . ' | ' . $e->getTraceAsString());
     }
 }
 
@@ -2175,12 +2185,18 @@ if ($method === 'GET' && $path === '/api/admin/monitoramento/feed') {
 if ($method === 'GET' && $path === '/api/admin/db-structure') {
     requireMonitorOwnerAuth();
 
+    error_log('[AgeRun] /api/admin/db-structure called');
     ensureCoreTables();
+    error_log('[AgeRun] ensureCoreTables() completed');
     ensureUsuariosCompatibilityColumns();
+    error_log('[AgeRun] ensureUsuariosCompatibilityColumns() completed');
     ensureRpTestesTable();
+    error_log('[AgeRun] ensureRpTestesTable() completed');
     ensureDbHealthChecksTable();
+    error_log('[AgeRun] ensureDbHealthChecksTable() completed');
 
     $driver = strtolower((string) (appConfig()['db']['driver'] ?? 'mysql'));
+    error_log('[AgeRun] db-structure driver: ' . $driver);
     $tables = [];
 
     try {
