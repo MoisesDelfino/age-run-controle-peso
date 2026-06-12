@@ -786,6 +786,64 @@ function appendFallbackTeste(array $payload): int
     return $nextId;
 }
 
+function updateFallbackTestEntry(
+    int $usuarioId,
+    int $testeId,
+    int $tempoSegundos,
+    float $distanciaKm,
+    float $paceSegundosKm,
+    ?string $criadoEm = null
+): bool {
+    if ($usuarioId <= 0 || $testeId <= 0) {
+        return false;
+    }
+
+    $items = loadFallbackTests();
+    $updated = false;
+
+    foreach ($items as &$item) {
+        if ((int) ($item['usuario_id'] ?? 0) !== $usuarioId || (int) ($item['id'] ?? 0) !== $testeId) {
+            continue;
+        }
+
+        $item['tempo_segundos'] = $tempoSegundos;
+        $item['distancia_km'] = $distanciaKm;
+        $item['pace_segundos_km'] = $paceSegundosKm;
+        if ($criadoEm !== null && $criadoEm !== '') {
+            $item['criado_em'] = $criadoEm;
+        }
+        $item['updated_at'] = date('Y-m-d H:i:s');
+        $updated = true;
+        break;
+    }
+    unset($item);
+
+    if ($updated) {
+        saveFallbackTests($items);
+    }
+
+    return $updated;
+}
+
+function deleteFallbackTestEntry(int $usuarioId, int $testeId): bool
+{
+    if ($usuarioId <= 0 || $testeId <= 0) {
+        return false;
+    }
+
+    $items = loadFallbackTests();
+    $filtered = array_values(array_filter($items, static function ($item) use ($usuarioId, $testeId) {
+        return !((int) ($item['usuario_id'] ?? 0) === $usuarioId && (int) ($item['id'] ?? 0) === $testeId);
+    }));
+
+    if (count($filtered) === count($items)) {
+        return false;
+    }
+
+    saveFallbackTests($filtered);
+    return true;
+}
+
 function insertRpTesteHistoricoCompat(
     int $alvoUsuarioId,
     int $treinadorId,
@@ -3144,6 +3202,21 @@ if ($method === 'PUT' && preg_match('#^/api/treinador/usuarios/(\d+)/testes/(\d+
             );
 
             if (!$teste || (int) ($teste['usuario_id'] ?? 0) !== $alvoUsuarioId) {
+                if (updateFallbackTestEntry($alvoUsuarioId, $testeId, $tempoSegundos, $distanciaKm, $paceSegundosKm, $criadoEm)) {
+                    clearEditedTestOverride($alvoUsuarioId, $testeId);
+                    jsonResponse([
+                        'success' => true,
+                        'message' => 'Teste atualizado com sucesso',
+                        'teste' => [
+                            'id' => $testeId,
+                            'tempo_segundos' => $tempoSegundos,
+                            'tempo_formatado' => formatSecondsToRaceTime($tempoSegundos),
+                            'distancia_km' => $distanciaKm,
+                            'pace_segundos_km' => $paceSegundosKm,
+                            'pace_formatado' => formatPace($paceSegundosKm),
+                        ],
+                    ]);
+                }
                 jsonResponse(['error' => 'Teste não encontrado para este usuário'], 404);
             }
         } catch (Throwable $e) {
@@ -3155,6 +3228,21 @@ if ($method === 'PUT' && preg_match('#^/api/treinador/usuarios/(\d+)/testes/(\d+
                 );
 
                 if (!$teste) {
+                    if (updateFallbackTestEntry($alvoUsuarioId, $testeId, $tempoSegundos, $distanciaKm, $paceSegundosKm, $criadoEm)) {
+                        clearEditedTestOverride($alvoUsuarioId, $testeId);
+                        jsonResponse([
+                            'success' => true,
+                            'message' => 'Teste atualizado com sucesso',
+                            'teste' => [
+                                'id' => $testeId,
+                                'tempo_segundos' => $tempoSegundos,
+                                'tempo_formatado' => formatSecondsToRaceTime($tempoSegundos),
+                                'distancia_km' => $distanciaKm,
+                                'pace_segundos_km' => $paceSegundosKm,
+                                'pace_formatado' => formatPace($paceSegundosKm),
+                            ],
+                        ]);
+                    }
                     jsonResponse(['error' => 'Teste não encontrado para este usuário'], 404);
                 }
             } catch (Throwable $inner) {
@@ -3261,6 +3349,14 @@ if ($method === 'DELETE' && preg_match('#^/api/treinador/usuarios/(\d+)/testes/(
         );
 
         if (!$teste || (int) ($teste['usuario_id'] ?? 0) !== $alvoUsuarioId) {
+            if (deleteFallbackTestEntry($alvoUsuarioId, $testeId)) {
+                clearEditedTestOverride($alvoUsuarioId, $testeId);
+                jsonResponse([
+                    'success' => true,
+                    'message' => 'Teste excluído com sucesso',
+                ]);
+            }
+
             if (isTestSoftDeleted($alvoUsuarioId, $testeId)) {
                 jsonResponse([
                     'success' => true,
