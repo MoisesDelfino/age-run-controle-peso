@@ -2237,6 +2237,11 @@ if ($method === 'GET' && $path === '/api/admin/db-structure') {
 if ($method === 'POST' && $path === '/api/admin/db-query') {
     requireMonitorOwnerAuth();
 
+    ensureCoreTables();
+    ensureUsuariosCompatibilityColumns();
+    ensureRpTestesTable();
+    ensureDbHealthChecksTable();
+
     $input = jsonInput();
     $sql = trim((string) ($input['sql'] ?? ''));
 
