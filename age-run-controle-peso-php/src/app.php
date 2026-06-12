@@ -792,11 +792,16 @@ function insertRpTesteHistoricoCompat(
     int $tempoSegundos,
     float $distanciaKm,
     float $paceSegundosKm
-): ?int {
+    ?string $criadoEm = null
+    ): ?int {
     $baseValues = [
         'usuario_id' => $alvoUsuarioId,
         'treinador_id' => $treinadorId,
         'prova' => 'teste',
+
+           if ($criadoEm !== null) {
+               $baseValues['criado_em'] = $criadoEm;
+           }
         'tempo_segundos' => $tempoSegundos,
         'distancia_km' => $distanciaKm,
         'pace_segundos_km' => $paceSegundosKm,
@@ -810,6 +815,14 @@ function insertRpTesteHistoricoCompat(
         ['usuario_id', 'treinador_id', 'tempo_segundos', 'distancia_km'],
         ['usuario_id', 'treinador_id', 'tempo_segundos', 'pace_segundos_km'],
         ['usuario_id', 'treinador_id', 'tempo_segundos'],
+
+       if ($criadoEm !== null) {
+           $candidates = [
+               ['usuario_id', 'treinador_id', 'prova', 'tempo_segundos', 'distancia_km', 'pace_segundos_km', 'criado_em'],
+               ['usuario_id', 'treinador_id', 'tempo_segundos', 'distancia_km', 'pace_segundos_km', 'criado_em'],
+               ...$candidates,
+           ];
+       }
     ];
 
     $lastError = null;
@@ -3070,6 +3083,7 @@ if ($method === 'POST' && preg_match('#^/api/treinador/usuarios/(\d+)/testes$#',
     $input = jsonInput();
     $tempoSegundos = parseRaceTimeToSeconds($input['tempo'] ?? null);
     $distanciaKm = isset($input['distancia_km']) ? (float) $input['distancia_km'] : 0.0;
+    $criadoEm = isset($input['criado_em']) && !empty($input['criado_em']) ? $input['criado_em'] : null;
 
     if ($tempoSegundos === -1 || $tempoSegundos === null || $tempoSegundos <= 0) {
         jsonResponse(['error' => 'Tempo do teste inválido'], 400);
@@ -3087,7 +3101,7 @@ if ($method === 'POST' && preg_match('#^/api/treinador/usuarios/(\d+)/testes$#',
     $paceSegundosKm = $tempoSegundos / $distanciaKm;
 
     try {
-        $testeId = insertRpTesteHistoricoCompat($alvoUsuarioId, $treinadorId, $tempoSegundos, $distanciaKm, $paceSegundosKm);
+        $testeId = insertRpTesteHistoricoCompat($alvoUsuarioId, $treinadorId, $tempoSegundos, $distanciaKm, $paceSegundosKm, $criadoEm);
     } catch (Throwable $e) {
         error_log('[AgeRun PHP] Falha ao salvar teste: ' . $e->getMessage());
         jsonResponse([
@@ -3114,6 +3128,7 @@ if ($method === 'PUT' && preg_match('#^/api/treinador/usuarios/(\d+)/testes/(\d+
 
     $alvoUsuarioId = (int) $matches[1];
     $testeId = (int) $matches[2];
+        $criadoEm = isset($input['criado_em']) && !empty($input['criado_em']) ? $input['criado_em'] : null;
     $input = jsonInput();
     $tempoSegundos = parseRaceTimeToSeconds($input['tempo'] ?? null);
     $distanciaKm = isset($input['distancia_km']) ? (float) $input['distancia_km'] : 0.0;
@@ -3179,6 +3194,11 @@ if ($method === 'PUT' && preg_match('#^/api/treinador/usuarios/(\d+)/testes/(\d+
         if ($hasPace) {
             $setParts[] = 'pace_segundos_km = :pace_segundos_km';
             $params[':pace_segundos_km'] = $paceSegundosKm;
+
+               if ($criadoEm !== null && safeDbColumnExists('rp_testes_historico', 'criado_em')) {
+                   $setParts[] = 'criado_em = :criado_em';
+                   $params[':criado_em'] = $criadoEm;
+               }
         }
 
         try {
