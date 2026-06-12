@@ -153,20 +153,35 @@ function parseRaceTimeToSeconds(value) {
 }
 
 function formatCoachHistoryDate(value) {
+    const isoDate = normalizeCoachDateToIso(value);
+    if (!isoDate) {
+        return '-';
+    }
+
+    const [year, month, day] = isoDate.split('-');
+    return `${day}/${month}/${year}`;
+}
+
+function normalizeCoachDateToIso(value) {
     if (!value) {
-        return '-';
+        return '';
     }
 
-    const parsed = new Date(value);
+    const raw = String(value).trim();
+    const directMatch = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (directMatch) {
+        return `${directMatch[1]}-${directMatch[2]}-${directMatch[3]}`;
+    }
+
+    const parsed = new Date(raw);
     if (Number.isNaN(parsed.getTime())) {
-        return '-';
+        return '';
     }
 
-    return parsed.toLocaleDateString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-    });
+    const year = parsed.getFullYear();
+    const month = String(parsed.getMonth() + 1).padStart(2, '0');
+    const day = String(parsed.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
 }
 
 function calcularPaceDaProva(prova, tempoSegundos) {
@@ -208,7 +223,7 @@ function renderCoachTesteHistorico(usuario) {
                         </div>
                     </div>
                     <div class="coach-rp-test-history-actions">
-                        <button class="btn btn-secondary coach-rp-test-edit" data-user-id="${usuario.usuario_id}" data-test-id="${item.id}" data-tempo="${item.tempo_formatado || formatRaceTime(item.tempo_segundos)}" data-distancia="${item.distancia_km}">Editar</button>
+                        <button class="btn btn-secondary coach-rp-test-edit" data-user-id="${usuario.usuario_id}" data-test-id="${item.id}" data-tempo="${item.tempo_formatado || formatRaceTime(item.tempo_segundos)}" data-distancia="${item.distancia_km}" data-data="${normalizeCoachDateToIso(item.criado_em)}">Editar</button>
                         <button class="btn coach-rp-test-delete" data-user-id="${usuario.usuario_id}" data-test-id="${item.id}">Excluir</button>
                     </div>
                 </article>
@@ -1436,7 +1451,8 @@ if (coachUsersContainer) {
             editingTests[usuarioId] = {
                 id: testeId,
                 tempo: editTestButton.getAttribute('data-tempo') || '',
-                distancia: editTestButton.getAttribute('data-distancia') || ''
+                distancia: editTestButton.getAttribute('data-distancia') || '',
+                data: editTestButton.getAttribute('data-data') || ''
             };
             filtrarUsuarios();
             return;
