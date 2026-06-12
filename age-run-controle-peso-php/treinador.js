@@ -220,8 +220,8 @@ function renderCoachTesteHistorico(usuario) {
 function renderCoachTestePanel(usuario) {
     const tempoInputId = `teste-tempo-${usuario.usuario_id}`;
     const distanciaInputId = `teste-distancia-${usuario.usuario_id}`;
-    const dataInputId = `teste-data-${usuario.usuario_id}`;
     const editing = editingTests[usuario.usuario_id] || null;
+    const dataInputId = `teste-data-${usuario.usuario_id}`;
     return `
         <div class="coach-rp-test-panel">
             <div class="coach-rp-test-panel-header">
@@ -239,10 +239,10 @@ function renderCoachTestePanel(usuario) {
                 <div class="coach-rp-test-field">
                     <label class="group-meta" for="${distanciaInputId}">Distância (km)</label>
                     <input id="${distanciaInputId}" class="coach-rp-test-input" type="text" placeholder="2" value="${editing?.distancia || ''}" data-user-id="${usuario.usuario_id}" data-test-field="distancia" />
-                               <div class="coach-rp-test-field">
-                                   <label class="group-meta" for="${dataInputId}">Data do teste</label>
-                                   <input id="${dataInputId}" class="coach-rp-test-input" type="date" value="${editing?.data || ''}" data-user-id="${usuario.usuario_id}" data-test-field="data" />
-                               </div>
+                </div>
+                <div class="coach-rp-test-field">
+                    <label class="group-meta" for="${dataInputId}">Data do teste</label>
+                    <input id="${dataInputId}" class="coach-rp-test-input" type="date" value="${editing?.data || ''}" data-user-id="${usuario.usuario_id}" data-test-field="data" />
                 </div>
                 <div class="coach-rp-test-preview">
                     <span class="group-meta">Pace calculado</span>
