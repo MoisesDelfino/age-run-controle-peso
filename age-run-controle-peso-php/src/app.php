@@ -791,21 +791,21 @@ function insertRpTesteHistoricoCompat(
     int $treinadorId,
     int $tempoSegundos,
     float $distanciaKm,
-    float $paceSegundosKm
+    float $paceSegundosKm,
     ?string $criadoEm = null
-    ): ?int {
+): ?int {
     $baseValues = [
         'usuario_id' => $alvoUsuarioId,
         'treinador_id' => $treinadorId,
         'prova' => 'teste',
-
-           if ($criadoEm !== null) {
-               $baseValues['criado_em'] = $criadoEm;
-           }
         'tempo_segundos' => $tempoSegundos,
         'distancia_km' => $distanciaKm,
         'pace_segundos_km' => $paceSegundosKm,
     ];
+
+    if ($criadoEm !== null) {
+        $baseValues['criado_em'] = $criadoEm;
+    }
 
     $candidates = [
         ['usuario_id', 'treinador_id', 'prova', 'tempo_segundos', 'distancia_km', 'pace_segundos_km'],
@@ -815,18 +815,18 @@ function insertRpTesteHistoricoCompat(
         ['usuario_id', 'treinador_id', 'tempo_segundos', 'distancia_km'],
         ['usuario_id', 'treinador_id', 'tempo_segundos', 'pace_segundos_km'],
         ['usuario_id', 'treinador_id', 'tempo_segundos'],
-
-       if ($criadoEm !== null) {
-           $candidates = [
-               ['usuario_id', 'treinador_id', 'prova', 'tempo_segundos', 'distancia_km', 'pace_segundos_km', 'criado_em'],
-               ['usuario_id', 'treinador_id', 'tempo_segundos', 'distancia_km', 'pace_segundos_km', 'criado_em'],
-               ...$candidates,
-           ];
-       }
     ];
 
-    $lastError = null;
+    if ($criadoEm !== null) {
+        array_unshift(
+            $candidates,
+            ['usuario_id', 'treinador_id', 'prova', 'tempo_segundos', 'distancia_km', 'pace_segundos_km', 'criado_em'],
+            ['usuario_id', 'treinador_id', 'tempo_segundos', 'distancia_km', 'pace_segundos_km', 'criado_em']
+        );
+    }
+
     $attemptErrors = [];
+    $ensureRetried = false;
 
     $attemptInsert = static function (array $columns) use ($baseValues): void {
         $placeholders = array_map(static fn ($column) => ':' . $column, $columns);
@@ -841,20 +841,17 @@ function insertRpTesteHistoricoCompat(
         );
     };
 
-    $ensureRetried = false;
-
     foreach ($candidates as $columns) {
         try {
             $attemptInsert($columns);
+
             try {
                 $lastInsertId = dbLastInsertId();
                 return $lastInsertId > 0 ? $lastInsertId : null;
-            } catch (Throwable $e) {
-                // Em alguns bancos/instalacoes o lastInsertId pode não estar disponível.
+            } catch (Throwable) {
                 return null;
             }
         } catch (Throwable $e) {
-            $lastError = $e;
             $message = strtolower($e->getMessage());
             $attemptErrors[] = sprintf('[%s] %s', implode(',', $columns), $e->getMessage());
 
@@ -879,18 +876,17 @@ function insertRpTesteHistoricoCompat(
         error_log('[AgeRun PHP] Fallback metadata insert falhou: ' . $e->getMessage());
     }
 
-    $fallbackId = appendFallbackTeste([
+    return appendFallbackTeste([
         'usuario_id' => $alvoUsuarioId,
         'treinador_id' => $treinadorId,
         'prova' => 'teste',
         'tempo_segundos' => $tempoSegundos,
         'distancia_km' => $distanciaKm,
         'pace_segundos_km' => $paceSegundosKm,
-        'criado_em' => date('Y-m-d H:i:s'),
+        'criado_em' => $criadoEm ?? date('Y-m-d H:i:s'),
         'treinador_nome' => null,
         'source' => 'file-fallback',
     ]);
-    return $fallbackId;
 }
 
 function isTestSoftDeleted(int $usuarioId, int $testeId): bool
@@ -3128,10 +3124,10 @@ if ($method === 'PUT' && preg_match('#^/api/treinador/usuarios/(\d+)/testes/(\d+
 
     $alvoUsuarioId = (int) $matches[1];
     $testeId = (int) $matches[2];
-        $criadoEm = isset($input['criado_em']) && !empty($input['criado_em']) ? $input['criado_em'] : null;
     $input = jsonInput();
     $tempoSegundos = parseRaceTimeToSeconds($input['tempo'] ?? null);
     $distanciaKm = isset($input['distancia_km']) ? (float) $input['distancia_km'] : 0.0;
+    $criadoEm = isset($input['criado_em']) && !empty($input['criado_em']) ? $input['criado_em'] : null;
 
     if ($tempoSegundos === -1 || $tempoSegundos === null || $tempoSegundos <= 0) {
         jsonResponse(['error' => 'Tempo do teste inválido'], 400);
@@ -3195,10 +3191,11 @@ if ($method === 'PUT' && preg_match('#^/api/treinador/usuarios/(\d+)/testes/(\d+
             $setParts[] = 'pace_segundos_km = :pace_segundos_km';
             $params[':pace_segundos_km'] = $paceSegundosKm;
 
-               if ($criadoEm !== null && safeDbColumnExists('rp_testes_historico', 'criado_em')) {
-                   $setParts[] = 'criado_em = :criado_em';
-                   $params[':criado_em'] = $criadoEm;
-               }
+        }
+
+        if ($criadoEm !== null && safeDbColumnExists('rp_testes_historico', 'criado_em')) {
+            $setParts[] = 'criado_em = :criado_em';
+            $params[':criado_em'] = $criadoEm;
         }
 
         try {
