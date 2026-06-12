@@ -221,6 +221,7 @@ function renderCoachTestePanel(usuario) {
     const tempoInputId = `teste-tempo-${usuario.usuario_id}`;
     const distanciaInputId = `teste-distancia-${usuario.usuario_id}`;
     const editing = editingTests[usuario.usuario_id] || null;
+        const dataInputId = `teste-data-${usuario.usuario_id}`;
     return `
         <div class="coach-rp-test-panel">
             <div class="coach-rp-test-panel-header">
@@ -238,6 +239,10 @@ function renderCoachTestePanel(usuario) {
                 <div class="coach-rp-test-field">
                     <label class="group-meta" for="${distanciaInputId}">Distância (km)</label>
                     <input id="${distanciaInputId}" class="coach-rp-test-input" type="text" placeholder="2" value="${editing?.distancia || ''}" data-user-id="${usuario.usuario_id}" data-test-field="distancia" />
+                               <div class="coach-rp-test-field">
+                                   <label class="group-meta" for="${dataInputId}">Data do teste</label>
+                                   <input id="${dataInputId}" class="coach-rp-test-input" type="date" value="${editing?.data || ''}" data-user-id="${usuario.usuario_id}" data-test-field="data" />
+                               </div>
                 </div>
                 <div class="coach-rp-test-preview">
                     <span class="group-meta">Pace calculado</span>
@@ -1151,6 +1156,7 @@ async function atualizarStatusRpTreinador(usuarioId, prova, status) {
 }
 
 async function registrarTesteTreinador(usuarioId, tempo, distanciaKm) {
+    async function registrarTesteTreinador(usuarioId, tempo, distanciaKm, dataTeste) {
     try {
         const response = await fetch(`${API_BASE}/treinador/usuarios/${usuarioId}/testes`, {
             method: 'POST',
@@ -1158,7 +1164,7 @@ async function registrarTesteTreinador(usuarioId, tempo, distanciaKm) {
                 'Content-Type': 'application/json'
             },
             credentials: 'include',
-            body: JSON.stringify({ tempo, distancia_km: distanciaKm })
+               body: JSON.stringify({ tempo, distancia_km: distanciaKm, criado_em: dataTeste || null })
         });
 
         const data = await response.json();
@@ -1182,6 +1188,7 @@ async function registrarTesteTreinador(usuarioId, tempo, distanciaKm) {
 }
 
 async function atualizarTesteTreinador(usuarioId, testeId, tempo, distanciaKm) {
+    async function atualizarTesteTreinador(usuarioId, testeId, tempo, distanciaKm, dataTeste) {
     try {
         const response = await fetch(`${API_BASE}/treinador/usuarios/${usuarioId}/testes/${testeId}`, {
             method: 'PUT',
@@ -1189,7 +1196,7 @@ async function atualizarTesteTreinador(usuarioId, testeId, tempo, distanciaKm) {
                 'Content-Type': 'application/json'
             },
             credentials: 'include',
-            body: JSON.stringify({ tempo, distancia_km: distanciaKm })
+               body: JSON.stringify({ tempo, distancia_km: distanciaKm, criado_em: dataTeste || null })
         });
 
         const data = await response.json();
@@ -1385,6 +1392,8 @@ if (coachUsersContainer) {
             const tempo = tempoInput?.value?.trim() || '';
             const distancia = String(distanciaInput?.value || '').trim().replace(',', '.');
             const distanciaKm = Number.parseFloat(distancia);
+           const dataInput = coachUsersContainer.querySelector(`.coach-rp-test-input[data-user-id="${usuarioId}"][data-test-field="data"]`);
+           const dataTeste = dataInput?.value?.trim() || '';
 
             if (!usuarioId) return;
             if (!parseRaceTimeToSeconds(tempo)) {
@@ -1403,9 +1412,9 @@ if (coachUsersContainer) {
 
             const editing = editingTests[usuarioId] || null;
             if (editing?.id) {
-                atualizarTesteTreinador(usuarioId, editing.id, tempo, distanciaKm);
+                   atualizarTesteTreinador(usuarioId, editing.id, tempo, distanciaKm, dataTeste);
             } else {
-                registrarTesteTreinador(usuarioId, tempo, distanciaKm);
+                   registrarTesteTreinador(usuarioId, tempo, distanciaKm, dataTeste);
             }
             return;
         }
