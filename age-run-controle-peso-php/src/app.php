@@ -1822,27 +1822,49 @@ if ($method === 'POST' && $path === '/api/auth/cadastro') {
         jsonResponse(['error' => 'E-mail já cadastrado'], 400);
     }
 
-    $verificationToken = generateEmailVerificationToken();
-    $verificationExpiresAt = (new DateTimeImmutable('+24 hours'))->format('Y-m-d H:i:s');
+    $supportsEmailVerification = safeDbColumnExists('usuarios', 'email_verificado')
+        && safeDbColumnExists('usuarios', 'email_verificacao_token')
+        && safeDbColumnExists('usuarios', 'email_verificacao_expiracao');
+
+    $verificationRequired = $supportsEmailVerification;
+    $verificationToken = $supportsEmailVerification ? generateEmailVerificationToken() : '';
+    $verificationExpiresAt = $supportsEmailVerification
+        ? (new DateTimeImmutable('+24 hours'))->format('Y-m-d H:i:s')
+        : null;
 
     try {
         $pdo = db();
         $pdo->beginTransaction();
 
+        $insertColumns = ['nome', 'email', 'senha', 'sexo'];
+        $insertParams = [
+            ':nome' => $nome,
+            ':email' => $email,
+            ':senha' => password_hash($senha, PASSWORD_DEFAULT),
+            ':sexo' => $sexo,
+        ];
+
+        if ($supportsEmailVerification) {
+            $insertColumns[] = 'email_verificado';
+            $insertColumns[] = 'email_verificacao_token';
+            $insertColumns[] = 'email_verificacao_expiracao';
+            $insertParams[':email_verificado'] = 0;
+            $insertParams[':email_verificacao_token'] = $verificationToken;
+            $insertParams[':email_verificacao_expiracao'] = $verificationExpiresAt;
+        } elseif (safeDbColumnExists('usuarios', 'email_verificado')) {
+            $insertColumns[] = 'email_verificado';
+            $insertParams[':email_verificado'] = 1;
+            $verificationRequired = false;
+        }
+
+        $placeholders = array_map(static fn (string $column): string => ':' . $column, $insertColumns);
         dbExecute(
-            'INSERT INTO usuarios (nome, email, senha, sexo, email_verificado, email_verificacao_token, email_verificacao_expiracao) VALUES (:nome, :email, :senha, :sexo, 0, :token, :expiracao)',
-            [
-                ':nome' => $nome,
-                ':email' => $email,
-                ':senha' => password_hash($senha, PASSWORD_DEFAULT),
-                ':sexo' => $sexo,
-                ':token' => $verificationToken,
-                ':expiracao' => $verificationExpiresAt,
-            ]
+            'INSERT INTO usuarios (' . implode(', ', $insertColumns) . ') VALUES (' . implode(', ', $placeholders) . ')',
+            $insertParams
         );
         $userId = dbLastInsertId();
 
-        if (!enviarEmailConfirmacaoCadastro($email, $nome, $verificationToken)) {
+        if ($verificationRequired && !enviarEmailConfirmacaoCadastro($email, $nome, $verificationToken)) {
             $pdo->rollBack();
             jsonResponse(['error' => 'Não foi possível enviar o e-mail de confirmação. Verifique a configuração SMTP e tente novamente.'], 500);
         }
@@ -1852,6 +1874,7 @@ if ($method === 'POST' && $path === '/api/auth/cadastro') {
         if (db()->inTransaction()) {
             db()->rollBack();
         }
+        error_log('[AgeRun PHP] Erro PDO em /api/auth/cadastro: ' . $e->getMessage());
         if (($e->getCode() ?? '') === '23000') {
             jsonResponse(['error' => 'E-mail já cadastrado'], 400);
         }
@@ -1865,8 +1888,10 @@ if ($method === 'POST' && $path === '/api/auth/cadastro') {
 
     jsonResponse([
         'success' => true,
-        'message' => 'Cadastro realizado. Verifique seu e-mail para confirmar a conta.',
-        'verification_required' => true,
+        'message' => $verificationRequired
+            ? 'Cadastro realizado. Verifique seu e-mail para confirmar a conta.'
+            : 'Cadastro realizado com sucesso.',
+        'verification_required' => $verificationRequired,
         'usuario' => ['id' => $userId, 'nome' => $nome, 'email' => $email, 'sexo' => $sexo],
     ]);
 }
