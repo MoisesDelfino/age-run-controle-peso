@@ -3089,8 +3089,6 @@ if ($method === 'GET' && $path === '/api/treinador/usuarios-ativos') {
 
     $rows = dbFetchAll($query, [':teste_local_pattern' => '%@teste.local']);
 
-    $rows = dbFetchAll($query);
-
     try {
         $historicoMap = buildRpTestesHistoricoMap(array_map(static fn ($row) => (int) ($row['id'] ?? 0), $rows));
     } catch (Throwable $e) {
