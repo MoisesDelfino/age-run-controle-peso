@@ -3083,13 +3083,11 @@ if ($method === 'GET' && $path === '/api/treinador/usuarios-ativos') {
           ORDER BY p2.data_pesagem DESC, p2.id DESC
           LIMIT 1
         )
-        WHERE EXISTS (
-          SELECT 1
-          FROM pesagens p3
-          WHERE p3.usuario_id = u.id AND %s
-        )
+        WHERE u.email NOT LIKE :teste_local_pattern
         ORDER BY u.nome ASC
-    ', implode(",\n          ", $usuarioSelectParts), implode(",\n          ", $pesagemSelectParts), $excluidoPredicate, str_replace('p2.', 'p3.', $excluidoPredicate));
+    ', implode(",\n          ", $usuarioSelectParts), implode(",\n          ", $pesagemSelectParts), $excluidoPredicate);
+
+    $rows = dbFetchAll($query, [':teste_local_pattern' => '%@teste.local']);
 
     $rows = dbFetchAll($query);
 
