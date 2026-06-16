@@ -2918,6 +2918,64 @@ if ($method === 'GET' && $path === '/api/performance/grupos') {
     ]);
 }
 
+if ($method === 'GET' && $path === '/api/admin/todos-grupos') {
+    requireTrainerAuth();
+
+    $rows = dbFetchAll(
+        'SELECT id, nome, email, rp_5k, rp_10k, rp_21k, rp_42k, rp_5k_status, rp_10k_status, rp_21k_status, rp_42k_status FROM usuarios ORDER BY nome ASC'
+    );
+
+    $atletas = [];
+    foreach ($rows as $row) {
+        $score = calculateApprovedPerformanceScore($row);
+        if ($score === null) {
+            continue;
+        }
+        $atletas[] = [
+            'id'                    => (int) ($row['id'] ?? 0),
+            'nome'                  => (string) ($row['nome'] ?? ''),
+            'email'                 => (string) ($row['email'] ?? ''),
+            'ritmo_medio_seg_km'    => $score,
+            'ritmo_medio_formatado' => formatPace($score),
+        ];
+    }
+
+    usort($atletas, static fn ($a, $b) => (float) $a['ritmo_medio_seg_km'] <=> (float) $b['ritmo_medio_seg_km']);
+
+    $sameThreshold = 6.0;
+    $grupos = [];
+
+    foreach ($atletas as $atleta) {
+        $placed = false;
+        foreach ($grupos as &$grupo) {
+            $refScore = (float) ($grupo['ritmo_medio_ref'] ?? 0.0);
+            if ($refScore <= 0) {
+                continue;
+            }
+            $diffPercent = abs(($atleta['ritmo_medio_seg_km'] - $refScore) / $refScore) * 100;
+            if ($diffPercent <= $sameThreshold) {
+                $grupo['atletas'][] = $atleta;
+                $placed = true;
+                break;
+            }
+        }
+        unset($grupo);
+        if (!$placed) {
+            $grupos[] = [
+                'ritmo_medio_ref'       => $atleta['ritmo_medio_seg_km'],
+                'ritmo_medio_formatado' => $atleta['ritmo_medio_formatado'],
+                'atletas'               => [$atleta],
+            ];
+        }
+    }
+
+    jsonResponse([
+        'success' => true,
+        'total'   => count($atletas),
+        'grupos'  => array_values($grupos),
+    ]);
+}
+
 if ($method === 'GET' && $path === '/api/performance/grupos-tiro') {
     $usuarioId = requireAuth();
 

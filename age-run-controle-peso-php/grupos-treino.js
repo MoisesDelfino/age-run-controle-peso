@@ -28,6 +28,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (ok) {
         await carregarRps();
         await carregarGruposTreino();
+        if (usuarioLogado?.perfil === 'treinador' || usuarioLogado?.email === 'moisescamposdelfino@gmail.com') {
+            await carregarAdminGrupos();
+        }
     }
 });
 
@@ -210,6 +213,76 @@ async function carregarGruposTreino() {
         if (groupsNotice) {
             groupsNotice.textContent = 'Não foi possível carregar os grupos de treino.';
         }
+    }
+}
+
+function normalizeStr(s) {
+    return String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+function renderAdminGrupos(grupos, filtro) {
+    const container = document.getElementById('adminGruposList');
+    if (!container) return;
+    const q = normalizeStr(filtro);
+
+    let html = '';
+    let grupoIdx = 0;
+
+    for (const grupo of grupos) {
+        const atletasFiltrados = q
+            ? grupo.atletas.filter((a) => normalizeStr(a.nome).includes(q) || normalizeStr(a.email).includes(q))
+            : grupo.atletas;
+        if (!atletasFiltrados.length) continue;
+        grupoIdx++;
+
+        html += `
+            <div class="admin-grupo-card" style="margin-bottom:1rem;padding:1rem;border-radius:10px;border:1px solid var(--border-color,#334155)">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem">
+                    <strong>Grupo ${grupoIdx}</strong>
+                    <span class="group-meta">Ritmo ref: ${grupo.ritmo_medio_formatado} &bull; ${atletasFiltrados.length} atleta(s)</span>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:.35rem">
+                    ${atletasFiltrados.map((a) => `
+                        <div style="display:flex;justify-content:space-between;align-items:center;padding:.3rem .5rem;border-radius:6px;background:var(--card-bg-alt,#1e293b)">
+                            <span>${a.nome}</span>
+                            <span class="group-meta">${a.ritmo_medio_formatado}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    if (!html) {
+        html = q
+            ? `<p class="group-empty">Nenhum atleta encontrado para "${filtro}".</p>`
+            : '<p class="group-empty">Nenhum atleta com RP aprovado encontrado.</p>';
+    }
+
+    container.innerHTML = html;
+}
+
+async function carregarAdminGrupos() {
+    const section = document.getElementById('adminGruposSection');
+    if (!section) return;
+
+    try {
+        const response = await fetch(`${API_BASE}/admin/todos-grupos`, { credentials: 'include' });
+        if (!response.ok) return;
+        const data = await response.json();
+        if (!data.grupos) return;
+
+        section.style.display = '';
+        renderAdminGrupos(data.grupos, '');
+
+        const searchInput = document.getElementById('adminGruposSearch');
+        if (searchInput) {
+            searchInput.addEventListener('input', () => {
+                renderAdminGrupos(data.grupos, searchInput.value);
+            });
+        }
+    } catch (e) {
+        console.error('Erro ao carregar admin grupos:', e);
     }
 }
 
