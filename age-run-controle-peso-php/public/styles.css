@@ -141,6 +141,112 @@ main {
     transform: scale(1.05);
 }
 
+/* ── User menu dropdown ─────────────────────────────── */
+.user-menu-dropdown {
+    position: relative;
+}
+
+.btn-user-menu {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.25);
+    color: var(--white);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 50%;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 1rem;
+    transition: background 0.2s, transform 0.2s;
+    line-height: 1;
+}
+
+.btn-user-menu:hover {
+    background: var(--white);
+    color: var(--secondary-color);
+    transform: scale(1.05);
+}
+
+.user-menu-inicial {
+    font-size: 1rem;
+    font-weight: 700;
+    pointer-events: none;
+}
+
+.user-menu-panel {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    min-width: 170px;
+    background: #fff;
+    border: 1px solid rgba(107, 114, 128, 0.18);
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.13);
+    z-index: 200;
+    overflow: hidden;
+    padding: 4px 0;
+}
+
+body.dark-mode .user-menu-panel {
+    background: #1e293b;
+    border-color: rgba(148, 163, 184, 0.2);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+}
+
+.user-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 16px;
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: #0f172a;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background 0.12s;
+    text-align: left;
+}
+
+body.dark-mode .user-menu-item {
+    color: #e2e8f0;
+}
+
+.user-menu-item .material-icons {
+    font-size: 18px;
+    opacity: 0.75;
+}
+
+.user-menu-item:hover {
+    background: rgba(14, 165, 233, 0.08);
+}
+
+body.dark-mode .user-menu-item:hover {
+    background: rgba(14, 165, 233, 0.12);
+}
+
+.user-menu-logout {
+    color: #dc2626;
+    border-top: 1px solid rgba(107, 114, 128, 0.12);
+    margin-top: 2px;
+}
+
+body.dark-mode .user-menu-logout {
+    color: #f87171;
+    border-top-color: rgba(148, 163, 184, 0.15);
+}
+
+.user-menu-logout:hover {
+    background: rgba(239, 68, 68, 0.08) !important;
+}
+/* ── fim user menu ─────────────────────────────────── */
+
 .user-greeting {
     background: rgba(139, 195, 74, 0.08);
     padding: 12px 16px;

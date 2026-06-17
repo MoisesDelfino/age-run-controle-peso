@@ -111,26 +111,70 @@ function ensureOwnerMonitorLinks(isOwner) {
     });
 }
 
-function ensurePerfilLink() {
-    const navList = document.querySelector('.nav-list');
-    if (!navList) return;
+function injectUserDropdown(nome) {
+    const headerActions = document.querySelector('.header-actions');
+    if (!headerActions || document.getElementById('userMenuDropdown')) return;
 
-    const href = withBasePath('/perfil');
-    const isActive = window.location.pathname === href || window.location.pathname.endsWith('/perfil');
+    const basePath = getAppBasePath();
+    const perfilHref = basePath ? `${basePath}/perfil` : '/perfil';
 
-    const existing = navList.querySelector('a[href$="/perfil"]');
-    if (existing) {
-        existing.classList.toggle('active', isActive);
-        return;
+    // Escapa o inicial para evitar XSS
+    const raw = String(nome || 'U').charAt(0).toUpperCase();
+    const inicial = raw.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+    // Oculta o botão original — os scripts de cada página ainda o encontram pelo id
+    const originalLogout = document.getElementById('btnLogout');
+    if (originalLogout) originalLogout.style.display = 'none';
+
+    const dropdown = document.createElement('div');
+    dropdown.id = 'userMenuDropdown';
+    dropdown.className = 'user-menu-dropdown';
+    dropdown.innerHTML = `
+        <button id="userMenuToggle" class="btn-user-menu" type="button" aria-label="Menu do usuário" aria-expanded="false">
+            <span class="user-menu-inicial">${inicial}</span>
+        </button>
+        <div id="userMenuPanel" class="user-menu-panel" hidden>
+            <a href="${perfilHref}" class="user-menu-item">
+                <span class="material-icons">person</span> Meu Perfil
+            </a>
+            <button type="button" class="user-menu-item user-menu-logout">
+                <span class="material-icons">logout</span> Sair
+            </button>
+        </div>
+    `;
+
+    headerActions.appendChild(dropdown);
+
+    const toggle = document.getElementById('userMenuToggle');
+    const panel = document.getElementById('userMenuPanel');
+    const sairBtn = dropdown.querySelector('.user-menu-logout');
+
+    if (toggle && panel) {
+        toggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isOpen = !panel.hidden;
+            panel.hidden = isOpen;
+            toggle.setAttribute('aria-expanded', String(!isOpen));
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!dropdown.contains(e.target)) {
+                panel.hidden = true;
+                toggle.setAttribute('aria-expanded', 'false');
+            }
+        });
     }
 
-    const li = document.createElement('li');
-    const a = document.createElement('a');
-    a.className = `nav-link${isActive ? ' active' : ''}`;
-    a.href = href;
-    a.textContent = '👤 Perfil';
-    li.appendChild(a);
-    navList.appendChild(li);
+    if (sairBtn) {
+        sairBtn.addEventListener('click', () => {
+            const orig = document.getElementById('btnLogout');
+            if (orig) orig.click();
+        });
+    }
+}
+
+function ensurePerfilLink() {
+    // Mantida por compatibilidade — o perfil agora fica no dropdown de usuário
 }
 
 function ativarFallbackRotasNovas(closeMenu) {
@@ -191,7 +235,7 @@ async function aplicarPermissoesMenu() {
         });
 
         ensureOwnerMonitorLinks(isOwner);
-        ensurePerfilLink();
+        injectUserDropdown(data.nome);
 
         if (!isMulher) return;
 
