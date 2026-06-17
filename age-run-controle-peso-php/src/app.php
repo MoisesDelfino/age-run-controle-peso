@@ -2648,6 +2648,7 @@ if ($method === 'GET' && $path === '/api/ranking') {
                 COUNT(p.id) AS total_pesagens
              FROM usuarios u
              LEFT JOIN pesagens p ON u.id = p.usuario_id AND (p.excluido IS NULL OR excluido = 0)
+             WHERE (LOWER(u.sexo) != \'feminino\' OR u.sexo IS NULL)
              GROUP BY u.id, u.nome, u.email
              HAVING COUNT(p.id) > 0'
         );
