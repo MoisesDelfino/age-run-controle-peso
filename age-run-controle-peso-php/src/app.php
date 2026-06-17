@@ -1969,6 +1969,7 @@ if ($method === 'POST' && $path === '/api/auth/cadastro') {
     }
 
     $verificationRequired = false;
+    // Email verification on signup is currently disabled. Users are auto-logged in after registration.
 
     try {
         $pdo = db();
@@ -1985,7 +1986,7 @@ if ($method === 'POST' && $path === '/api/auth/cadastro') {
             ':sexo' => $sexo,
         ];
 
-        if (safeDbColumnExists('usuarios', 'email_verificado')) {
+        if (false && safeDbColumnExists('usuarios', 'email_verificado')) {
             $insertColumns[] = 'email_verificado';
             $insertParams[':email_verificado'] = 0;
             $verificationRequired = true;
