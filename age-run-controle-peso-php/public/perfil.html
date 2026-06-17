@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Perfil - Age Run</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="stylesheet" href="styles.css?v=202605302205">
+    <link rel="stylesheet" href="effects.css?v=2026052045">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        .perfil-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.1rem;
+            max-width: 480px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-group label {
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: #475569;
+        }
+
+        body.dark-mode .form-group label {
+            color: #94a3b8;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 10px 12px;
+            border: 1px solid rgba(107, 114, 128, 0.35);
+            border-radius: 10px;
+            font-size: 0.95rem;
+            background: #fff;
+            color: #0f172a;
+            outline: none;
+            transition: border-color 0.15s;
+        }
+
+        body.dark-mode .form-group input,
+        body.dark-mode .form-group select {
+            background: #1e293b;
+            color: #e2e8f0;
+            border-color: rgba(148, 163, 184, 0.3);
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: #0ea5e9;
+        }
+
+        .perfil-message {
+            border-radius: 10px;
+            padding: 10px 12px;
+            font-size: 0.88rem;
+            display: none;
+        }
+
+        .perfil-message.show { display: block; }
+
+        .perfil-message.success {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .perfil-message.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+
+        body.dark-mode .perfil-message.success {
+            background: rgba(20, 83, 45, 0.4);
+            color: #bbf7d0;
+            border-color: rgba(34, 197, 94, 0.45);
+        }
+
+        body.dark-mode .perfil-message.error {
+            background: rgba(127, 29, 29, 0.4);
+            color: #fecaca;
+            border-color: rgba(248, 113, 113, 0.45);
+        }
+
+        .perfil-email-note {
+            font-size: 0.8rem;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        body.dark-mode .perfil-email-note {
+            color: #94a3b8;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="header-left">
+                    <button class="menu-toggle" aria-label="Menu">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
+                    <img src="logo.png" alt="Age Run" class="logo">
+                </div>
+                <div class="header-text">
+                    <h1>Meu Perfil</h1>
+                    <p class="subtitle">Atualize seus dados pessoais.</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn-dark-mode" data-theme-toggle aria-label="Ativar modo escuro" title="Alternar modo escuro">
+                        <span class="material-icons">dark_mode</span>
+                    </button>
+                    <button id="btnLogout" class="btn-logout" aria-label="Sair">
+                        <span class="material-icons">logout</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="menu-overlay"></div>
+
+    <nav class="nav-menu">
+        <div class="container">
+            <ul class="nav-list">
+                <li><a href="./home" class="nav-link">🏠 Home</a></li>
+                <li><a href="./pesagem" class="nav-link">📝 Pesagem</a></li>
+                <li><a href="./ranking" class="nav-link">🏆 Ranking</a></li>
+                <li><a href="./grupos-treino" class="nav-link">🤝 Grupos de Treino</a></li>
+                <li><a href="./bioimpedancia" class="nav-link">📊 Bioimpedancia</a></li>
+                <li class="trainer-only"><a href="./treinador" class="nav-link">🧑‍🏫 Treinador</a></li>
+                <li class="owner-only owner-monitor-link"><a href="./monitoramento" class="nav-link">🧪 Query Tool</a></li>
+                <li class="owner-only owner-access-link"><a href="./monitoramento-acessos" class="nav-link">🛰️ Ultimos Acessos</a></li>
+                <li><a href="./perfil" class="nav-link active">👤 Perfil</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container home-content">
+        <section class="card">
+            <h2 style="margin-bottom:1.2rem">👤 Meu Perfil</h2>
+
+            <div id="perfilMessage" class="perfil-message"></div>
+
+            <form id="perfilForm" class="perfil-form" novalidate>
+                <div class="form-group">
+                    <label for="perfilNome">Nome completo</label>
+                    <input type="text" id="perfilNome" name="nome" placeholder="Seu nome" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="perfilEmail">E-mail</label>
+                    <input type="email" id="perfilEmail" name="email" disabled>
+                    <span class="perfil-email-note">O e-mail não pode ser alterado.</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="perfilSexo">Sexo</label>
+                    <select id="perfilSexo" name="sexo">
+                        <option value="masculino">Masculino</option>
+                        <option value="feminino">Feminino</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="alturaGroup">
+                    <label for="perfilAltura">Altura (cm)</label>
+                    <input type="number" id="perfilAltura" name="altura" min="100" max="250" placeholder="Ex: 175">
+                </div>
+
+                <button type="submit" class="btn btn-primary" id="btnSalvarPerfil">Salvar alterações</button>
+            </form>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>🏃‍♂️ Age Run - Transformando vidas através da corrida com propósito</p>
+        </div>
+    </footer>
+
+    <script src="theme.js?v=202605302205"></script>
+    <script src="menu.js?v=202605302205"></script>
+    <script src="perfil.js?v=20260617"></script>
+</body>
+</html>

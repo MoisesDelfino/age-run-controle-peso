@@ -189,12 +189,122 @@ if (btnRefreshAccess) {
     });
 }
 
+// ==================== NOVOS USUÁRIOS ====================
+
+let pendingDescartarId = null;
+
+const newUsersSection = document.getElementById('newUsersSection');
+const newUsersList = document.getElementById('newUsersList');
+const newUsersBadge = document.getElementById('newUsersBadge');
+const descartarModal = document.getElementById('descartarModal');
+const descartarModalText = document.getElementById('descartarModalText');
+const btnCancelDescartar = document.getElementById('btnCancelDescartar');
+const btnConfirmDescartar = document.getElementById('btnConfirmDescartar');
+
+function formatCadastroDate(value) {
+    if (!value) return '-';
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return String(value);
+    return d.toLocaleDateString('pt-BR');
+}
+
+function renderNovosUsuarios(usuarios) {
+    if (!newUsersList || !newUsersSection || !newUsersBadge) return;
+
+    if (!Array.isArray(usuarios) || usuarios.length === 0) {
+        newUsersSection.style.display = 'none';
+        return;
+    }
+
+    newUsersSection.style.display = 'block';
+    newUsersBadge.textContent = String(usuarios.length);
+
+    newUsersList.innerHTML = usuarios.map((u) => {
+        const nome = escapeHtml(String(u.nome || '-'));
+        const email = escapeHtml(String(u.email || '-'));
+        const sexo = escapeHtml(String(u.sexo || '-'));
+        const dataCadastro = escapeHtml(formatCadastroDate(u.data_cadastro));
+        const uid = Number(u.id || 0);
+        return `<div class="new-user-item">
+            <div class="new-user-info">
+                <strong>${nome}</strong>
+                <span>${email} · ${sexo} · Cadastro: ${dataCadastro}</span>
+            </div>
+            <button class="btn-descartar" type="button" data-uid="${uid}" data-nome="${nome}">Descartar</button>
+        </div>`;
+    }).join('');
+
+    newUsersList.querySelectorAll('.btn-descartar').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const uid = Number(btn.dataset.uid);
+            const nome = btn.dataset.nome || 'este usuário';
+            pendingDescartarId = uid;
+            if (descartarModalText) {
+                descartarModalText.textContent = `Tem certeza que deseja descartar "${nome}" da lista de novos?`;
+            }
+            if (descartarModal) descartarModal.classList.add('show');
+        });
+    });
+}
+
+async function carregarNovosUsuarios() {
+    try {
+        const response = await fetch(`${API_BASE}/admin/novos-usuarios`, { credentials: 'include' });
+        if (!response.ok) return;
+        const data = await response.json();
+        renderNovosUsuarios(Array.isArray(data?.novos_usuarios) ? data.novos_usuarios : []);
+    } catch (e) {
+        console.error('Erro ao carregar novos usuários:', e);
+    }
+}
+
+async function descartarNovoUsuario(uid) {
+    const response = await fetch(`${API_BASE}/admin/novos-usuarios/${uid}/descartar`, {
+        method: 'POST',
+        credentials: 'include',
+    });
+    if (!response.ok) throw new Error('Falha ao descartar usuário');
+    await carregarNovosUsuarios();
+}
+
+if (btnCancelDescartar) {
+    btnCancelDescartar.addEventListener('click', () => {
+        pendingDescartarId = null;
+        if (descartarModal) descartarModal.classList.remove('show');
+    });
+}
+
+if (descartarModal) {
+    descartarModal.addEventListener('click', (e) => {
+        if (e.target === descartarModal) {
+            pendingDescartarId = null;
+            descartarModal.classList.remove('show');
+        }
+    });
+}
+
+if (btnConfirmDescartar) {
+    btnConfirmDescartar.addEventListener('click', async () => {
+        if (!pendingDescartarId) return;
+        const uid = pendingDescartarId;
+        pendingDescartarId = null;
+        if (descartarModal) descartarModal.classList.remove('show');
+        try {
+            await descartarNovoUsuario(uid);
+        } catch (e) {
+            showMessage(e.message || 'Erro ao descartar usuário.', 'error');
+        }
+    });
+}
+
+// ==================== INIT ====================
+
 async function initPage() {
     try {
         const ok = await verificarSessao();
         if (!ok) return;
 
-        await carregarUltimosAcessos();
+        await Promise.all([carregarUltimosAcessos(), carregarNovosUsuarios()]);
         iniciarAutoRefresh();
     } catch (error) {
         console.error('Erro ao iniciar pagina de acessos:', error);

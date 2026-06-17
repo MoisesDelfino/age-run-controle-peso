@@ -104,6 +104,31 @@ function monitorPwaStatusFilePath(): string
     return dirname(__DIR__) . '/storage/monitor_pwa_status.json';
 }
 
+function novosUsuariosDescartadosFilePath(): string
+{
+    return dirname(__DIR__) . '/storage/novos_usuarios_descartados.json';
+}
+
+function readNovosUsuariosDescartados(): array
+{
+    $path = novosUsuariosDescartadosFilePath();
+    if (!is_file($path)) {
+        return [];
+    }
+    $data = @json_decode((string) @file_get_contents($path), true);
+    return is_array($data) ? array_map('intval', $data) : [];
+}
+
+function writeNovosUsuariosDescartados(array $ids): void
+{
+    $path = novosUsuariosDescartadosFilePath();
+    $dir = dirname($path);
+    if (!is_dir($dir)) {
+        @mkdir($dir, 0775, true);
+    }
+    @file_put_contents($path, json_encode(array_values(array_unique($ids)), JSON_UNESCAPED_UNICODE));
+}
+
 function appendMonitorEvent(array $event): void
 {
     $path = monitorEventsFilePath();
@@ -2210,8 +2235,111 @@ if ($method === 'GET' && $path === '/api/admin/db-health') {
     ], $dbCheck['ok'] ? 200 : 503);
 }
 
-if ($method === 'GET' && $path === '/api/admin/monitoramento/feed') {
+// ── Novos usuários ──────────────────────────────────────────────────────────
+
+if ($method === 'GET' && $path === '/api/admin/novos-usuarios') {
     requireMonitorOwnerAuth();
+
+    $descartados = readNovosUsuariosDescartados();
+
+    try {
+        $rows = dbFetchAll(
+            'SELECT id, nome, email, sexo, data_cadastro FROM usuarios ORDER BY data_cadastro DESC, id DESC'
+        );
+    } catch (Throwable) {
+        $rows = dbFetchAll('SELECT id, nome, email, sexo FROM usuarios ORDER BY id DESC');
+        foreach ($rows as &$r) { $r['data_cadastro'] = null; }
+        unset($r);
+    }
+
+    $novos = array_values(array_filter($rows, static fn ($row) => !in_array((int) ($row['id'] ?? 0), $descartados, true)));
+
+    jsonResponse(['novos_usuarios' => $novos]);
+}
+
+if ($method === 'POST' && preg_match('#^/api/admin/novos-usuarios/(\d+)/descartar$#', $path, $m) === 1) {
+    requireMonitorOwnerAuth();
+
+    $alvoId = (int) $m[1];
+    $descartados = readNovosUsuariosDescartados();
+    if (!in_array($alvoId, $descartados, true)) {
+        $descartados[] = $alvoId;
+        writeNovosUsuariosDescartados($descartados);
+    }
+
+    jsonResponse(['success' => true]);
+}
+
+// ── Perfil do usuário ────────────────────────────────────────────────────────
+
+if ($method === 'GET' && $path === '/api/usuario/perfil') {
+    $userId = requireAuth();
+
+    try {
+        $usuario = dbFetchOne(
+            'SELECT id, nome, email, sexo, altura FROM usuarios WHERE id = :id LIMIT 1',
+            [':id' => $userId]
+        );
+    } catch (Throwable) {
+        $usuario = dbFetchOne('SELECT id, nome, email FROM usuarios WHERE id = :id LIMIT 1', [':id' => $userId]);
+        if ($usuario) { $usuario['sexo'] = null; $usuario['altura'] = null; }
+    }
+
+    if (!$usuario) {
+        jsonResponse(['error' => 'Usuário não encontrado'], 404);
+    }
+
+    jsonResponse($usuario);
+}
+
+if ($method === 'PUT' && $path === '/api/usuario/perfil') {
+    $userId = requireAuth();
+    $input = jsonInput();
+
+    $nome = trim((string) ($input['nome'] ?? ''));
+    $sexo = strtolower(trim((string) ($input['sexo'] ?? '')));
+    $altura = isset($input['altura']) && $input['altura'] !== '' ? (float) $input['altura'] : null;
+
+    if ($nome === '') {
+        jsonResponse(['error' => 'Nome é obrigatório'], 400);
+    }
+    if ($sexo !== '' && !in_array($sexo, ['masculino', 'feminino'], true)) {
+        jsonResponse(['error' => 'Sexo inválido'], 400);
+    }
+
+    $setClauses = ['nome = :nome'];
+    $params = [':nome' => $nome, ':id' => $userId];
+
+    if ($sexo !== '') {
+        $setClauses[] = 'sexo = :sexo';
+        $params[':sexo'] = $sexo;
+    }
+
+    if ($altura !== null) {
+        if (safeDbColumnExists('usuarios', 'altura')) {
+            $setClauses[] = 'altura = :altura';
+            $params[':altura'] = $altura;
+        }
+    }
+
+    try {
+        dbExecute(
+            'UPDATE usuarios SET ' . implode(', ', $setClauses) . ' WHERE id = :id',
+            $params
+        );
+    } catch (Throwable $e) {
+        jsonResponse(['error' => 'Erro ao atualizar perfil'], 500);
+    }
+
+    $_SESSION['nome'] = $nome;
+    if ($sexo !== '') {
+        $_SESSION['sexo'] = $sexo;
+    }
+
+    jsonResponse(['success' => true, 'message' => 'Perfil atualizado com sucesso.']);
+}
+
+if ($method === 'GET' && $path === '/api/admin/monitoramento/feed') {
 
     $limit = (int) ($_GET['limit'] ?? 120);
     if ($limit < 20) {
@@ -3574,6 +3702,7 @@ $pages = [
     '/treinador' => 'treinador.html',
     '/monitoramento' => 'monitoramento.html',
     '/monitoramento-acessos' => 'monitoramento-acessos.html',
+    '/perfil' => 'perfil.html',
 ];
 
 if ($path === '/' || $path === '') {
@@ -3584,7 +3713,7 @@ if ($path === '/' || $path === '') {
 }
 
 if (array_key_exists($path, $pages)) {
-    $protectedPages = ['/home', '/pesagem', '/ranking', '/bioimpedancia', '/grupos-treino', '/treinador', '/monitoramento', '/monitoramento-acessos'];
+    $protectedPages = ['/home', '/pesagem', '/ranking', '/bioimpedancia', '/grupos-treino', '/treinador', '/monitoramento', '/monitoramento-acessos', '/perfil'];
     if (in_array($path, $protectedPages, true) && empty($_SESSION['userId'])) {
         redirectTo('/login');
     }

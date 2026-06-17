@@ -28,6 +28,7 @@ function normalizarLinksMenu() {
         '/treinador',
         '/monitoramento',
         '/monitoramento-acessos',
+        '/perfil',
         '/login',
         '/cadastro',
         '/recuperar-senha'
@@ -110,6 +111,28 @@ function ensureOwnerMonitorLinks(isOwner) {
     });
 }
 
+function ensurePerfilLink() {
+    const navList = document.querySelector('.nav-list');
+    if (!navList) return;
+
+    const href = withBasePath('/perfil');
+    const isActive = window.location.pathname === href || window.location.pathname.endsWith('/perfil');
+
+    const existing = navList.querySelector('a[href$="/perfil"]');
+    if (existing) {
+        existing.classList.toggle('active', isActive);
+        return;
+    }
+
+    const li = document.createElement('li');
+    const a = document.createElement('a');
+    a.className = `nav-link${isActive ? ' active' : ''}`;
+    a.href = href;
+    a.textContent = '👤 Perfil';
+    li.appendChild(a);
+    navList.appendChild(li);
+}
+
 function ativarFallbackRotasNovas(closeMenu) {
     const fallbackRoute = withBasePath('/bioimpedancia');
     const candidatos = document.querySelectorAll('.nav-link[href$="/grupos-treino"], .nav-link[href$="/treinador"]');
@@ -168,6 +191,7 @@ async function aplicarPermissoesMenu() {
         });
 
         ensureOwnerMonitorLinks(isOwner);
+        ensurePerfilLink();
 
         if (!isMulher) return;
 

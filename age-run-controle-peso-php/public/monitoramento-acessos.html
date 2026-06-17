@@ -168,6 +168,169 @@
             color: #fecaca;
             border-color: rgba(248, 113, 113, 0.45);
         }
+
+        /* Novos usuários */
+        .new-users-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .new-users-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .new-users-header h2 {
+            font-size: 1rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .new-users-badge {
+            background: #ef4444;
+            color: #fff;
+            border-radius: 999px;
+            padding: 2px 9px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .new-users-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .new-user-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            background: rgba(14, 165, 233, 0.07);
+            border: 1px solid rgba(14, 165, 233, 0.2);
+            border-radius: 10px;
+            padding: 10px 14px;
+            flex-wrap: wrap;
+        }
+
+        body.dark-mode .new-user-item {
+            background: rgba(14, 165, 233, 0.1);
+            border-color: rgba(14, 165, 233, 0.25);
+        }
+
+        .new-user-info strong {
+            display: block;
+            font-size: 0.92rem;
+        }
+
+        .new-user-info span {
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+
+        body.dark-mode .new-user-info span {
+            color: #94a3b8;
+        }
+
+        .btn-descartar {
+            background: transparent;
+            border: 1px solid #ef4444;
+            color: #ef4444;
+            border-radius: 8px;
+            padding: 5px 12px;
+            font-size: 0.82rem;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background 0.15s, color 0.15s;
+        }
+
+        .btn-descartar:hover {
+            background: #ef4444;
+            color: #fff;
+        }
+
+        /* Modal de confirmação */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.55);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-box {
+            background: #fff;
+            border-radius: 14px;
+            padding: 28px 24px;
+            max-width: 380px;
+            width: 90%;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+        }
+
+        body.dark-mode .modal-box {
+            background: #1e293b;
+            color: #e2e8f0;
+        }
+
+        .modal-box h3 {
+            margin: 0 0 10px;
+            font-size: 1.05rem;
+        }
+
+        .modal-box p {
+            margin: 0 0 20px;
+            font-size: 0.9rem;
+            color: #475569;
+        }
+
+        body.dark-mode .modal-box p {
+            color: #94a3b8;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .btn-cancel-modal {
+            background: transparent;
+            border: 1px solid #94a3b8;
+            color: #475569;
+            border-radius: 8px;
+            padding: 7px 16px;
+            font-size: 0.88rem;
+            cursor: pointer;
+        }
+
+        body.dark-mode .btn-cancel-modal {
+            color: #94a3b8;
+            border-color: #475569;
+        }
+
+        .btn-confirm-modal {
+            background: #ef4444;
+            border: none;
+            color: #fff;
+            border-radius: 8px;
+            padding: 7px 16px;
+            font-size: 0.88rem;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn-confirm-modal:hover {
+            background: #dc2626;
+        }
     </style>
 </head>
 <body>
@@ -217,6 +380,14 @@
 
     <main class="container home-content">
         <section class="card access-layout">
+            <!-- Novos usuários -->
+            <div id="newUsersSection" class="new-users-section" style="display:none">
+                <div class="new-users-header">
+                    <h2>🆕 Novos usuários <span id="newUsersBadge" class="new-users-badge">0</span></h2>
+                </div>
+                <div id="newUsersList" class="new-users-list"></div>
+            </div>
+
             <div class="access-toolbar">
                 <div class="access-meta">
                     <span id="accessTotalLabel">Eventos: -</span>
@@ -248,6 +419,18 @@
             </div>
         </section>
     </main>
+
+    <!-- Modal confirmação descartar -->
+    <div id="descartarModal" class="modal-overlay" role="dialog" aria-modal="true">
+        <div class="modal-box">
+            <h3>Descartar usuário</h3>
+            <p id="descartarModalText">Tem certeza que deseja descartar este usuário da lista de novos?</p>
+            <div class="modal-actions">
+                <button id="btnCancelDescartar" class="btn-cancel-modal" type="button">Cancelar</button>
+                <button id="btnConfirmDescartar" class="btn-confirm-modal" type="button">Descartar</button>
+            </div>
+        </div>
+    </div>
 
     <script src="theme.js?v=202605302205"></script>
     <script src="menu.js?v=202605302305"></script>
