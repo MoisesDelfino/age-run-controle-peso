@@ -246,6 +246,15 @@ if (document.getElementById('cadastroForm')) {
                 throw new Error(data.error || `Erro ao criar conta (HTTP ${response.status})`);
             }
 
+            if (data?.verification_required) {
+                const loginUrl = getAppPath('/login') + '?email_confirmacao=pendente&email=' + encodeURIComponent(email);
+                mostrarMensagem('✅ Conta criada! Verifique seu e-mail para ativar a conta.', 'success', { persist: true });
+                setTimeout(() => {
+                    window.location.href = loginUrl;
+                }, 2000);
+                return;
+            }
+
             mostrarMensagem('✅ Conta criada! Entrando na sua conta...', 'success');
 
             setTimeout(() => {

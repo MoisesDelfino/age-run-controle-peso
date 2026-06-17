@@ -1969,6 +1969,9 @@ if ($method === 'POST' && $path === '/api/auth/cadastro') {
         $pdo = db();
         $pdo->beginTransaction();
 
+        $verificationToken = generateEmailVerificationToken();
+        $verificationExpiresAt = (new DateTimeImmutable('+24 hours'))->format('Y-m-d H:i:s');
+
         $insertColumns = ['nome', 'email', 'senha', 'sexo'];
         $insertParams = [
             ':nome' => $nome,
@@ -1979,7 +1982,18 @@ if ($method === 'POST' && $path === '/api/auth/cadastro') {
 
         if (safeDbColumnExists('usuarios', 'email_verificado')) {
             $insertColumns[] = 'email_verificado';
-            $insertParams[':email_verificado'] = 1;
+            $insertParams[':email_verificado'] = 0;
+            $verificationRequired = true;
+        }
+
+        if ($verificationRequired && safeDbColumnExists('usuarios', 'email_verificacao_token')) {
+            $insertColumns[] = 'email_verificacao_token';
+            $insertParams[':email_verificacao_token'] = $verificationToken;
+        }
+
+        if ($verificationRequired && safeDbColumnExists('usuarios', 'email_verificacao_expiracao')) {
+            $insertColumns[] = 'email_verificacao_expiracao';
+            $insertParams[':email_verificacao_expiracao'] = $verificationExpiresAt;
         }
 
         $placeholders = array_map(static fn (string $column): string => ':' . $column, $insertColumns);
@@ -1991,12 +2005,14 @@ if ($method === 'POST' && $path === '/api/auth/cadastro') {
 
         $pdo->commit();
 
-        $_SESSION['userId'] = $userId;
-        $_SESSION['nome'] = $nome;
-        $_SESSION['sexo'] = $sexo;
-        $_SESSION['email'] = $email;
-        $_SESSION['perfil'] = 'aluno';
-        $_SESSION['requirePasswordChange'] = false;
+        if (!$verificationRequired) {
+            $_SESSION['userId'] = $userId;
+            $_SESSION['nome'] = $nome;
+            $_SESSION['sexo'] = $sexo;
+            $_SESSION['email'] = $email;
+            $_SESSION['perfil'] = 'aluno';
+            $_SESSION['requirePasswordChange'] = false;
+        }
     } catch (PDOException $e) {
         if (db()->inTransaction()) {
             db()->rollBack();
@@ -2011,6 +2027,16 @@ if ($method === 'POST' && $path === '/api/auth/cadastro') {
             db()->rollBack();
         }
         jsonResponse(['error' => 'Erro ao cadastrar usuário: ' . $e->getMessage()], 500);
+    }
+
+    if ($verificationRequired) {
+        enviarEmailConfirmacaoCadastro($email, $nome, $verificationToken);
+        jsonResponse([
+            'success' => true,
+            'message' => 'Cadastro realizado! Verifique seu e-mail para ativar a conta.',
+            'verification_required' => true,
+            'auto_login' => false,
+        ]);
     }
 
     jsonResponse([
