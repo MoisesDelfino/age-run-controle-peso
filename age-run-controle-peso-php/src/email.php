@@ -183,7 +183,7 @@ function sendEmailViaSmtp(string $to, string $subject, string $message, array $c
 
         return true;
     } catch (Throwable $e) {
-        setLastEmailError('Falha no envio SMTP. Verifique host, porta, criptografia, usuário e senha da conta de e-mail.');
+        setLastEmailError('Falha SMTP: ' . $e->getMessage());
         error_log('[Age Run] Falha SMTP: ' . $e->getMessage());
         return false;
     } finally {
