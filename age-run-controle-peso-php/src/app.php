@@ -12,6 +12,7 @@ set_exception_handler(static function (Throwable $e): void {
     $isDebug = ($cfg['app_env'] ?? 'production') !== 'production';
     $uriPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?? '/';
     $isDevPath = str_starts_with($uriPath, '/dev/');
+    $isConfirmEmailPath = str_contains($uriPath, 'confirmar-email');
     $accept = (string) ($_SERVER['HTTP_ACCEPT'] ?? '');
     $isApi = str_contains($uriPath, '/api/');
 
@@ -30,7 +31,7 @@ set_exception_handler(static function (Throwable $e): void {
 
     http_response_code(500);
     header('Content-Type: text/plain; charset=utf-8');
-    echo ($isDebug || $isDevPath) ? ('Erro interno do servidor: ' . $e->getMessage()) : 'Erro interno do servidor';
+    echo ($isDebug || $isDevPath || $isConfirmEmailPath) ? ('Erro interno do servidor: ' . $e->getMessage()) : 'Erro interno do servidor';
 });
 
 setupSession();
@@ -2155,6 +2156,9 @@ if ($method === 'POST' && $path === '/api/auth/reenviar-confirmacao') {
 }
 
 if ($method === 'GET' && $path === '/confirmar-email') {
+    ensureCoreTables();
+    ensureUsuariosCompatibilityColumns();
+
     $token = trim((string) ($_GET['token'] ?? ''));
     if ($token === '') {
         redirectTo(buildVerificationRedirectPath('token-invalido'));
