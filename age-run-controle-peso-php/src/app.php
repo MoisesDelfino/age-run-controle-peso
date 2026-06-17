@@ -1027,21 +1027,25 @@ function ensureUsuariosCompatibilityColumns(): void
     try {
         $driver = strtolower((string) (appConfig()['db']['driver'] ?? 'mysql'));
 
+        $isPgsql = ($driver === 'pgsql' || $driver === 'postgres' || $driver === 'postgresql');
+        $timestampType = $isPgsql ? 'TIMESTAMP' : 'DATETIME';
+        $varcharType = $isPgsql ? 'VARCHAR(20)' : 'VARCHAR(20)';
+
         $missing = [];
         $targetColumns = [
             'perfil' => "VARCHAR(20) DEFAULT 'aluno'",
             'senha_temporaria' => 'INTEGER DEFAULT 0',
             'email_verificado' => 'INTEGER DEFAULT 1',
             'email_verificacao_token' => 'VARCHAR(120) DEFAULT NULL',
-            'email_verificacao_expiracao' => 'DATETIME DEFAULT NULL',
+            'email_verificacao_expiracao' => $timestampType . ' DEFAULT NULL',
             'rp_5k' => 'INTEGER DEFAULT NULL',
             'rp_10k' => 'INTEGER DEFAULT NULL',
             'rp_21k' => 'INTEGER DEFAULT NULL',
             'rp_42k' => 'INTEGER DEFAULT NULL',
-            'rp_5k_status' => "VARCHAR(20) DEFAULT NULL",
-            'rp_10k_status' => "VARCHAR(20) DEFAULT NULL",
-            'rp_21k_status' => "VARCHAR(20) DEFAULT NULL",
-            'rp_42k_status' => "VARCHAR(20) DEFAULT NULL",
+            'rp_5k_status' => $varcharType . ' DEFAULT NULL',
+            'rp_10k_status' => $varcharType . ' DEFAULT NULL',
+            'rp_21k_status' => $varcharType . ' DEFAULT NULL',
+            'rp_42k_status' => $varcharType . ' DEFAULT NULL',
         ];
 
         foreach ($targetColumns as $column => $definition) {
