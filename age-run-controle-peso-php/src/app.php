@@ -343,7 +343,12 @@ function trackAlunoApiActivity(string $method, string $path): void
     }
 
     $snapshot = getUserSnapshotById($userId);
-    if (!$snapshot || !isAlunoSnapshot($snapshot)) {
+    if (!$snapshot) {
+        return;
+    }
+
+    $userEmail = normalizeEmail((string) ($snapshot['email'] ?? ''));
+    if (isMonitorOwnerEmail($userEmail)) {
         return;
     }
 
@@ -353,7 +358,7 @@ function trackAlunoApiActivity(string $method, string $path): void
         'path' => $path,
         'user_id' => (int) ($snapshot['id'] ?? 0),
         'user_nome' => (string) ($snapshot['nome'] ?? ''),
-        'user_email' => normalizeEmail((string) ($snapshot['email'] ?? '')),
+        'user_email' => $userEmail,
         'ip' => currentClientIp(),
     ]);
 }
@@ -366,7 +371,12 @@ function trackAlunoPageAccess(string $path): void
     }
 
     $snapshot = getUserSnapshotById($userId);
-    if (!$snapshot || !isAlunoSnapshot($snapshot)) {
+    if (!$snapshot) {
+        return;
+    }
+
+    $userEmail = normalizeEmail((string) ($snapshot['email'] ?? ''));
+    if (isMonitorOwnerEmail($userEmail)) {
         return;
     }
 
@@ -376,7 +386,7 @@ function trackAlunoPageAccess(string $path): void
         'path' => $path,
         'user_id' => (int) ($snapshot['id'] ?? 0),
         'user_nome' => (string) ($snapshot['nome'] ?? ''),
-        'user_email' => normalizeEmail((string) ($snapshot['email'] ?? '')),
+        'user_email' => $userEmail,
         'ip' => currentClientIp(),
     ]);
 }
@@ -2202,14 +2212,15 @@ if ($method === 'GET' && $path === '/confirmar-email') {
 
 if ($method === 'POST' && $path === '/api/auth/logout') {
     $logoutUser = getUserSnapshotById((int) ($_SESSION['userId'] ?? 0));
-    if (is_array($logoutUser) && isAlunoSnapshot($logoutUser)) {
+    $logoutEmail = normalizeEmail((string) ($logoutUser['email'] ?? ''));
+    if (is_array($logoutUser) && !isMonitorOwnerEmail($logoutEmail)) {
         appendMonitorEvent([
             'event_type' => 'logout',
             'method' => 'POST',
             'path' => '/api/auth/logout',
             'user_id' => (int) ($logoutUser['id'] ?? 0),
             'user_nome' => (string) ($logoutUser['nome'] ?? ''),
-            'user_email' => normalizeEmail((string) ($logoutUser['email'] ?? '')),
+            'user_email' => $logoutEmail,
             'ip' => currentClientIp(),
         ]);
     }
