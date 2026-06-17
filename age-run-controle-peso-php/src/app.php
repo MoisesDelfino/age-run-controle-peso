@@ -2442,6 +2442,56 @@ if ($method === 'GET' && $path === '/api/admin/monitoramento/feed') {
     ]);
 }
 
+if ($method === 'GET' && $path === '/api/admin/diagnostico-email') {
+    requireMonitorOwnerAuth();
+
+    $config = appConfig()['email'] ?? [];
+    $smtp   = (array) ($config['smtp'] ?? []);
+
+    $result = [
+        'transport'    => $config['transport'] ?? '(não definido)',
+        'from_address' => $config['from_address'] ?? '(não definido)',
+        'smtp_host'    => $smtp['host'] ?? '(não definido)',
+        'smtp_port'    => $smtp['port'] ?? '(não definido)',
+        'smtp_encryption' => $smtp['encryption'] ?? '(não definido)',
+        'smtp_username'   => $smtp['username'] ?? '(não definido)',
+        'smtp_password'   => $smtp['password'] !== '' ? '***' : '(vazio)',
+    ];
+
+    // Teste de conexão TCP
+    $host = (string) ($smtp['host'] ?? '');
+    $port = (int) ($smtp['port'] ?? 587);
+    $enc  = strtolower((string) ($smtp['encryption'] ?? 'tls'));
+    $tcpResult = 'não testado';
+
+    if ($host !== '') {
+        $remoteHost = $enc === 'ssl' ? 'ssl://' . $host : $host;
+        $socket = @fsockopen($remoteHost, $port, $errNo, $errMsg, 5);
+        if ($socket) {
+            $banner = fgets($socket, 512);
+            fclose($socket);
+            $tcpResult = 'OK — banner: ' . trim((string) $banner);
+        } else {
+            $tcpResult = "FALHOU ({$errNo}): {$errMsg}";
+        }
+    }
+
+    $result['tcp_test'] = $tcpResult;
+
+    // Teste de envio real
+    $testTo = $config['from_address'] ?? '';
+    $sendResult = 'não testado';
+    if ($testTo !== '') {
+        clearLastEmailError();
+        $ok = sendAppEmail($testTo, '[Age Run] Teste SMTP', "Este é um e-mail de teste enviado pelo diagnóstico SMTP.\n\nHorário: " . date('Y-m-d H:i:s'));
+        $sendResult = $ok ? 'ENVIADO com sucesso para ' . $testTo : 'FALHOU: ' . getLastEmailError();
+    }
+
+    $result['send_test'] = $sendResult;
+
+    jsonResponse($result);
+}
+
 if ($method === 'GET' && $path === '/api/admin/db-structure') {
     requireMonitorOwnerAuth();
 
