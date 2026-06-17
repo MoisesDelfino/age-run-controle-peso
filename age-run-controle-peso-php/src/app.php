@@ -3157,6 +3157,42 @@ if ($method === 'GET' && $path === '/api/admin/todos-grupos') {
         }
     }
 
+    // Redistribuir atletas solitários para o grupo imediatamente acima (pace mais rápido).
+    // Repete até estabilizar, pois mover um solitário pode deixar outro grupo com 1 atleta.
+    $changed = true;
+    while ($changed) {
+        $changed = false;
+        foreach ($grupos as $idx => &$grupo) {
+            if (count($grupo['atletas']) !== 1) {
+                continue;
+            }
+            // Grupo acima = índice anterior (lista ordenada por pace crescente = mais rápido primeiro)
+            $destIdx = null;
+            for ($j = $idx - 1; $j >= 0; $j--) {
+                if (count($grupos[$j]['atletas']) > 0) {
+                    $destIdx = $j;
+                    break;
+                }
+            }
+            // Se não há grupo acima, mover para o imediatamente abaixo
+            if ($destIdx === null) {
+                for ($j = $idx + 1; $j < count($grupos); $j++) {
+                    if (count($grupos[$j]['atletas']) > 0) {
+                        $destIdx = $j;
+                        break;
+                    }
+                }
+            }
+            if ($destIdx !== null) {
+                $grupos[$destIdx]['atletas'][] = $grupo['atletas'][0];
+                $grupo['atletas'] = [];
+                $changed = true;
+            }
+        }
+        unset($grupo);
+        $grupos = array_values(array_filter($grupos, static fn ($g) => count($g['atletas']) > 0));
+    }
+
     jsonResponse([
         'success' => true,
         'total'   => count($atletas),
