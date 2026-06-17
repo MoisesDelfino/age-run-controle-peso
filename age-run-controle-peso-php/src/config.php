@@ -110,7 +110,7 @@ function appConfig(): array
             'smtp' => [
                 'host' => (string) env('SMTP_HOST', ''),
                 'port' => (int) env('SMTP_PORT', 587),
-                'encryption' => strtolower((string) env('SMTP_ENCRYPTION', 'tls')),
+                'encryption' => strtolower(trim((string) (getenv('SMTP_ENCRYPTION') !== false ? getenv('SMTP_ENCRYPTION') : 'tls'))),
                 'username' => (string) env('SMTP_USERNAME', ''),
                 'password' => (string) env('SMTP_PASSWORD', ''),
                 'timeout' => (int) env('SMTP_TIMEOUT', 15),
