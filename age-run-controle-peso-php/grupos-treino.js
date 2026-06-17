@@ -245,7 +245,7 @@ function renderAdminGrupos(grupos, filtro) {
                     ${atletasFiltrados.map((a) => `
                         <div style="display:flex;justify-content:space-between;align-items:center;padding:.3rem .5rem;border-radius:6px;background:var(--card-bg-alt,#1e293b)">
                             <span>${a.nome}</span>
-                            <span class="group-meta">${a.ritmo_medio_formatado}</span>
+                            <span class="group-meta">${a.ritmo_medio_formatado}&nbsp;<small style="opacity:.6">${a.fonte === 'teste' ? '🧪 teste' : '📋 RP'}</small></span>
                         </div>
                     `).join('')}
                 </div>

@@ -1677,6 +1677,45 @@ function calculateApprovedPerformanceScore(array $user): ?float
     return $weightedPaceSum / $weightTotal;
 }
 
+/**
+ * Retorna o pace (seg/km) a ser usado nos grupos de treino.
+ *
+ * Prioridade:
+ *  1. Teste mais recente do usuário (pace_segundos_km do histórico)
+ *  2. RP aprovado da menor distância disponível
+ */
+function calculateUserPaceForGroup(array $user, array $historico): ?float
+{
+    // 1. Teste mais recente com pace válido
+    if (!empty($historico)) {
+        foreach ($historico as $teste) {
+            $pace = isset($teste['pace_segundos_km']) && is_numeric($teste['pace_segundos_km'])
+                ? (float) $teste['pace_segundos_km']
+                : null;
+            if ($pace !== null && $pace > 0) {
+                return $pace;
+            }
+        }
+    }
+
+    // 2. RP aprovado da menor distância
+    $orderedColumns = ['rp_5k', 'rp_10k', 'rp_21k', 'rp_42k'];
+    foreach ($orderedColumns as $column) {
+        $statusColumn = RP_STATUS_COLUMNS[$column] ?? null;
+        $status = $statusColumn ? ($user[$statusColumn] ?? null) : null;
+        if ($status !== 'aprovado') {
+            continue;
+        }
+        $value = isset($user[$column]) && is_numeric($user[$column]) ? (float) $user[$column] : 0.0;
+        $distanceKm = RACE_DISTANCES[$column] ?? 0.0;
+        if ($value > 0 && $distanceKm > 0) {
+            return $value / $distanceKm;
+        }
+    }
+
+    return null;
+}
+
 function mapRunnerForGroup(array $user, float $myScore, ?float $scoreOverride = null): array
 {
     $score = $scoreOverride ?? calculatePerformanceScore($user);
@@ -2999,7 +3038,15 @@ if ($method === 'GET' && $path === '/api/performance/grupos') {
         jsonResponse(['error' => 'Usuário não encontrado'], 404);
     }
 
-    $meuScore = calculateApprovedPerformanceScore($usuarioLogado);
+    $allIds = array_map(static fn ($r) => (int) ($r['id'] ?? 0), $rows);
+    try {
+        $historicoMap = buildRpTestesHistoricoMap($allIds);
+    } catch (Throwable) {
+        $historicoMap = [];
+    }
+
+    $meuHistorico = $historicoMap[$usuarioId] ?? [];
+    $meuScore = calculateUserPaceForGroup($usuarioLogado, $meuHistorico);
     if ($meuScore === null) {
         jsonResponse([
             'meu_nivel' => null,
@@ -3008,7 +3055,7 @@ if ($method === 'GET' && $path === '/api/performance/grupos') {
                 'nivel_mais_alto' => [],
                 'nivel_mais_baixo' => [],
             ],
-            'aviso' => 'Seus grupos de treino serão exibidos após o treinador aprovar ao menos um RP.',
+            'aviso' => 'Seus grupos de treino serão exibidos após cadastrar um teste ou ter um RP aprovado.',
         ]);
     }
 
@@ -3017,7 +3064,8 @@ if ($method === 'GET' && $path === '/api/performance/grupos') {
         if ((int) ($row['id'] ?? 0) === $usuarioId) {
             continue;
         }
-        $score = calculateApprovedPerformanceScore($row);
+        $historico = $historicoMap[(int) ($row['id'] ?? 0)] ?? [];
+        $score = calculateUserPaceForGroup($row, $historico);
         if ($score === null) {
             continue;
         }
@@ -3054,18 +3102,29 @@ if ($method === 'GET' && $path === '/api/admin/todos-grupos') {
         'SELECT id, nome, email, rp_5k, rp_10k, rp_21k, rp_42k, rp_5k_status, rp_10k_status, rp_21k_status, rp_42k_status FROM usuarios ORDER BY nome ASC'
     );
 
+    $allIds = array_map(static fn ($r) => (int) ($r['id'] ?? 0), $rows);
+    try {
+        $historicoMap = buildRpTestesHistoricoMap($allIds);
+    } catch (Throwable) {
+        $historicoMap = [];
+    }
+
     $atletas = [];
     foreach ($rows as $row) {
-        $score = calculateApprovedPerformanceScore($row);
+        $uid = (int) ($row['id'] ?? 0);
+        $historico = $historicoMap[$uid] ?? [];
+        $score = calculateUserPaceForGroup($row, $historico);
         if ($score === null) {
             continue;
         }
+        $fonteLabel = !empty($historico) ? 'teste' : 'rp';
         $atletas[] = [
-            'id'                    => (int) ($row['id'] ?? 0),
+            'id'                    => $uid,
             'nome'                  => (string) ($row['nome'] ?? ''),
             'email'                 => (string) ($row['email'] ?? ''),
             'ritmo_medio_seg_km'    => $score,
             'ritmo_medio_formatado' => formatPace($score),
+            'fonte'                 => $fonteLabel,
         ];
     }
 
