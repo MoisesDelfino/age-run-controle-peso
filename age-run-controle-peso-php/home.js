@@ -170,8 +170,8 @@ function marcarNivelAtual(gruposTiroData) {
                     paceText = `${currMelhor} /km`;
                 }
             }
-        } else if (grupos.length > 0) {
-            // Levels beyond last group: show last group's worst pace as lower bound
+        } else if (grupos.length > 0 && index === grupos.length) {
+            // Apenas o primeiro nível além do último grupo mostra o "+" limite inferior
             const last = grupos[grupos.length - 1];
             const lastPior = stripPaceUnit(last.pior_pace_formatado);
             if (lastPior) {
