@@ -3299,8 +3299,13 @@ if ($method === 'GET' && $path === '/api/admin/todos-grupos') {
 if ($method === 'GET' && $path === '/api/performance/grupos-tiro') {
     $usuarioId = requireAuth();
 
+    $rpColumns = ['rp_5k', 'rp_10k', 'rp_21k', 'rp_42k', 'rp_5k_status', 'rp_10k_status', 'rp_21k_status', 'rp_42k_status'];
+    $rpSelectParts = array_map(static function (string $col): string {
+        return dbColumnExists('usuarios', $col) ? "u.{$col}" : "NULL AS {$col}";
+    }, $rpColumns);
+
     $rows = dbFetchAll(
-        'SELECT u.id, u.nome
+        'SELECT u.id, u.nome, ' . implode(', ', $rpSelectParts) . '
            FROM usuarios u
           WHERE EXISTS (
                 SELECT 1
@@ -3320,6 +3325,36 @@ if ($method === 'GET' && $path === '/api/performance/grupos-tiro') {
     }
 
     $historicoMap = buildRpTestesHistoricoMap(array_map(static fn ($row) => (int) ($row['id'] ?? 0), $rows));
+
+    // Para usuários sem teste de pace, criar entrada sintética a partir do RP aprovado.
+    foreach ($rows as $row) {
+        $uid = (int) ($row['id'] ?? 0);
+        if ($uid <= 0) {
+            continue;
+        }
+        $hasTeste = !empty($historicoMap[$uid]);
+        if ($hasTeste) {
+            continue;
+        }
+        foreach (['rp_5k' => 5.0, 'rp_10k' => 10.0, 'rp_21k' => 21.0975, 'rp_42k' => 42.195] as $col => $distKm) {
+            $statusCol = $col . '_status';
+            if (($row[$statusCol] ?? '') !== 'aprovado') {
+                continue;
+            }
+            $tempoSeg = isset($row[$col]) && is_numeric($row[$col]) ? (float) $row[$col] : 0.0;
+            if ($tempoSeg <= 0) {
+                continue;
+            }
+            $pace = $tempoSeg / $distKm;
+            $historicoMap[$uid] = [[
+                'tempo_segundos' => $tempoSeg,
+                'distancia_km' => $distKm,
+                'pace_segundos_km' => $pace,
+            ]];
+            break;
+        }
+    }
+
     $grupos = buildShootingGroups($rows, $historicoMap);
 
     if (!$grupos) {
