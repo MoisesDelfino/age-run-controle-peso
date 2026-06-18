@@ -2086,8 +2086,15 @@ body.dark-mode .nav-link.active {
 
 .home-levels-section h3 {
     font-size: 0.98rem;
-    margin: 0 0 8px;
+    margin: 0 0 2px;
     color: #32495a;
+}
+
+.home-levels-note {
+    font-size: 0.72rem;
+    color: #7a9aad;
+    margin: 0 0 8px;
+    font-style: italic;
 }
 
 .home-levels-list {
@@ -2247,6 +2254,10 @@ body.dark-mode .home-levels-section {
 
 body.dark-mode .home-levels-section h3 {
     color: #d6e7f5;
+}
+
+body.dark-mode .home-levels-note {
+    color: #6a8fa5;
 }
 
 body.dark-mode .home-level-item {
