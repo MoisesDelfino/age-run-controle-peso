@@ -137,11 +137,34 @@ function marcarNivelAtual(gruposTiroData) {
         return;
     }
 
-    homeLevelItems.forEach((item) => {
+    const grupos = Array.isArray(gruposTiroData?.grupos) ? gruposTiroData.grupos : [];
+
+    // Reset e adicionar pace de referência de cada grupo
+    homeLevelItems.forEach((item, index) => {
         item.classList.remove('home-level-item-current');
-        const tagAtual = item.querySelector('.home-level-tag');
-        if (tagAtual) {
-            tagAtual.remove();
+        item.querySelector('.home-level-tag')?.remove();
+        item.querySelector('.home-level-pace')?.remove();
+
+        const isLastItem = index === homeLevelItems.length - 1;
+        let melhorPace = null;
+        let piorPace = null;
+
+        if (isLastItem && grupos.length > index) {
+            const overflow = grupos.slice(index);
+            melhorPace = overflow[0]?.melhor_pace_formatado || null;
+            piorPace = overflow[overflow.length - 1]?.pior_pace_formatado || null;
+        } else if (index < grupos.length) {
+            melhorPace = grupos[index]?.melhor_pace_formatado || null;
+            piorPace = grupos[index]?.pior_pace_formatado || null;
+        }
+
+        if (melhorPace) {
+            const paceSpan = document.createElement('span');
+            paceSpan.className = 'home-level-pace';
+            paceSpan.textContent = (piorPace && piorPace !== melhorPace)
+                ? `${melhorPace} – ${piorPace}/km`
+                : `${melhorPace}/km`;
+            item.appendChild(paceSpan);
         }
     });
 
@@ -152,8 +175,7 @@ function marcarNivelAtual(gruposTiroData) {
 
     const itemAtual = homeLevelItems.find((item) => {
         const nivelKey = normalizeNivelLabel(item.dataset.levelKey || '');
-        const nivelItem = normalizeNivelLabel(item.textContent);
-        return nivelKey === nivelAtual || nivelItem.includes(nivelAtual) || nivelAtual.includes(nivelItem);
+        return nivelKey !== '' && (nivelKey === nivelAtual || nivelAtual.includes(nivelKey) || nivelKey.includes(nivelAtual));
     }) || (nivelAtual !== '' ? homeLevelItems[homeLevelItems.length - 1] : null);
 
     if (!itemAtual) {

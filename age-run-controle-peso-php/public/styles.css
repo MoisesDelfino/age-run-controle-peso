@@ -2117,8 +2117,15 @@ body.dark-mode .nav-link.active {
     color: #2e4f20;
 }
 
-.home-level-tag {
+.home-level-pace {
+    font-size: 0.72rem;
+    color: #5a8fa5;
+    font-weight: 500;
+    white-space: nowrap;
     margin-left: auto;
+}
+
+.home-level-tag {
     display: inline-flex;
     align-items: center;
     padding: 2px 8px;
@@ -2228,6 +2235,10 @@ body.dark-mode .home-level-item-current {
     border-color: #739c4c;
     background: linear-gradient(135deg, rgba(49, 70, 41, 0.7) 0%, rgba(34, 51, 42, 0.75) 100%);
     color: #e8f6d6;
+}
+
+body.dark-mode .home-level-pace {
+    color: #7aafca;
 }
 
 body.dark-mode .home-level-tag {
