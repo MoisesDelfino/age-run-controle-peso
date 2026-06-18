@@ -1990,7 +1990,7 @@ body.dark-mode .nav-link.active {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 290px;
     gap: 14px;
-    align-items: stretch;
+    align-items: start;
 }
 
 .home-stats-grid {
