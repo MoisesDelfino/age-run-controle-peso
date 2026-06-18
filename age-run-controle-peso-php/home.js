@@ -170,7 +170,8 @@ function marcarNivelAtual(gruposTiroData) {
                     paceText = `${currMelhor} /km`;
                 }
             }
-        } else if (isLastItem && grupos.length > 0) {
+        } else if (grupos.length > 0) {
+            // Levels beyond last group: show last group's worst pace as lower bound
             const last = grupos[grupos.length - 1];
             const lastPior = stripPaceUnit(last.pior_pace_formatado);
             if (lastPior) {
@@ -204,17 +205,7 @@ function marcarNivelAtual(gruposTiroData) {
     }
 
     itemAtual.classList.add('home-level-item-current');
-    let right = itemAtual.querySelector('.home-level-right');
-    if (!right) {
-        right = document.createElement('span');
-        right.className = 'home-level-right';
-        itemAtual.appendChild(right);
-    }
-    right.classList.add('home-level-right-current');
-    const tag = document.createElement('span');
-    tag.className = 'home-level-tag';
-    tag.textContent = 'Nivel atual';
-    right.appendChild(tag);
+    // Highlight verde já indica o nível atual — sem badge adicional.
 }
 
 function findMinhaPosicaoRanking(rankingData) {
