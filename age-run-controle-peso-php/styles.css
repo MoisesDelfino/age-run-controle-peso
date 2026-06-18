@@ -2118,6 +2118,21 @@ body.dark-mode .nav-link.active {
     color: #2e4f20;
 }
 
+.home-level-label {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.home-level-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
 .home-level-pace {
     font-size: 0.72rem;
     color: #5a8fa5;

@@ -133,7 +133,6 @@ function normalizeNivelLabel(text) {
 }
 
 function stripPaceUnit(pace) {
-    // formatPace returns "04:38 /km" — strip the " /km" suffix for range display
     return String(pace || '').replace(/\s*\/km\s*$/i, '').trim();
 }
 
@@ -144,24 +143,9 @@ function marcarNivelAtual(gruposTiroData) {
 
     const grupos = Array.isArray(gruposTiroData?.grupos) ? gruposTiroData.grupos : [];
 
-    // Wrap bare text node in span so flex layout works correctly
-    homeLevelItems.forEach((item) => {
-        if (!item.querySelector('.home-level-label')) {
-            const textNode = Array.from(item.childNodes).find((n) => n.nodeType === Node.TEXT_NODE && n.textContent.trim());
-            if (textNode) {
-                const labelSpan = document.createElement('span');
-                labelSpan.className = 'home-level-label';
-                labelSpan.textContent = textNode.textContent;
-                item.replaceChild(labelSpan, textNode);
-            }
-        }
-    });
-
-    // Reset e adicionar pace de referência de cada grupo
     homeLevelItems.forEach((item, index) => {
         item.classList.remove('home-level-item-current');
-        item.querySelector('.home-level-tag')?.remove();
-        item.querySelector('.home-level-pace')?.remove();
+        item.querySelector('.home-level-right')?.remove();
 
         const isLastItem = index === homeLevelItems.length - 1;
         let melhorPace = null;
@@ -177,14 +161,44 @@ function marcarNivelAtual(gruposTiroData) {
         }
 
         if (melhorPace) {
-            const paceSpan = document.createElement('span');
-            paceSpan.className = 'home-level-pace';
+            const right = document.createElement('span');
+            right.className = 'home-level-right';
             const m = stripPaceUnit(melhorPace);
             const p = stripPaceUnit(piorPace);
+            const paceSpan = document.createElement('span');
+            paceSpan.className = 'home-level-pace';
             paceSpan.textContent = (p && p !== m) ? `${m} – ${p} /km` : `${m} /km`;
-            item.appendChild(paceSpan);
+            right.appendChild(paceSpan);
+            item.appendChild(right);
         }
     });
+
+    const nivelAtual = normalizeNivelLabel(gruposTiroData?.meu_grupo?.nome_nivel || '');
+    if (!nivelAtual) {
+        return;
+    }
+
+    const itemAtual = homeLevelItems.find((item) => {
+        const nivelKey = normalizeNivelLabel(item.dataset.levelKey || '');
+        return nivelKey !== '' && (nivelKey === nivelAtual || nivelAtual.includes(nivelKey) || nivelKey.includes(nivelAtual));
+    }) || (nivelAtual !== '' ? homeLevelItems[homeLevelItems.length - 1] : null);
+
+    if (!itemAtual) {
+        return;
+    }
+
+    itemAtual.classList.add('home-level-item-current');
+    let right = itemAtual.querySelector('.home-level-right');
+    if (!right) {
+        right = document.createElement('span');
+        right.className = 'home-level-right';
+        itemAtual.appendChild(right);
+    }
+    const tag = document.createElement('span');
+    tag.className = 'home-level-tag';
+    tag.textContent = 'Nivel atual';
+    right.appendChild(tag);
+}
 
     const nivelAtual = normalizeNivelLabel(gruposTiroData?.meu_grupo?.nome_nivel || '');
     if (!nivelAtual) {
