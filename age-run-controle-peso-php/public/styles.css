@@ -418,15 +418,13 @@ body.dark-mode .user-menu-logout {
 }
 
 .rp-confirm-box h3 {
-    margin: 0 0 4px;
+    margin: 0 0 12px;
     font-size: 1.1rem;
     color: var(--text-color, #1e293b);
 }
 
 .rp-confirm-subtitle {
-    margin: 0 0 16px;
-    font-size: 0.85rem;
-    color: var(--text-muted, #64748b);
+    display: none;
 }
 
 .rp-confirm-table {
@@ -454,7 +452,7 @@ body.dark-mode .user-menu-logout {
 .rp-confirm-avg {
     font-size: 0.9rem;
     font-weight: 700;
-    color: var(--secondary-color, #4ade80);
+    color: #1a7a3c;
     margin: 0 0 18px;
 }
 
@@ -464,6 +462,12 @@ body.dark-mode .user-menu-logout {
     justify-content: flex-end;
 }
 
+.rp-confirm-actions .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
 body.dark-mode .rp-confirm-box {
     background: #1e293b;
 }
@@ -471,6 +475,10 @@ body.dark-mode .rp-confirm-box {
 body.dark-mode .rp-confirm-table th,
 body.dark-mode .rp-confirm-table td {
     border-bottom-color: #334155;
+}
+
+body.dark-mode .rp-confirm-avg {
+    color: #4ade80;
 }
 
 .rp-status-badge {
