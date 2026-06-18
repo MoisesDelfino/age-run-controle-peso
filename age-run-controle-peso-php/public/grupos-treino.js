@@ -286,22 +286,90 @@ async function carregarAdminGrupos() {
     }
 }
 
-async function salvarRps(event) {
+function parseRpToSeconds(value) {
+    if (!value) return null;
+    const parts = value.trim().split(':').map(Number);
+    if (parts.some(isNaN) || parts.length < 2) return null;
+    if (parts.length === 2) return parts[0] * 60 + parts[1];
+    if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+    return null;
+}
+
+function secondsToPaceDisplay(totalSeconds, distKm) {
+    if (!totalSeconds || !distKm) return '–';
+    const paceSeconds = totalSeconds / distKm;
+    const m = Math.floor(paceSeconds / 60);
+    const s = Math.round(paceSeconds % 60);
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')} /km`;
+}
+
+let _rpConfirmPayload = null;
+
+function salvarRps(event) {
     event.preventDefault();
 
-    const payload = {
-        rp_5k: document.getElementById('rp5k')?.value?.trim() || null,
-        rp_10k: document.getElementById('rp10k')?.value?.trim() || null,
-        rp_21k: document.getElementById('rp21k')?.value?.trim() || null,
-        rp_42k: document.getElementById('rp42k')?.value?.trim() || null
-    };
+    const fields = [
+        { id: 'rp5k',  key: 'rp_5k',  label: '5 km',              dist: 5 },
+        { id: 'rp10k', key: 'rp_10k', label: '10 km',             dist: 10 },
+        { id: 'rp21k', key: 'rp_21k', label: 'Meia Maratona (21k)', dist: 21.0975 },
+        { id: 'rp42k', key: 'rp_42k', label: 'Maratona (42k)',     dist: 42.195 }
+    ];
+
+    const payload = {};
+    let totalPace = 0;
+    let countPace = 0;
+
+    const tbody = document.getElementById('rpConfirmTableBody');
+    if (tbody) tbody.innerHTML = '';
+
+    fields.forEach(({ id, key, label, dist }) => {
+        const raw = document.getElementById(id)?.value?.trim() || null;
+        payload[key] = raw || null;
+
+        const secs = parseRpToSeconds(raw);
+        const paceDisplay = secs ? secondsToPaceDisplay(secs, dist) : '–';
+
+        if (secs) {
+            totalPace += secs / dist;
+            countPace++;
+        }
+
+        if (tbody) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${label}</td><td>${raw || '–'}</td><td>${paceDisplay}</td>`;
+            tbody.appendChild(tr);
+        }
+    });
+
+    const avgPaceEl = document.getElementById('rpConfirmAvgPace');
+    if (avgPaceEl) {
+        if (countPace > 0) {
+            const avgSecs = totalPace / countPace;
+            const m = Math.floor(avgSecs / 60);
+            const s = Math.round(avgSecs % 60);
+            avgPaceEl.textContent = `Ritmo médio estimado: ${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')} /km`;
+        } else {
+            avgPaceEl.textContent = '';
+        }
+    }
+
+    _rpConfirmPayload = payload;
+    const modal = document.getElementById('rpConfirmModal');
+    if (modal) modal.style.display = 'flex';
+}
+
+async function executarSalvarRps() {
+    if (!_rpConfirmPayload) return;
+    const payload = _rpConfirmPayload;
+    _rpConfirmPayload = null;
+
+    const modal = document.getElementById('rpConfirmModal');
+    if (modal) modal.style.display = 'none';
 
     try {
         const response = await fetch(`${API_BASE}/performance/rps`, {
             method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
             body: JSON.stringify(payload)
         });
@@ -349,3 +417,17 @@ if (btnLogout) {
 if (rpForm) {
     rpForm.addEventListener('submit', salvarRps);
 }
+
+document.getElementById('rpConfirmOk')?.addEventListener('click', executarSalvarRps);
+
+document.getElementById('rpConfirmCancel')?.addEventListener('click', () => {
+    _rpConfirmPayload = null;
+    const modal = document.getElementById('rpConfirmModal');
+    if (modal) modal.style.display = 'none';
+});
+
+document.getElementById('rpConfirmModal')?.querySelector('.rp-confirm-backdrop')?.addEventListener('click', () => {
+    _rpConfirmPayload = null;
+    const modal = document.getElementById('rpConfirmModal');
+    if (modal) modal.style.display = 'none';
+});

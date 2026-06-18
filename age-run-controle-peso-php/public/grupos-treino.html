@@ -123,7 +123,6 @@
                 </div>
             </div>
         </section>
-
         <section id="adminGruposSection" style="display:none">
             <div class="card">
                 <h2>👨‍🏫 Visão Geral &mdash; Todos os Grupos</h2>
@@ -135,6 +134,23 @@
             </div>
         </section>
     </main>
+
+    <div id="rpConfirmModal" class="rp-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="rpConfirmTitle" style="display:none">
+        <div class="rp-confirm-backdrop"></div>
+        <div class="rp-confirm-box">
+            <h3 id="rpConfirmTitle">Confirmar Recordes Pessoais</h3>
+            <p class="rp-confirm-subtitle">Verifique os dados antes de salvar:</p>
+            <table class="rp-confirm-table">
+                <thead><tr><th>Distância</th><th>Tempo</th><th>Pace</th></tr></thead>
+                <tbody id="rpConfirmTableBody"></tbody>
+            </table>
+            <p class="rp-confirm-avg" id="rpConfirmAvgPace"></p>
+            <div class="rp-confirm-actions">
+                <button type="button" class="btn btn-secondary" id="rpConfirmCancel">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="rpConfirmOk">Salvar</button>
+            </div>
+        </div>
+    </div>
 
     <footer class="footer">
         <div class="container">
