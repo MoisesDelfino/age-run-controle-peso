@@ -147,27 +147,43 @@ function marcarNivelAtual(gruposTiroData) {
         item.classList.remove('home-level-item-current');
         item.querySelector('.home-level-right')?.remove();
 
+        // Build boundary-based pace range:
+        // Level 0: "até {pior[0]} /km"
+        // Level N: "{pior[N-1]} – {pior[N]} /km"
+        // Last level with data: "{melhor[last]}+ /km"
+        let paceText = null;
         const isLastItem = index === homeLevelItems.length - 1;
-        let melhorPace = null;
-        let piorPace = null;
 
-        if (isLastItem && grupos.length > index) {
-            const overflow = grupos.slice(index);
-            melhorPace = overflow[0]?.melhor_pace_formatado || null;
-            piorPace = overflow[overflow.length - 1]?.pior_pace_formatado || null;
-        } else if (index < grupos.length) {
-            melhorPace = grupos[index]?.melhor_pace_formatado || null;
-            piorPace = grupos[index]?.pior_pace_formatado || null;
+        if (index < grupos.length) {
+            const curr = grupos[index];
+            const currPior = stripPaceUnit(curr.pior_pace_formatado);
+            const currMelhor = stripPaceUnit(curr.melhor_pace_formatado);
+
+            if (index === 0) {
+                paceText = `até ${currPior} /km`;
+            } else {
+                const prev = grupos[index - 1];
+                const prevPior = stripPaceUnit(prev.pior_pace_formatado);
+                if (currPior && currPior !== prevPior) {
+                    paceText = `${prevPior} – ${currPior} /km`;
+                } else {
+                    paceText = `${currMelhor} /km`;
+                }
+            }
+        } else if (isLastItem && grupos.length > 0) {
+            const last = grupos[grupos.length - 1];
+            const lastPior = stripPaceUnit(last.pior_pace_formatado);
+            if (lastPior) {
+                paceText = `${lastPior}+ /km`;
+            }
         }
 
-        if (melhorPace) {
+        if (paceText) {
             const right = document.createElement('span');
             right.className = 'home-level-right';
-            const m = stripPaceUnit(melhorPace);
-            const p = stripPaceUnit(piorPace);
             const paceSpan = document.createElement('span');
             paceSpan.className = 'home-level-pace';
-            paceSpan.textContent = (p && p !== m) ? `${m} – ${p} /km` : `${m} /km`;
+            paceSpan.textContent = paceText;
             right.appendChild(paceSpan);
             item.appendChild(right);
         }

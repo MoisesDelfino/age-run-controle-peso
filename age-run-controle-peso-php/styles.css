@@ -2151,14 +2151,14 @@ body.dark-mode .nav-link.active {
 .home-level-tag {
     display: inline-flex;
     align-items: center;
-    padding: 2px 8px;
+    padding: 1px 6px;
     border-radius: 999px;
-    border: 1px solid #b6d991;
-    background: #dff2c8;
-    color: #355720;
-    font-size: 0.67rem;
-    font-weight: 700;
-    letter-spacing: 0.05em;
+    border: 1px solid #739c4c;
+    background: transparent;
+    color: #739c4c;
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
     white-space: nowrap;
     flex-shrink: 0;
@@ -2266,9 +2266,9 @@ body.dark-mode .home-level-pace {
 }
 
 body.dark-mode .home-level-tag {
-    border-color: #7da85d;
-    background: #2e4526;
-    color: #dff5c8;
+    border-color: #739c4c;
+    background: transparent;
+    color: #8bbf60;
 }
 
 body.dark-mode .home-resumo-aviso {
