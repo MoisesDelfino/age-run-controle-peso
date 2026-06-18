@@ -171,8 +171,13 @@ function marcarNivelAtual(gruposTiroData) {
                 }
             }
         } else if (grupos.length > 0 && index === grupos.length) {
-            // First level beyond last group: no real data yet, show nothing
-            // (levels without athletes don't get a pace range)
+            // First overflow level: anchored to last real group's worst pace + fictional upper bound
+            const last = grupos[grupos.length - 1];
+            const lastPior = stripPaceUnit(last.pior_pace_formatado);
+            paceText = lastPior ? `${lastPior} – 09:00 /km` : `até 09:00 /km`;
+        } else if (grupos.length > 0 && index > grupos.length) {
+            // Second+ overflow levels: fictional range beyond 09:00
+            paceText = `09:00+ /km`;
         }
 
         if (paceText) {
