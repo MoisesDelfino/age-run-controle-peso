@@ -154,7 +154,7 @@ function marcarNivelAtual(gruposTiroData) {
         const nivelKey = normalizeNivelLabel(item.dataset.levelKey || '');
         const nivelItem = normalizeNivelLabel(item.textContent);
         return nivelKey === nivelAtual || nivelItem.includes(nivelAtual) || nivelAtual.includes(nivelItem);
-    });
+    }) || (nivelAtual !== '' ? homeLevelItems[homeLevelItems.length - 1] : null);
 
     if (!itemAtual) {
         return;
@@ -241,7 +241,6 @@ async function carregarResumoHome() {
             homeRpsResumo.innerHTML = formatRpsResumo(rpsResp?.ok ? rpsData : null);
         }
 
-        console.log('[home] grupos-tiro response:', JSON.stringify(gruposTiroData?.meu_grupo ?? null));
         marcarNivelAtual(gruposTiroResp?.ok ? gruposTiroData : null);
 
         if (homeResumoAviso) {
