@@ -3337,10 +3337,6 @@ if ($method === 'GET' && $path === '/api/performance/grupos-tiro') {
             continue;
         }
         foreach (['rp_5k' => 5.0, 'rp_10k' => 10.0, 'rp_21k' => 21.0975, 'rp_42k' => 42.195] as $col => $distKm) {
-            $statusCol = $col . '_status';
-            if (($row[$statusCol] ?? '') !== 'aprovado') {
-                continue;
-            }
             $tempoSeg = isset($row[$col]) && is_numeric($row[$col]) ? (float) $row[$col] : 0.0;
             if ($tempoSeg <= 0) {
                 continue;
