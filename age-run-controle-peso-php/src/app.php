@@ -3299,13 +3299,22 @@ if ($method === 'GET' && $path === '/api/admin/todos-grupos') {
 if ($method === 'GET' && $path === '/api/performance/grupos-tiro') {
     $usuarioId = requireAuth();
 
+    // Buscar sexo do usuário logado para filtrar grupos por gênero.
+    $meUsuario = dbFetchOne('SELECT sexo FROM usuarios WHERE id = :id LIMIT 1', [':id' => $usuarioId]);
+    $meuSexo = strtolower(trim((string) ($meUsuario['sexo'] ?? 'masculino')));
+    if ($meuSexo === '') {
+        $meuSexo = 'masculino';
+    }
+
     $rpColumns = ['rp_5k', 'rp_10k', 'rp_21k', 'rp_42k', 'rp_5k_status', 'rp_10k_status', 'rp_21k_status', 'rp_42k_status'];
     $rpSelectParts = array_map(static function (string $col): string {
         return dbColumnExists('usuarios', $col) ? "u.{$col}" : "NULL AS {$col}";
     }, $rpColumns);
 
+    $sexoSelectPart = dbColumnExists('usuarios', 'sexo') ? 'u.sexo' : "'' AS sexo";
+
     $rows = dbFetchAll(
-        'SELECT u.id, u.nome, ' . implode(', ', $rpSelectParts) . '
+        'SELECT u.id, u.nome, ' . $sexoSelectPart . ', ' . implode(', ', $rpSelectParts) . '
            FROM usuarios u
           WHERE EXISTS (
                 SELECT 1
@@ -3315,6 +3324,15 @@ if ($method === 'GET' && $path === '/api/performance/grupos-tiro') {
           )
           ORDER BY u.nome ASC'
     );
+
+    // Filtrar apenas usuários do mesmo sexo que o logado.
+    $rows = array_values(array_filter($rows, static function (array $row) use ($meuSexo): bool {
+        $sexo = strtolower(trim((string) ($row['sexo'] ?? 'masculino')));
+        if ($sexo === '') {
+            $sexo = 'masculino';
+        }
+        return $sexo === $meuSexo;
+    }));
 
     if (!$rows) {
         jsonResponse([
@@ -3326,7 +3344,7 @@ if ($method === 'GET' && $path === '/api/performance/grupos-tiro') {
 
     $historicoMap = buildRpTestesHistoricoMap(array_map(static fn ($row) => (int) ($row['id'] ?? 0), $rows));
 
-    // Para usuários sem teste de pace, criar entrada sintética a partir do RP aprovado.
+    // Para usuários sem teste de pace, criar entrada sintética a partir do RP.
     foreach ($rows as $row) {
         $uid = (int) ($row['id'] ?? 0);
         if ($uid <= 0) {
