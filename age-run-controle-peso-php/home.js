@@ -132,12 +132,30 @@ function normalizeNivelLabel(text) {
         .toLowerCase();
 }
 
+function stripPaceUnit(pace) {
+    // formatPace returns "04:38 /km" — strip the " /km" suffix for range display
+    return String(pace || '').replace(/\s*\/km\s*$/i, '').trim();
+}
+
 function marcarNivelAtual(gruposTiroData) {
     if (!homeLevelItems.length) {
         return;
     }
 
     const grupos = Array.isArray(gruposTiroData?.grupos) ? gruposTiroData.grupos : [];
+
+    // Wrap bare text node in span so flex layout works correctly
+    homeLevelItems.forEach((item) => {
+        if (!item.querySelector('.home-level-label')) {
+            const textNode = Array.from(item.childNodes).find((n) => n.nodeType === Node.TEXT_NODE && n.textContent.trim());
+            if (textNode) {
+                const labelSpan = document.createElement('span');
+                labelSpan.className = 'home-level-label';
+                labelSpan.textContent = textNode.textContent;
+                item.replaceChild(labelSpan, textNode);
+            }
+        }
+    });
 
     // Reset e adicionar pace de referência de cada grupo
     homeLevelItems.forEach((item, index) => {
@@ -161,9 +179,9 @@ function marcarNivelAtual(gruposTiroData) {
         if (melhorPace) {
             const paceSpan = document.createElement('span');
             paceSpan.className = 'home-level-pace';
-            paceSpan.textContent = (piorPace && piorPace !== melhorPace)
-                ? `${melhorPace} – ${piorPace}`
-                : melhorPace;
+            const m = stripPaceUnit(melhorPace);
+            const p = stripPaceUnit(piorPace);
+            paceSpan.textContent = (p && p !== m) ? `${m} – ${p} /km` : `${m} /km`;
             item.appendChild(paceSpan);
         }
     });
