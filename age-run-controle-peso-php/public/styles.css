@@ -1988,7 +1988,7 @@ body.dark-mode .nav-link.active {
 
 .home-summary-layout {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 250px;
+    grid-template-columns: minmax(0, 1fr) 290px;
     gap: 14px;
     align-items: stretch;
 }
@@ -2094,7 +2094,7 @@ body.dark-mode .nav-link.active {
     margin: 0;
     padding: 0;
     display: grid;
-    gap: 8px;
+    gap: 6px;
 }
 
 .home-level-item {
