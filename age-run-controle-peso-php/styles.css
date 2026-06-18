@@ -2100,8 +2100,8 @@ body.dark-mode .nav-link.active {
 .home-level-item {
     display: flex;
     align-items: center;
-    justify-content: flex-start;
-    gap: 8px;
+    justify-content: space-between;
+    gap: 6px;
     border: 1px solid #dbe8f1;
     border-radius: 10px;
     background: rgba(255, 255, 255, 0.45);
@@ -2109,6 +2109,7 @@ body.dark-mode .nav-link.active {
     font-size: 0.9rem;
     font-weight: 600;
     padding: 9px 10px;
+    flex-wrap: nowrap;
 }
 
 .home-level-item-current {
@@ -2122,7 +2123,7 @@ body.dark-mode .nav-link.active {
     color: #5a8fa5;
     font-weight: 500;
     white-space: nowrap;
-    margin-left: auto;
+    flex-shrink: 0;
 }
 
 .home-level-tag {
@@ -2138,6 +2139,7 @@ body.dark-mode .nav-link.active {
     letter-spacing: 0.05em;
     text-transform: uppercase;
     white-space: nowrap;
+    flex-shrink: 0;
 }
 
 @media (max-width: 768px) {

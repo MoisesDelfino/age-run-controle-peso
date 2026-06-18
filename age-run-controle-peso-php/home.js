@@ -162,8 +162,8 @@ function marcarNivelAtual(gruposTiroData) {
             const paceSpan = document.createElement('span');
             paceSpan.className = 'home-level-pace';
             paceSpan.textContent = (piorPace && piorPace !== melhorPace)
-                ? `${melhorPace} – ${piorPace}/km`
-                : `${melhorPace}/km`;
+                ? `${melhorPace} – ${piorPace}`
+                : melhorPace;
             item.appendChild(paceSpan);
         }
     });
