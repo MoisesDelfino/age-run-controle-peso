@@ -194,6 +194,7 @@ function marcarNivelAtual(gruposTiroData) {
         right.className = 'home-level-right';
         itemAtual.appendChild(right);
     }
+    right.classList.add('home-level-right-current');
     const tag = document.createElement('span');
     tag.className = 'home-level-tag';
     tag.textContent = 'Nivel atual';

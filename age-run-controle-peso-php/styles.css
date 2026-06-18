@@ -2081,6 +2081,7 @@ body.dark-mode .nav-link.active {
     border-radius: 12px;
     background: linear-gradient(135deg, #f7fbff 0%, #f2f9ef 100%);
     padding: 12px;
+    box-sizing: border-box;
 }
 
 .home-levels-section h3 {
@@ -2131,6 +2132,12 @@ body.dark-mode .nav-link.active {
     align-items: center;
     gap: 6px;
     flex-shrink: 0;
+}
+
+.home-level-right.home-level-right-current {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 3px;
 }
 
 .home-level-pace {
