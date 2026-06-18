@@ -316,8 +316,6 @@ function salvarRps(event) {
     ];
 
     const payload = {};
-    let totalPace = 0;
-    let countPace = 0;
 
     const tbody = document.getElementById('rpConfirmTableBody');
     if (tbody) tbody.innerHTML = '';
@@ -329,29 +327,12 @@ function salvarRps(event) {
         const secs = parseRpToSeconds(raw);
         const paceDisplay = secs ? secondsToPaceDisplay(secs, dist) : '–';
 
-        if (secs) {
-            totalPace += secs / dist;
-            countPace++;
-        }
-
         if (tbody) {
             const tr = document.createElement('tr');
             tr.innerHTML = `<td>${label}</td><td>${raw || '–'}</td><td>${paceDisplay}</td>`;
             tbody.appendChild(tr);
         }
     });
-
-    const avgPaceEl = document.getElementById('rpConfirmAvgPace');
-    if (avgPaceEl) {
-        if (countPace > 0) {
-            const avgSecs = totalPace / countPace;
-            const m = Math.floor(avgSecs / 60);
-            const s = Math.round(avgSecs % 60);
-            avgPaceEl.textContent = `Ritmo médio estimado: ${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')} /km`;
-        } else {
-            avgPaceEl.textContent = '';
-        }
-    }
 
     _rpConfirmPayload = payload;
     const modal = document.getElementById('rpConfirmModal');

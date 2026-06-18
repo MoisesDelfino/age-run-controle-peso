@@ -427,6 +427,10 @@ body.dark-mode .user-menu-logout {
     display: none;
 }
 
+.rp-confirm-avg {
+    display: none;
+}
+
 .rp-confirm-table {
     width: 100%;
     border-collapse: collapse;
@@ -472,13 +476,13 @@ body.dark-mode .rp-confirm-box {
     background: #1e293b;
 }
 
+body.dark-mode .rp-confirm-box h3 {
+    color: #e2eaf2;
+}
+
 body.dark-mode .rp-confirm-table th,
 body.dark-mode .rp-confirm-table td {
     border-bottom-color: #334155;
-}
-
-body.dark-mode .rp-confirm-avg {
-    color: #4ade80;
 }
 
 .rp-status-badge {
