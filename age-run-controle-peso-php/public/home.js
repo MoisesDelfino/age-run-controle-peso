@@ -200,27 +200,6 @@ function marcarNivelAtual(gruposTiroData) {
     right.appendChild(tag);
 }
 
-    const nivelAtual = normalizeNivelLabel(gruposTiroData?.meu_grupo?.nome_nivel || '');
-    if (!nivelAtual) {
-        return;
-    }
-
-    const itemAtual = homeLevelItems.find((item) => {
-        const nivelKey = normalizeNivelLabel(item.dataset.levelKey || '');
-        return nivelKey !== '' && (nivelKey === nivelAtual || nivelAtual.includes(nivelKey) || nivelKey.includes(nivelAtual));
-    }) || (nivelAtual !== '' ? homeLevelItems[homeLevelItems.length - 1] : null);
-
-    if (!itemAtual) {
-        return;
-    }
-
-    itemAtual.classList.add('home-level-item-current');
-    const tag = document.createElement('span');
-    tag.className = 'home-level-tag';
-    tag.textContent = 'Nivel atual';
-    itemAtual.appendChild(tag);
-}
-
 function findMinhaPosicaoRanking(rankingData) {
     const lista = Array.isArray(rankingData?.ranking) ? rankingData.ranking : [];
     const meuId = Number(usuarioLogado?.id || 0);
