@@ -171,12 +171,8 @@ function marcarNivelAtual(gruposTiroData) {
                 }
             }
         } else if (grupos.length > 0 && index === grupos.length) {
-            // Apenas o primeiro nível além do último grupo mostra o "+" limite inferior
-            const last = grupos[grupos.length - 1];
-            const lastPior = stripPaceUnit(last.pior_pace_formatado);
-            if (lastPior) {
-                paceText = `${lastPior}+ /km`;
-            }
+            // First level beyond last group: no real data yet, show nothing
+            // (levels without athletes don't get a pace range)
         }
 
         if (paceText) {
