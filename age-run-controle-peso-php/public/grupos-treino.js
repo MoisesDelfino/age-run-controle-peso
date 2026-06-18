@@ -118,16 +118,22 @@ function showRpMessage(texto, tipo = 'info') {
 
 function fillRpInputs(data) {
     const map = [
-        ['rp5k', data.rp_5k_formatado],
-        ['rp10k', data.rp_10k_formatado],
-        ['rp21k', data.rp_21k_formatado],
-        ['rp42k', data.rp_42k_formatado]
+        ['rp5k',  data.rp_5k_formatado,  data.rp_5k,  5,        'paceRp5k'],
+        ['rp10k', data.rp_10k_formatado, data.rp_10k, 10,       'paceRp10k'],
+        ['rp21k', data.rp_21k_formatado, data.rp_21k, 21.0975,  'paceRp21k'],
+        ['rp42k', data.rp_42k_formatado, data.rp_42k, 42.195,   'paceRp42k']
     ];
 
-    map.forEach(([id, value]) => {
+    map.forEach(([id, value, secs, dist, paceId]) => {
         const input = document.getElementById(id);
-        if (input) {
-            input.value = value || '';
+        if (input) input.value = value || '';
+
+        const paceEl = document.getElementById(paceId);
+        if (paceEl) {
+            const s = Number(secs);
+            paceEl.textContent = (Number.isFinite(s) && s > 0)
+                ? secondsToPaceDisplay(s, dist)
+                : '';
         }
     });
 

@@ -485,6 +485,13 @@ body.dark-mode .rp-confirm-table td {
     border-bottom-color: #334155;
 }
 
+.rp-pace-inline {
+    margin-left: 6px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: #5a8fa5;
+}
+
 .rp-status-badge {
     display: inline-flex;
     align-items: center;
