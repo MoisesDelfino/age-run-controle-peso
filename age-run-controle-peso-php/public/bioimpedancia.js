@@ -197,9 +197,14 @@ async function calcularIMC(altura) {
         console.log('⚖️ Peso usado para cálculo:', peso);
         const imc = (peso / (alturaValor * alturaValor)).toFixed(1);
         
-        // Verificar se tem dados de bioimpedância
-        const temBioimpedancia = ultimaPesagem.gordura_percentual !== null && 
-                                 ultimaPesagem.gordura_percentual !== undefined;
+        // Buscar a entrada mais recente que tenha dados de bioimpedância (pode ser diferente da última pesagem)
+        const camposBioCheck = ['gordura_percentual', 'massa_muscular_percentual', 'agua_percentual', 'massa_ossea', 'metabolismo_basal', 'idade_metabolica', 'gordura_visceral'];
+        const possuiValorBio = (v) => v !== null && v !== undefined && String(v).trim() !== '';
+        const ultimaBioimpedancia = pesagensAtivas.find(p => camposBioCheck.some(c => possuiValorBio(p[c]))) || null;
+
+        const temBioimpedancia = ultimaBioimpedancia !== null &&
+                                 ultimaBioimpedancia.gordura_percentual !== null &&
+                                 ultimaBioimpedancia.gordura_percentual !== undefined;
         
         let classificacao, cor, corHex, descricao;
         if (imc < 18.5) {
@@ -240,10 +245,10 @@ async function calcularIMC(altura) {
         const faltaPerder = parseFloat(diferenca);
         const progresso = faltaPerder > 0 ? Math.max(5, Math.min(100, 100 - (faltaPerder * 3.5))) : 100;
         
-        // Calcular métricas avançadas se houver bioimpedância
+        // Calcular métricas avançadas se houver bioimpedância (usa entrada mais recente com bio)
         let metricasAvancadas = null;
         if (temBioimpedancia) {
-            metricasAvancadas = calcularMetricasAvancadas(ultimaPesagem, alturaValor);
+            metricasAvancadas = calcularMetricasAvancadas(ultimaBioimpedancia, alturaValor);
         }
 
         const metricasValidas = metricasAvancadas
