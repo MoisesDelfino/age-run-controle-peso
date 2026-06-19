@@ -3435,6 +3435,9 @@ if ($method === 'GET' && $path === '/api/treinador/usuarios-ativos') {
         ? '(p2.excluido IS NULL OR p2.excluido = 0)'
         : '1=1';
 
+    $bioFields = ['gordura_percentual', 'massa_muscular_percentual', 'agua_percentual', 'massa_ossea', 'metabolismo_basal', 'idade_metabolica', 'gordura_visceral'];
+    $bioNotNullPredicate = implode(' IS NOT NULL OR ', array_map(fn($c) => "pb2.$c", $bioFields)) . ' IS NOT NULL';
+
     $query = sprintf('
         SELECT
           u.id,
@@ -3452,9 +3455,16 @@ if ($method === 'GET' && $path === '/api/treinador/usuarios-ativos') {
           ORDER BY p2.data_pesagem DESC, p2.id DESC
           LIMIT 1
         )
+        LEFT JOIN pesagens pb ON pb.id = (
+          SELECT pb2.id
+          FROM pesagens pb2
+          WHERE pb2.usuario_id = u.id AND (%s) AND %s
+          ORDER BY pb2.data_pesagem DESC, pb2.id DESC
+          LIMIT 1
+        )
         WHERE u.email NOT LIKE :teste_local_pattern
         ORDER BY u.nome ASC
-    ', implode(",\n          ", $usuarioSelectParts), implode(",\n          ", $pesagemSelectParts), $excluidoPredicate);
+    ', implode(",\n          ", $usuarioSelectParts), implode(",\n          ", array_map(fn($s) => str_replace('p.', 'pb.', $s), $pesagemSelectParts)), $excluidoPredicate, $bioNotNullPredicate, str_replace('p2.', 'pb2.', $excluidoPredicate));
 
     $rows = dbFetchAll($query, [':teste_local_pattern' => '%@teste.local']);
 
