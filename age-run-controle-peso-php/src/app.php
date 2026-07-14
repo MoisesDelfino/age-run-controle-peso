@@ -3168,15 +3168,101 @@ if ($method === 'GET' && $path === '/api/performance/grupos') {
         $candidatos[] = mapRunnerForGroup($row, $meuScore, $score);
     }
 
+    // Build the same discrete groups used by the admin view, including the logged-in user.
+    $todosAtletas = $candidatos;
+    $todosAtletas[] = mapRunnerForGroup($usuarioLogado, $meuScore, $meuScore); // include self (diff = 0)
+    usort($todosAtletas, static fn ($a, $b) => (float) ($a['ritmo_medio_seg_km'] ?? 0) <=> (float) ($b['ritmo_medio_seg_km'] ?? 0));
+
     $sameThreshold = 6.0;
-    $mesmoNivel = array_values(array_filter($candidatos, static fn($item) => abs((float) ($item['diferenca_percentual'] ?? 0)) <= $sameThreshold));
-    usort($mesmoNivel, static fn($a, $b) => abs((float) $a['diferenca_percentual']) <=> abs((float) $b['diferenca_percentual']));
+    $grupos = [];
+    foreach ($todosAtletas as $atleta) {
+        $placed = false;
+        foreach ($grupos as &$grupo) {
+            $refScore = (float) ($grupo['ritmo_ref'] ?? 0.0);
+            if ($refScore <= 0) {
+                continue;
+            }
+            $diffPercent = abs(((float) ($atleta['ritmo_medio_seg_km'] ?? 0) - $refScore) / $refScore) * 100;
+            if ($diffPercent <= $sameThreshold) {
+                $grupo['membros'][] = $atleta;
+                $placed = true;
+                break;
+            }
+        }
+        unset($grupo);
+        if (!$placed) {
+            $grupos[] = [
+                'ritmo_ref' => (float) ($atleta['ritmo_medio_seg_km'] ?? 0),
+                'membros'   => [$atleta],
+            ];
+        }
+    }
 
-    $nivelMaisAlto = array_values(array_filter($candidatos, static fn($item) => (float) ($item['diferenca_percentual'] ?? 0) < -$sameThreshold));
-    usort($nivelMaisAlto, static fn($a, $b) => (float) ($a['ritmo_medio_seg_km'] ?? 999999) <=> (float) ($b['ritmo_medio_seg_km'] ?? 999999));
+    // Absorb solo groups into the nearest group above (same redistribution as admin view).
+    $changed = true;
+    while ($changed) {
+        $changed = false;
+        foreach ($grupos as $idx => &$grupo) {
+            if (count($grupo['membros']) !== 1) {
+                continue;
+            }
+            $destIdx = null;
+            for ($j = $idx - 1; $j >= 0; $j--) {
+                if (count($grupos[$j]['membros']) > 0) {
+                    $destIdx = $j;
+                    break;
+                }
+            }
+            if ($destIdx === null) {
+                for ($j = $idx + 1; $j < count($grupos); $j++) {
+                    if (count($grupos[$j]['membros']) > 0) {
+                        $destIdx = $j;
+                        break;
+                    }
+                }
+            }
+            if ($destIdx !== null) {
+                $grupos[$destIdx]['membros'][] = $grupo['membros'][0];
+                $grupo['membros'] = [];
+                $changed = true;
+            }
+        }
+        unset($grupo);
+        $grupos = array_values(array_filter($grupos, static fn ($g) => count($g['membros']) > 0));
+    }
 
-    $nivelMaisBaixo = array_values(array_filter($candidatos, static fn($item) => (float) ($item['diferenca_percentual'] ?? 0) > $sameThreshold));
-    usort($nivelMaisBaixo, static fn($a, $b) => (float) ($a['diferenca_percentual'] ?? 0) <=> (float) ($b['diferenca_percentual'] ?? 0));
+    // Find which group index the logged-in user belongs to.
+    $meuGrupoIdx = null;
+    foreach ($grupos as $idx => $grupo) {
+        foreach ($grupo['membros'] as $membro) {
+            if ((int) ($membro['usuario_id'] ?? 0) === $usuarioId) {
+                $meuGrupoIdx = $idx;
+                break 2;
+            }
+        }
+    }
+
+    // Helper to extract group members excluding the logged-in user.
+    $membrosDoGrupo = static function (array $grupo) use ($usuarioId): array {
+        return array_values(array_filter(
+            $grupo['membros'],
+            static fn ($m) => (int) ($m['usuario_id'] ?? 0) !== $usuarioId
+        ));
+    };
+
+    $mesmoNivel    = $meuGrupoIdx !== null
+        ? $membrosDoGrupo($grupos[$meuGrupoIdx])
+        : [];
+    $nivelMaisAlto = ($meuGrupoIdx !== null && $meuGrupoIdx > 0)
+        ? $membrosDoGrupo($grupos[$meuGrupoIdx - 1])
+        : [];
+    $nivelMaisBaixo = ($meuGrupoIdx !== null && $meuGrupoIdx < count($grupos) - 1)
+        ? $membrosDoGrupo($grupos[$meuGrupoIdx + 1])
+        : [];
+
+    usort($mesmoNivel,    static fn ($a, $b) => abs((float) ($a['diferenca_percentual'] ?? 0)) <=> abs((float) ($b['diferenca_percentual'] ?? 0)));
+    usort($nivelMaisAlto, static fn ($a, $b) => (float) ($a['ritmo_medio_seg_km'] ?? 999999) <=> (float) ($b['ritmo_medio_seg_km'] ?? 999999));
+    usort($nivelMaisBaixo, static fn ($a, $b) => (float) ($a['diferenca_percentual'] ?? 0) <=> (float) ($b['diferenca_percentual'] ?? 0));
 
     jsonResponse([
         'meu_nivel' => [
