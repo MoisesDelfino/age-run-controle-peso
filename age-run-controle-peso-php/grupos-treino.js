@@ -178,13 +178,10 @@ function renderGroupList(container, itens) {
     }
 
     container.innerHTML = itens.map((item) => {
-        const diff = Number(item.diferenca_percentual || 0);
-        const sinal = diff > 0 ? '+' : '';
         return `
             <div class="group-item">
                 <strong>${item.nome}</strong>
                 <div class="group-meta">Ritmo médio: ${item.ritmo_medio_formatado || '-'}</div>
-                <div class="group-meta">Diferença vs você: ${sinal}${diff.toFixed(2)}%</div>
             </div>
         `;
     }).join('');

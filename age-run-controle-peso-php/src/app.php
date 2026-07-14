@@ -3260,6 +3260,11 @@ if ($method === 'GET' && $path === '/api/performance/grupos') {
         ? $membrosDoGrupo($grupos[$meuGrupoIdx + 1])
         : [];
 
+    $maxDiffPercent = 15.0;
+    $mesmoNivel     = array_values(array_filter($mesmoNivel,    static fn ($m) => abs((float) ($m['diferenca_percentual'] ?? 0)) <= $maxDiffPercent));
+    $nivelMaisAlto  = array_values(array_filter($nivelMaisAlto,  static fn ($m) => abs((float) ($m['diferenca_percentual'] ?? 0)) <= $maxDiffPercent));
+    $nivelMaisBaixo = array_values(array_filter($nivelMaisBaixo, static fn ($m) => abs((float) ($m['diferenca_percentual'] ?? 0)) <= $maxDiffPercent));
+
     usort($mesmoNivel,    static fn ($a, $b) => abs((float) ($a['diferenca_percentual'] ?? 0)) <=> abs((float) ($b['diferenca_percentual'] ?? 0)));
     usort($nivelMaisAlto, static fn ($a, $b) => (float) ($a['ritmo_medio_seg_km'] ?? 999999) <=> (float) ($b['ritmo_medio_seg_km'] ?? 999999));
     usort($nivelMaisBaixo, static fn ($a, $b) => (float) ($a['diferenca_percentual'] ?? 0) <=> (float) ($b['diferenca_percentual'] ?? 0));
