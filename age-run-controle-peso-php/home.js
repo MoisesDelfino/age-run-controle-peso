@@ -131,11 +131,11 @@ function formatUltimoTesteResumo(ultimoTeste) {
     const data = ultimoTeste.criado_em_formatado || '-';
     const tempo = ultimoTeste.tempo_formatado || '-';
     const pace = ultimoTeste.pace_formatado || '-';
-    const prova = ultimoTeste.prova ? ` · ${ultimoTeste.prova}` : '';
+    const tempoSemTeste = String(tempo).toLowerCase().replace(/\s*teste\b/g, '').trim();
 
     return `
         <div class="home-ultimo-teste-row"><span>Data:</span><strong>${data}</strong></div>
-        <div class="home-ultimo-teste-row"><span>Tempo:</span><strong>${tempo}${prova}</strong></div>
+        <div class="home-ultimo-teste-row"><span>Tempo:</span><strong>${tempoSemTeste}</strong></div>
         <div class="home-ultimo-teste-row"><span>Pace:</span><strong>${pace}</strong></div>
     `;
 }
