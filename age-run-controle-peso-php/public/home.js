@@ -302,6 +302,10 @@ async function carregarResumoHome() {
             homeRpsResumo.innerHTML = formatRpsResumo(rpsResp?.ok ? rpsData : null);
         }
 
+        if (homeUltimoTesteResumo) {
+            homeUltimoTesteResumo.innerHTML = formatUltimoTesteResumo(rpsResp?.ok ? ultimoTeste : null);
+        }
+
         marcarNivelAtual(gruposTiroResp?.ok ? gruposTiroData : null);
 
         if (homeResumoAviso) {
