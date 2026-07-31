@@ -13,6 +13,7 @@ const homeResumoAviso = document.getElementById('homeResumoAviso');
 const homeRankingCard = document.getElementById('homeRankingCard');
 const homeStatsIntro = document.getElementById('homeStatsIntro');
 const homeStatsGrid = document.getElementById('homeStatsGrid');
+const homeUltimoTesteResumo = document.getElementById('homeUltimoTesteResumo');
 const homeLevelItems = Array.from(document.querySelectorAll('.home-level-item'));
 
 // Inicialização
@@ -120,6 +121,23 @@ function formatRpsResumo(rpsData) {
             </div>
         `)
         .join('');
+}
+
+function formatUltimoTesteResumo(ultimoTeste) {
+    if (!ultimoTeste) {
+        return '<span class="home-ultimo-teste-empty">Nenhum teste cadastrado.</span>';
+    }
+
+    const data = ultimoTeste.criado_em_formatado || '-';
+    const tempo = ultimoTeste.tempo_formatado || '-';
+    const pace = ultimoTeste.pace_formatado || '-';
+    const tempoSemTeste = String(tempo).toLowerCase().replace(/\s*teste\b/g, '').trim();
+
+    return `
+        <div class="home-ultimo-teste-row"><span>Data:</span><strong>${data}</strong></div>
+        <div class="home-ultimo-teste-row"><span>Tempo:</span><strong>${tempoSemTeste}</strong></div>
+        <div class="home-ultimo-teste-row"><span>Pace:</span><strong>${pace}</strong></div>
+    `;
 }
 
 function normalizeNivelLabel(text) {
@@ -257,6 +275,7 @@ async function carregarResumoHome() {
         const rpsData = rpsResp ? await rpsResp.json() : {};
         const gruposTiroData = gruposTiroResp ? await gruposTiroResp.json() : {};
         const rankingData = rankingResp ? await rankingResp.json() : null;
+        const ultimoTeste = rpsData?.ultimo_teste || null;
 
         const pesagens = Array.isArray(pesagensData?.pesagens) ? pesagensData.pesagens : [];
         let pesoPerdido = 0;
@@ -281,6 +300,10 @@ async function carregarResumoHome() {
 
         if (homeRpsResumo) {
             homeRpsResumo.innerHTML = formatRpsResumo(rpsResp?.ok ? rpsData : null);
+        }
+
+        if (homeUltimoTesteResumo) {
+            homeUltimoTesteResumo.innerHTML = formatUltimoTesteResumo(rpsResp?.ok ? ultimoTeste : null);
         }
 
         marcarNivelAtual(gruposTiroResp?.ok ? gruposTiroData : null);
