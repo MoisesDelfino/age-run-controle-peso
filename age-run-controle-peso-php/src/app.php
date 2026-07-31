@@ -3030,6 +3030,52 @@ if ($method === 'GET' && $path === '/api/performance/rps') {
         }
     }
 
+    if (!$ultimoTeste) {
+        $hasProva = safeDbColumnExists('rp_testes_historico', 'prova');
+        $hasDistancia = safeDbColumnExists('rp_testes_historico', 'distancia_km');
+        $hasPace = safeDbColumnExists('rp_testes_historico', 'pace_segundos_km');
+        $hasCriadoEm = safeDbColumnExists('rp_testes_historico', 'criado_em');
+
+        try {
+            $ultimoTesteRaw = dbFetchOne(
+                'SELECT h.id, h.usuario_id, h.treinador_id, '
+                    . ($hasProva ? 'h.prova' : 'NULL AS prova') . ', '
+                    . 'h.tempo_segundos, '
+                    . ($hasDistancia ? 'h.distancia_km' : 'NULL AS distancia_km') . ', '
+                    . ($hasPace ? 'h.pace_segundos_km' : 'NULL AS pace_segundos_km') . ', '
+                    . ($hasCriadoEm ? 'h.criado_em' : 'NULL AS criado_em') . ', '
+                    . 't.nome AS treinador_nome '
+                . 'FROM rp_testes_historico h '
+                . 'LEFT JOIN usuarios t ON t.id = h.treinador_id '
+                . 'WHERE h.usuario_id = :usuario_id '
+                . 'ORDER BY h.criado_em DESC, h.id DESC '
+                . 'LIMIT 1',
+                [':usuario_id' => $usuarioId]
+            );
+        } catch (Throwable $e) {
+            $ultimoTesteRaw = null;
+        }
+
+        if (is_array($ultimoTesteRaw)) {
+            $ultimoTeste = [
+                'id' => (int) ($ultimoTesteRaw['id'] ?? 0),
+                'prova' => isset($ultimoTesteRaw['prova']) ? (string) $ultimoTesteRaw['prova'] : null,
+                'tempo_segundos' => (int) ($ultimoTesteRaw['tempo_segundos'] ?? 0),
+                'tempo_formatado' => formatSecondsToRaceTime($ultimoTesteRaw['tempo_segundos'] ?? null),
+                'distancia_km' => isset($ultimoTesteRaw['distancia_km']) && is_numeric($ultimoTesteRaw['distancia_km'])
+                    ? (float) $ultimoTesteRaw['distancia_km']
+                    : null,
+                'pace_segundos_km' => isset($ultimoTesteRaw['pace_segundos_km']) && is_numeric($ultimoTesteRaw['pace_segundos_km'])
+                    ? (float) $ultimoTesteRaw['pace_segundos_km']
+                    : null,
+                'pace_formatado' => formatPace($ultimoTesteRaw['pace_segundos_km'] ?? null),
+                'criado_em' => $ultimoTesteRaw['criado_em'] ?? null,
+                'treinador_id' => (int) ($ultimoTesteRaw['treinador_id'] ?? 0),
+                'treinador_nome' => (string) ($ultimoTesteRaw['treinador_nome'] ?? ''),
+            ];
+        }
+    }
+
     $ultimoTestePayload = null;
     if ($ultimoTeste) {
         $dataCriacao = $ultimoTeste['criado_em'] ?? null;
