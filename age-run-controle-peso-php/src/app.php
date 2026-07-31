@@ -3017,6 +3017,46 @@ if ($method === 'GET' && $path === '/api/performance/rps') {
     }
 
     $score = calculatePerformanceScore($usuario);
+    $historicoMap = buildRpTestesHistoricoMap([$usuarioId]);
+    $historicoDoUsuario = $historicoMap[$usuarioId] ?? [];
+
+    $ultimoTeste = null;
+    if (!empty($historicoDoUsuario)) {
+        foreach ($historicoDoUsuario as $teste) {
+            if (!empty($teste['tempo_segundos']) && (int) $teste['tempo_segundos'] > 0) {
+                $ultimoTeste = $teste;
+                break;
+            }
+        }
+    }
+
+    $ultimoTestePayload = null;
+    if ($ultimoTeste) {
+        $dataCriacao = $ultimoTeste['criado_em'] ?? null;
+        $dataFormatada = null;
+        if ($dataCriacao) {
+            $ts = strtotime((string) $dataCriacao);
+            if ($ts !== false) {
+                $dataFormatada = date('d/m/Y', $ts);
+            }
+        }
+
+        $ultimoTestePayload = [
+            'id' => (int) ($ultimoTeste['id'] ?? 0),
+            'prova' => $ultimoTeste['prova'] ?? null,
+            'tempo_segundos' => (int) ($ultimoTeste['tempo_segundos'] ?? 0),
+            'tempo_formatado' => $ultimoTeste['tempo_formatado'] ?? formatSecondsToRaceTime($ultimoTeste['tempo_segundos'] ?? null),
+            'distancia_km' => isset($ultimoTeste['distancia_km']) && is_numeric($ultimoTeste['distancia_km'])
+                ? (float) $ultimoTeste['distancia_km']
+                : null,
+            'pace_segundos_km' => isset($ultimoTeste['pace_segundos_km']) && is_numeric($ultimoTeste['pace_segundos_km'])
+                ? (float) $ultimoTeste['pace_segundos_km']
+                : null,
+            'pace_formatado' => $ultimoTeste['pace_formatado'] ?? formatPace($ultimoTeste['pace_segundos_km'] ?? null),
+            'criado_em' => $dataCriacao,
+            'criado_em_formatado' => $dataFormatada,
+        ];
+    }
 
     jsonResponse([
         'rp_5k' => isset($usuario['rp_5k']) ? (int) $usuario['rp_5k'] : null,
@@ -3033,6 +3073,7 @@ if ($method === 'GET' && $path === '/api/performance/rps') {
         'rp_42k_formatado' => formatSecondsToRaceTime($usuario['rp_42k'] ?? null),
         'ritmo_medio_seg_km' => $score,
         'ritmo_medio_formatado' => formatPace($score),
+        'ultimo_teste' => $ultimoTestePayload,
     ]);
 }
 
