@@ -43,7 +43,12 @@ function loadEnv(string $path, bool $overrideExisting = false): void
 
         $_ENV[$key] = $value;
         $_SERVER[$key] = $value;
-        putenv("{$key}={$value}");
+        // Some shared-hosting environments disable putenv(). The application
+        // already reads from $_ENV and $_SERVER, so exporting to the process
+        // environment is optional.
+        if (function_exists('putenv')) {
+            putenv("{$key}={$value}");
+        }
     }
 }
 
