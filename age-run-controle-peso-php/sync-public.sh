@@ -33,6 +33,8 @@ login.html
 menu.js
 pesagem.html
 pesagem.js
+perfil.html
+perfil.js
 ranking.html
 ranking.js
 recuperar-senha.html

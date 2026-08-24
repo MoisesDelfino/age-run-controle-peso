@@ -8,6 +8,9 @@ const perfilSexo = document.getElementById('perfilSexo');
 const perfilAltura = document.getElementById('perfilAltura');
 const btnSalvarPerfil = document.getElementById('btnSalvarPerfil');
 const btnLogout = document.getElementById('btnLogout');
+const garminCard = document.getElementById('garminCard');
+const btnConectarGarmin = document.getElementById('btnConectarGarmin');
+const garminSecurityNote = document.getElementById('garminSecurityNote');
 
 function showMessage(text, type) {
     if (!perfilMessage) return;
@@ -31,6 +34,25 @@ async function carregarPerfil() {
     if (perfilEmail) perfilEmail.value = data.email || '';
     if (perfilSexo) perfilSexo.value = (data.sexo || 'masculino').toLowerCase();
     if (perfilAltura) perfilAltura.value = data.altura != null ? String(data.altura) : '';
+    if (garminCard) garminCard.hidden = data.garmin_pilot_enabled !== true;
+}
+
+if (btnConectarGarmin) {
+    btnConectarGarmin.addEventListener('click', async () => {
+        btnConectarGarmin.disabled = true;
+        try {
+            const response = await fetch(`${API_BASE}/garmin/status`, { credentials: 'include' });
+            const data = await response.json();
+            if (!response.ok || data?.pilot_enabled !== true) {
+                throw new Error(data?.error || 'Acesso ao piloto Garmin não autorizado.');
+            }
+            garminSecurityNote?.classList.add('show');
+            btnConectarGarmin.textContent = 'Piloto liberado';
+        } catch (err) {
+            showMessage(err.message || 'Não foi possível iniciar a conexão Garmin.', 'error');
+            btnConectarGarmin.disabled = false;
+        }
+    });
 }
 
 if (perfilForm) {

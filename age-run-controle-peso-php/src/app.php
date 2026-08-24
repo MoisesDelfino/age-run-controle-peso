@@ -63,6 +63,7 @@ const TRAINER_OVERRIDE_EMAILS = [
     'filipe.sul@gmail.com',
 ];
 const MONITOR_OWNER_EMAIL = 'moisescamposdelfino@gmail.com';
+const GARMIN_PILOT_EMAIL = 'moisescamposdelfino@gmail.com';
 
 function isTrainerOverrideEmail(?string $email): bool
 {
@@ -72,6 +73,11 @@ function isTrainerOverrideEmail(?string $email): bool
     }
 
     return in_array($normalized, TRAINER_OVERRIDE_EMAILS, true);
+}
+
+function isGarminPilotEmail(?string $email): bool
+{
+    return normalizeEmail((string) $email) === GARMIN_PILOT_EMAIL;
 }
 
 function isHiddenFromRankingEmail(?string $email): bool
@@ -2282,7 +2288,23 @@ if ($method === 'GET' && $path === '/api/auth/session') {
     $_SESSION['requirePasswordChange'] = !empty($usuario['senha_temporaria']);
     $usuario['require_password_change'] = sessionRequiresPasswordChange();
     $usuario['authenticated'] = true;
+    $usuario['garmin_pilot_enabled'] = isGarminPilotEmail((string) ($usuario['email'] ?? ''));
     jsonResponse($usuario);
+}
+
+if ($method === 'GET' && $path === '/api/garmin/status') {
+    $userId = requireAuth();
+    $usuario = dbFetchOne('SELECT email FROM usuarios WHERE id = :id LIMIT 1', [':id' => $userId]);
+
+    if (!$usuario || !isGarminPilotEmail((string) ($usuario['email'] ?? ''))) {
+        jsonResponse(['error' => 'Integração Garmin ainda não liberada para este perfil.'], 403);
+    }
+
+    jsonResponse([
+        'pilot_enabled' => true,
+        'connected' => false,
+        'phase' => 'interface_validation',
+    ]);
 }
 
 if ($method === 'POST' && $path === '/api/auth/alterar-senha-primeiro-acesso') {
@@ -2382,6 +2404,7 @@ if ($method === 'GET' && $path === '/api/usuario/perfil') {
         jsonResponse(['error' => 'Usuário não encontrado'], 404);
     }
 
+    $usuario['garmin_pilot_enabled'] = isGarminPilotEmail((string) ($usuario['email'] ?? ''));
     jsonResponse($usuario);
 }
 

@@ -103,6 +103,95 @@
         body.dark-mode .perfil-email-note {
             color: #94a3b8;
         }
+
+        .perfil-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 480px) minmax(0, 480px);
+            gap: 1.5rem;
+            align-items: start;
+            justify-content: center;
+        }
+
+        .garmin-card[hidden] { display: none; }
+
+        .garmin-heading {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 1rem;
+        }
+
+        .garmin-heading h2 { margin: 0; }
+
+        .garmin-mark {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: #0d2238;
+            color: #38bdf8;
+            font-size: 1.15rem;
+        }
+
+        .garmin-pilot-badge {
+            display: inline-block;
+            margin-bottom: 1rem;
+            padding: 4px 9px;
+            border-radius: 999px;
+            background: rgba(14, 165, 233, 0.13);
+            color: #0369a1;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        body.dark-mode .garmin-pilot-badge { color: #7dd3fc; }
+
+        .garmin-description,
+        .garmin-security-note {
+            color: #64748b;
+            font-size: 0.88rem;
+            line-height: 1.55;
+        }
+
+        body.dark-mode .garmin-description,
+        body.dark-mode .garmin-security-note { color: #94a3b8; }
+
+        .garmin-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 1.1rem 0;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .garmin-status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #94a3b8;
+        }
+
+        .garmin-action { width: 100%; }
+
+        .garmin-security-note {
+            display: none;
+            margin-top: 1rem;
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: rgba(14, 165, 233, 0.08);
+            border: 1px solid rgba(14, 165, 233, 0.24);
+        }
+
+        .garmin-security-note.show { display: block; }
+
+        @media (max-width: 900px) {
+            .perfil-grid { grid-template-columns: minmax(0, 480px); }
+        }
     </style>
 </head>
 <body>
@@ -151,6 +240,7 @@
     </nav>
 
     <main class="container home-content">
+        <div class="perfil-grid">
         <section class="card">
             <h2 style="margin-bottom:1.2rem">👤 Meu Perfil</h2>
 
@@ -184,6 +274,22 @@
                 <button type="submit" class="btn btn-primary" id="btnSalvarPerfil">Salvar alterações</button>
             </form>
         </section>
+
+        <section id="garminCard" class="card garmin-card" hidden>
+            <div class="garmin-heading">
+                <span class="garmin-mark" aria-hidden="true">▲</span>
+                <h2>Garmin Connect</h2>
+            </div>
+            <span class="garmin-pilot-badge">Acesso experimental</span>
+            <p class="garmin-description">Conecte sua conta para, nas próximas etapas, consultar e compartilhar treinos agendados.</p>
+            <div class="garmin-status" aria-live="polite">
+                <span class="garmin-status-dot"></span>
+                <span id="garminStatusText">Não conectado</span>
+            </div>
+            <button type="button" class="btn btn-primary garmin-action" id="btnConectarGarmin">Conectar Garmin</button>
+            <p id="garminSecurityNote" class="garmin-security-note">A interface do piloto está liberada. A autenticação real e o MFA serão ativados no próximo teste; nenhuma credencial Garmin é solicitada ou armazenada nesta etapa.</p>
+        </section>
+        </div>
     </main>
 
     <footer class="footer">
@@ -194,6 +300,6 @@
 
     <script src="theme.js?v=202605302205"></script>
     <script src="menu.js?v=202605302205"></script>
-    <script src="perfil.js?v=20260617"></script>
+    <script src="perfil.js?v=2026082401"></script>
 </body>
 </html>
