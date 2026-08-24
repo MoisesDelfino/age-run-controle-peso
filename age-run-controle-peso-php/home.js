@@ -165,37 +165,20 @@ function marcarNivelAtual(gruposTiroData) {
         item.classList.remove('home-level-item-current');
         item.querySelector('.home-level-right')?.remove();
 
-        // Build boundary-based pace range:
-        // Level 0: "até {pior[0]} /km"
-        // Level N: "{pior[N-1]} – {pior[N]} /km"
-        // Last level with data: "{melhor[last]}+ /km"
         let paceText = null;
-        const isLastItem = index === homeLevelItems.length - 1;
 
         if (index < grupos.length) {
             const curr = grupos[index];
-            const currPior = stripPaceUnit(curr.pior_pace_formatado);
-            const currMelhor = stripPaceUnit(curr.melhor_pace_formatado);
+            const minPace = stripPaceUnit(curr.melhor_pace_formatado);
+            const maxPace = stripPaceUnit(curr.pior_pace_formatado);
 
             if (index === 0) {
-                paceText = `até ${currPior} /km`;
+                paceText = `até ${maxPace} /km`;
+            } else if (index === grupos.length - 1) {
+                paceText = `acima de ${minPace} /km`;
             } else {
-                const prev = grupos[index - 1];
-                const prevPior = stripPaceUnit(prev.pior_pace_formatado);
-                if (currPior && currPior !== prevPior) {
-                    paceText = `${prevPior} – ${currPior} /km`;
-                } else {
-                    paceText = `${currMelhor} /km`;
-                }
+                paceText = `${minPace} – ${maxPace} /km`;
             }
-        } else if (grupos.length > 0 && index === grupos.length) {
-            // First overflow level: anchored to last real group's worst pace + fictional upper bound
-            const last = grupos[grupos.length - 1];
-            const lastPior = stripPaceUnit(last.pior_pace_formatado);
-            paceText = lastPior ? `${lastPior} – 09:00 /km` : `até 09:00 /km`;
-        } else if (grupos.length > 0 && index > grupos.length) {
-            // Second+ overflow levels: fictional range beyond 09:00
-            paceText = `09:00+ /km`;
         }
 
         if (paceText) {

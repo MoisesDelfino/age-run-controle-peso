@@ -1763,10 +1763,22 @@ function getShootingLevelLabel(int $index): string
         '🐺 Lobo',
         '🐎 Cavalo',
         '🦊 Raposa',
-        '🐢 Tartaruga',
+        '🦙 Lhama',
     ];
 
     return $labels[$index] ?? ('🐾 Pelotao ' . ($index + 1));
+}
+
+function getShootingLevelDefinitions(): array
+{
+    return [
+        ['nome_nivel' => '🐆 Guepardo', 'pace_min_seg_km' => null,  'pace_max_seg_km' => 240.0],
+        ['nome_nivel' => '🦌 Antilope', 'pace_min_seg_km' => 241.0, 'pace_max_seg_km' => 270.0],
+        ['nome_nivel' => '🐺 Lobo',     'pace_min_seg_km' => 271.0, 'pace_max_seg_km' => 300.0],
+        ['nome_nivel' => '🐎 Cavalo',   'pace_min_seg_km' => 301.0, 'pace_max_seg_km' => 330.0],
+        ['nome_nivel' => '🦊 Raposa',   'pace_min_seg_km' => 331.0, 'pace_max_seg_km' => 375.0],
+        ['nome_nivel' => '🦙 Lhama',    'pace_min_seg_km' => 376.0, 'pace_max_seg_km' => null],
+    ];
 }
 
 function getLatestValidShootingTest(array $historico): ?array
@@ -1810,17 +1822,71 @@ function calculateShootingTestScore(array $teste): ?float
         return null;
     }
 
-    $tempoMinutos = $tempoSegundos / 60.0;
-    $bonusTempo = min(28.0, log(1.0 + max(0.0, $tempoMinutos - 4.0)) * 10.0);
-    $bonusDistancia = min(22.0, log(1.0 + max(0.0, $distanciaKm - 0.8)) * 9.0);
-    $score = $pace - $bonusTempo - $bonusDistancia;
+    $tempoEquivalente5k = $tempoSegundos * pow(5.0 / $distanciaKm, 1.06);
+    $paceEquivalente5k = $tempoEquivalente5k / 5.0;
 
-    return $score > 0 ? $score : null;
+    return $paceEquivalente5k > 0 ? $paceEquivalente5k : null;
 }
 
-function buildShootingGroups(array $users, array $historicoMap, float $compatThresholdPercent = 5.0): array
+function isShootingTestRecent(array $teste, int $maxAgeDays = 90): bool
 {
-    $atletas = [];
+    $rawDate = trim((string) ($teste['criado_em'] ?? ''));
+    $timestamp = $rawDate !== '' ? strtotime($rawDate) : false;
+    return $timestamp !== false && $timestamp <= time() && $timestamp >= strtotime('-' . $maxAgeDays . ' days');
+}
+
+function getApprovedRpAsShootingTest(array $user): ?array
+{
+    $best = null;
+    foreach (RACE_DISTANCES as $column => $distanceKm) {
+        $statusColumn = RP_STATUS_COLUMNS[$column] ?? null;
+        if (($statusColumn ? ($user[$statusColumn] ?? null) : null) !== 'aprovado') {
+            continue;
+        }
+        $tempoSegundos = isset($user[$column]) && is_numeric($user[$column]) ? (float) $user[$column] : 0.0;
+        if ($tempoSegundos <= 0 || $distanceKm <= 0) {
+            continue;
+        }
+        $candidate = [
+            'tempo_segundos' => $tempoSegundos,
+            'distancia_km' => (float) $distanceKm,
+            'pace_segundos_km' => $tempoSegundos / (float) $distanceKm,
+            'fonte' => strtoupper(str_replace('rp_', '', $column)) . ' aprovado',
+        ];
+        $candidateScore = calculateShootingTestScore($candidate);
+        if ($candidateScore !== null && ($best === null || $candidateScore < $best['score'])) {
+            $best = ['teste' => $candidate, 'score' => $candidateScore];
+        }
+    }
+    return $best['teste'] ?? null;
+}
+
+function getShootingClassificationTest(array $user, array $historico): ?array
+{
+    foreach ($historico as $teste) {
+        $validTest = getLatestValidShootingTest([$teste]);
+        if (isShootingTestRecent($teste) && $validTest !== null) {
+            $validTest['fonte'] = 'Teste dos últimos 90 dias';
+            return $validTest;
+        }
+    }
+    return getApprovedRpAsShootingTest($user);
+}
+
+function buildShootingGroups(array $users, array $historicoMap): array
+{
+    $definitions = getShootingLevelDefinitions();
+    $grupos = array_map(static fn ($definition, $index) => [
+        'id' => $index + 1,
+        'nome_nivel' => $definition['nome_nivel'],
+        'pace_min_seg_km' => $definition['pace_min_seg_km'],
+        'pace_max_seg_km' => $definition['pace_max_seg_km'],
+        'melhor_pace_seg_km' => $definition['pace_min_seg_km'],
+        'pior_pace_seg_km' => $definition['pace_max_seg_km'],
+        'melhor_pace_formatado' => formatPace($definition['pace_min_seg_km']),
+        'pior_pace_formatado' => formatPace($definition['pace_max_seg_km']),
+        'usuarios' => [],
+    ], $definitions, array_keys($definitions));
 
     foreach ($users as $row) {
         $usuarioId = (int) ($row['id'] ?? 0);
@@ -1828,7 +1894,7 @@ function buildShootingGroups(array $users, array $historicoMap, float $compatThr
             continue;
         }
 
-        $teste = getLatestValidShootingTest($historicoMap[$usuarioId] ?? []);
+        $teste = getShootingClassificationTest($row, $historicoMap[$usuarioId] ?? []);
         if (!$teste) {
             continue;
         }
@@ -1838,81 +1904,23 @@ function buildShootingGroups(array $users, array $historicoMap, float $compatThr
             continue;
         }
 
-        $atletas[] = [
+        $levelIndex = count($definitions) - 1;
+        foreach ($definitions as $index => $definition) {
+            if ($definition['pace_max_seg_km'] === null || $score <= $definition['pace_max_seg_km']) {
+                $levelIndex = $index;
+                break;
+            }
+        }
+        $grupos[$levelIndex]['usuarios'][] = [
             'usuario_id' => $usuarioId,
             'nome' => (string) ($row['nome'] ?? ''),
-            'score' => $score,
+            'pace_equivalente_5k_seg_km' => $score,
+            'pace_equivalente_5k_formatado' => formatPace($score),
             'pace_segundos_km' => (float) $teste['pace_segundos_km'],
+            'fonte' => (string) ($teste['fonte'] ?? 'Teste'),
         ];
     }
-
-    if (!$atletas) {
-        return [];
-    }
-
-    usort($atletas, static fn($a, $b) => (float) $a['score'] <=> (float) $b['score']);
-
-    $grupos = [];
-
-    foreach ($atletas as $atleta) {
-        $lastIndex = count($grupos) - 1;
-
-        if ($lastIndex < 0) {
-            $grupos[] = [
-                'usuarios' => [$atleta],
-                'media_score' => (float) $atleta['score'],
-            ];
-            continue;
-        }
-
-        $mediaAtual = (float) ($grupos[$lastIndex]['media_score'] ?? 0.0);
-        if ($mediaAtual <= 0) {
-            $grupos[] = [
-                'usuarios' => [$atleta],
-                'media_score' => (float) $atleta['score'],
-            ];
-            continue;
-        }
-
-        $diffPercent = abs((((float) $atleta['score']) - $mediaAtual) / $mediaAtual) * 100.0;
-        if ($diffPercent <= $compatThresholdPercent) {
-            $grupos[$lastIndex]['usuarios'][] = $atleta;
-            $total = count($grupos[$lastIndex]['usuarios']);
-            $grupos[$lastIndex]['media_score'] = (($mediaAtual * ($total - 1)) + (float) $atleta['score']) / $total;
-            continue;
-        }
-
-        $grupos[] = [
-            'usuarios' => [$atleta],
-            'media_score' => (float) $atleta['score'],
-        ];
-    }
-
-    $result = [];
-    foreach ($grupos as $index => $grupo) {
-        $paces = array_map(static fn($item) => (float) ($item['pace_segundos_km'] ?? 0), $grupo['usuarios']);
-        $paces = array_values(array_filter($paces, static fn($value) => $value > 0));
-        sort($paces);
-
-        if (!$paces) {
-            continue;
-        }
-
-        $result[] = [
-            'id' => $index + 1,
-            'nome_nivel' => getShootingLevelLabel($index),
-            'melhor_pace_seg_km' => $paces[0],
-            'pior_pace_seg_km' => $paces[count($paces) - 1],
-            'melhor_pace_formatado' => formatPace($paces[0]),
-            'pior_pace_formatado' => formatPace($paces[count($paces) - 1]),
-            'usuarios' => array_map(static fn($item) => [
-                'usuario_id' => (int) ($item['usuario_id'] ?? 0),
-                'nome' => (string) ($item['nome'] ?? ''),
-            ], $grupo['usuarios']),
-        ];
-    }
-
-    return $result;
+    return $grupos;
 }
 
 function requireTrainerAuth(): int
@@ -3521,31 +3529,6 @@ if ($method === 'GET' && $path === '/api/performance/grupos-tiro') {
     }
 
     $historicoMap = buildRpTestesHistoricoMap(array_map(static fn ($row) => (int) ($row['id'] ?? 0), $rows));
-
-    // Para usuários sem teste de pace, criar entrada sintética a partir do RP.
-    foreach ($rows as $row) {
-        $uid = (int) ($row['id'] ?? 0);
-        if ($uid <= 0) {
-            continue;
-        }
-        $hasTeste = !empty($historicoMap[$uid]);
-        if ($hasTeste) {
-            continue;
-        }
-        foreach (['rp_5k' => 5.0, 'rp_10k' => 10.0, 'rp_21k' => 21.0975, 'rp_42k' => 42.195] as $col => $distKm) {
-            $tempoSeg = isset($row[$col]) && is_numeric($row[$col]) ? (float) $row[$col] : 0.0;
-            if ($tempoSeg <= 0) {
-                continue;
-            }
-            $pace = $tempoSeg / $distKm;
-            $historicoMap[$uid] = [[
-                'tempo_segundos' => $tempoSeg,
-                'distancia_km' => $distKm,
-                'pace_segundos_km' => $pace,
-            ]];
-            break;
-        }
-    }
 
     $grupos = buildShootingGroups($rows, $historicoMap);
 
