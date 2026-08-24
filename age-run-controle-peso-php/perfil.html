@@ -189,6 +189,20 @@
 
         .garmin-security-note.show { display: block; }
 
+        .garmin-checks {
+            display: none;
+            margin: 1rem 0 0;
+            padding: 0;
+            list-style: none;
+            font-size: 0.84rem;
+        }
+
+        .garmin-checks.show { display: grid; gap: 6px; }
+        .garmin-check-ok { color: #15803d; }
+        .garmin-check-error { color: #b91c1c; }
+        body.dark-mode .garmin-check-ok { color: #86efac; }
+        body.dark-mode .garmin-check-error { color: #fca5a5; }
+
         @media (max-width: 900px) {
             .perfil-grid { grid-template-columns: minmax(0, 480px); }
         }
@@ -287,7 +301,8 @@
                 <span id="garminStatusText">Não conectado</span>
             </div>
             <button type="button" class="btn btn-primary garmin-action" id="btnConectarGarmin">Conectar Garmin</button>
-            <p id="garminSecurityNote" class="garmin-security-note">A interface do piloto está liberada. A autenticação real e o MFA serão ativados no próximo teste; nenhuma credencial Garmin é solicitada ou armazenada nesta etapa.</p>
+            <ul id="garminChecks" class="garmin-checks" aria-live="polite"></ul>
+            <p id="garminSecurityNote" class="garmin-security-note">O diagnóstico não solicita nem armazena credenciais. Após todos os itens serem validados, ativaremos o login e o MFA.</p>
         </section>
         </div>
     </main>
@@ -300,6 +315,6 @@
 
     <script src="theme.js?v=202605302205"></script>
     <script src="menu.js?v=202605302205"></script>
-    <script src="perfil.js?v=2026082401"></script>
+    <script src="perfil.js?v=2026082402"></script>
 </body>
 </html>

@@ -11,6 +11,30 @@ const btnLogout = document.getElementById('btnLogout');
 const garminCard = document.getElementById('garminCard');
 const btnConectarGarmin = document.getElementById('btnConectarGarmin');
 const garminSecurityNote = document.getElementById('garminSecurityNote');
+const garminChecks = document.getElementById('garminChecks');
+const garminStatusText = document.getElementById('garminStatusText');
+
+const GARMIN_CHECK_LABELS = {
+    php: 'PHP compatível',
+    curl: 'Comunicação HTTPS (cURL)',
+    sodium: 'Criptografia de tokens (sodium)',
+    openssl: 'OpenSSL',
+    oauth_signer: 'Assinatura OAuth em PHP',
+    private_storage: 'Armazenamento privado',
+    garmin_outbound: 'Acesso ao servidor Garmin',
+};
+
+function renderGarminDiagnostics(diagnostics) {
+    if (!garminChecks) return;
+    garminChecks.textContent = '';
+    Object.entries(diagnostics?.checks || {}).forEach(([key, passed]) => {
+        const item = document.createElement('li');
+        item.className = passed ? 'garmin-check-ok' : 'garmin-check-error';
+        item.textContent = `${passed ? '✓' : '✕'} ${GARMIN_CHECK_LABELS[key] || key}`;
+        garminChecks.appendChild(item);
+    });
+    garminChecks.classList.add('show');
+}
 
 function showMessage(text, type) {
     if (!perfilMessage) return;
@@ -46,8 +70,16 @@ if (btnConectarGarmin) {
             if (!response.ok || data?.pilot_enabled !== true) {
                 throw new Error(data?.error || 'Acesso ao piloto Garmin não autorizado.');
             }
+            renderGarminDiagnostics(data.diagnostics);
             garminSecurityNote?.classList.add('show');
-            btnConectarGarmin.textContent = 'Piloto liberado';
+            if (data.diagnostics?.ready) {
+                if (garminStatusText) garminStatusText.textContent = 'Ambiente validado';
+                btnConectarGarmin.textContent = 'Diagnóstico concluído';
+            } else {
+                if (garminStatusText) garminStatusText.textContent = 'Ambiente incompleto';
+                btnConectarGarmin.textContent = 'Verificar novamente';
+                btnConectarGarmin.disabled = false;
+            }
         } catch (err) {
             showMessage(err.message || 'Não foi possível iniciar a conexão Garmin.', 'error');
             btnConectarGarmin.disabled = false;

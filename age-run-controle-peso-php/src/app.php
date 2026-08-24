@@ -6,6 +6,7 @@ require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/helpers.php';
 require_once __DIR__ . '/email.php';
+require_once __DIR__ . '/garmin.php';
 
 set_exception_handler(static function (Throwable $e): void {
     $cfg = appConfig();
@@ -2303,7 +2304,8 @@ if ($method === 'GET' && $path === '/api/garmin/status') {
     jsonResponse([
         'pilot_enabled' => true,
         'connected' => false,
-        'phase' => 'interface_validation',
+        'phase' => 'environment_validation',
+        'diagnostics' => garminPilotDiagnostics(),
     ]);
 }
 
