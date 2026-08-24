@@ -2317,6 +2317,10 @@ if ($method === 'POST' && $path === '/api/garmin/connect') {
     }
 
     $lastAttempt = (int) ($_SESSION['garmin_last_attempt'] ?? 0);
+    $blockedUntil = (int) ($_SESSION['garmin_blocked_until'] ?? 0);
+    if ($blockedUntil > time()) {
+        jsonResponse(['error' => 'A Garmin limitou temporariamente as tentativas. Aguarde pelo menos uma hora.'], 429);
+    }
     if ($lastAttempt > 0 && time() - $lastAttempt < 30) {
         jsonResponse(['error' => 'Aguarde 30 segundos antes de tentar novamente.'], 429);
     }
@@ -2339,6 +2343,10 @@ if ($method === 'POST' && $path === '/api/garmin/connect') {
         jsonResponse(['error' => $e->getMessage()], 400);
     } catch (Throwable $e) {
         error_log('[AgeRun Garmin] Falha de conexão para user_id=' . $userId . ': ' . $e->getMessage());
+        if (str_contains($e->getMessage(), 'HTTP 429')) {
+            $_SESSION['garmin_blocked_until'] = time() + 3600;
+            jsonResponse(['error' => 'A Garmin limitou temporariamente as tentativas. Aguarde pelo menos uma hora.'], 429);
+        }
         jsonResponse(['error' => $e->getMessage()], 502);
     }
 }

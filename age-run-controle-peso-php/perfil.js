@@ -176,6 +176,7 @@ if (garminLoginForm) {
         } catch (err) {
             showGarminLoginMessage(err.message || 'Erro ao conectar.', 'error');
         } finally {
+            if (!isMfa && garminPassword) garminPassword.value = '';
             if (btnGarminLogin) btnGarminLogin.disabled = false;
         }
     });
