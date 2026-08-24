@@ -203,6 +203,18 @@
         body.dark-mode .garmin-check-ok { color: #86efac; }
         body.dark-mode .garmin-check-error { color: #fca5a5; }
 
+        .garmin-login-form {
+            display: none;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(148, 163, 184, 0.25);
+        }
+
+        .garmin-login-form.show { display: grid; gap: 0.85rem; }
+        #garminMfaGroup[hidden], #garminPasswordGroup[hidden] { display: none; }
+        .garmin-login-actions { display: flex; gap: 8px; }
+        .garmin-login-actions .btn { flex: 1; }
+
         @media (max-width: 900px) {
             .perfil-grid { grid-template-columns: minmax(0, 480px); }
         }
@@ -303,6 +315,25 @@
             <button type="button" class="btn btn-primary garmin-action" id="btnConectarGarmin">Conectar Garmin</button>
             <ul id="garminChecks" class="garmin-checks" aria-live="polite"></ul>
             <p id="garminSecurityNote" class="garmin-security-note">O diagnóstico não solicita nem armazena credenciais. Após todos os itens serem validados, ativaremos o login e o MFA.</p>
+            <form id="garminLoginForm" class="garmin-login-form" autocomplete="off">
+                <div class="form-group">
+                    <label for="garminEmail">E-mail do Garmin Connect</label>
+                    <input type="email" id="garminEmail" autocomplete="username" required>
+                </div>
+                <div class="form-group" id="garminPasswordGroup">
+                    <label for="garminPassword">Senha do Garmin Connect</label>
+                    <input type="password" id="garminPassword" autocomplete="current-password" required>
+                </div>
+                <div class="form-group" id="garminMfaGroup" hidden>
+                    <label for="garminMfaCode">Código MFA</label>
+                    <input type="text" id="garminMfaCode" inputmode="numeric" autocomplete="one-time-code" maxlength="8">
+                </div>
+                <div id="garminLoginMessage" class="perfil-message"></div>
+                <div class="garmin-login-actions">
+                    <button type="submit" class="btn btn-primary" id="btnGarminLogin">Entrar no Garmin</button>
+                    <button type="button" class="btn btn-secondary" id="btnGarminCancel">Cancelar</button>
+                </div>
+            </form>
         </section>
         </div>
     </main>
@@ -315,6 +346,6 @@
 
     <script src="theme.js?v=202605302205"></script>
     <script src="menu.js?v=202605302205"></script>
-    <script src="perfil.js?v=2026082402"></script>
+    <script src="perfil.js?v=2026082403"></script>
 </body>
 </html>

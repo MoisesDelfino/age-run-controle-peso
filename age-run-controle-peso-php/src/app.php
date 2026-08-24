@@ -2303,10 +2303,70 @@ if ($method === 'GET' && $path === '/api/garmin/status') {
 
     jsonResponse([
         'pilot_enabled' => true,
-        'connected' => false,
+        'connected' => garminPilotIsConnected($userId),
         'phase' => 'environment_validation',
         'diagnostics' => garminPilotDiagnostics(),
     ]);
+}
+
+if ($method === 'POST' && $path === '/api/garmin/connect') {
+    $userId = requireAuth();
+    $usuario = dbFetchOne('SELECT email FROM usuarios WHERE id = :id LIMIT 1', [':id' => $userId]);
+    if (!$usuario || !isGarminPilotEmail((string) ($usuario['email'] ?? ''))) {
+        jsonResponse(['error' => 'Integração Garmin ainda não liberada para este perfil.'], 403);
+    }
+
+    $lastAttempt = (int) ($_SESSION['garmin_last_attempt'] ?? 0);
+    if ($lastAttempt > 0 && time() - $lastAttempt < 30) {
+        jsonResponse(['error' => 'Aguarde 30 segundos antes de tentar novamente.'], 429);
+    }
+    $_SESSION['garmin_last_attempt'] = time();
+    $input = jsonInput();
+
+    try {
+        $result = garminPilotStartLogin(
+            $userId,
+            normalizeEmail((string) ($input['email'] ?? '')),
+            (string) ($input['password'] ?? '')
+        );
+        $statusCode = match ($result['status'] ?? '') {
+            'captcha_required' => 409,
+            'invalid_credentials' => 401,
+            default => 200,
+        };
+        jsonResponse($result, $statusCode);
+    } catch (InvalidArgumentException $e) {
+        jsonResponse(['error' => $e->getMessage()], 400);
+    } catch (Throwable $e) {
+        error_log('[AgeRun Garmin] Falha de conexão para user_id=' . $userId . ': ' . $e->getMessage());
+        jsonResponse(['error' => $e->getMessage()], 502);
+    }
+}
+
+if ($method === 'POST' && $path === '/api/garmin/mfa') {
+    $userId = requireAuth();
+    $usuario = dbFetchOne('SELECT email FROM usuarios WHERE id = :id LIMIT 1', [':id' => $userId]);
+    if (!$usuario || !isGarminPilotEmail((string) ($usuario['email'] ?? ''))) {
+        jsonResponse(['error' => 'Integração Garmin ainda não liberada para este perfil.'], 403);
+    }
+    try {
+        jsonResponse(garminPilotResumeMfa($userId, trim((string) (jsonInput()['code'] ?? ''))));
+    } catch (InvalidArgumentException $e) {
+        jsonResponse(['error' => $e->getMessage()], 400);
+    } catch (Throwable $e) {
+        error_log('[AgeRun Garmin] Falha MFA para user_id=' . $userId . ': ' . $e->getMessage());
+        jsonResponse(['error' => $e->getMessage()], 502);
+    }
+}
+
+if ($method === 'POST' && $path === '/api/garmin/disconnect') {
+    $userId = requireAuth();
+    $usuario = dbFetchOne('SELECT email FROM usuarios WHERE id = :id LIMIT 1', [':id' => $userId]);
+    if (!$usuario || !isGarminPilotEmail((string) ($usuario['email'] ?? ''))) {
+        jsonResponse(['error' => 'Integração Garmin ainda não liberada para este perfil.'], 403);
+    }
+    garminPilotDisconnect($userId);
+    jsonResponse(['success' => true, 'connected' => false]);
 }
 
 if ($method === 'POST' && $path === '/api/auth/alterar-senha-primeiro-acesso') {

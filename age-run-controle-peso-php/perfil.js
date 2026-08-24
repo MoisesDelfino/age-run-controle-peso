@@ -13,6 +13,15 @@ const btnConectarGarmin = document.getElementById('btnConectarGarmin');
 const garminSecurityNote = document.getElementById('garminSecurityNote');
 const garminChecks = document.getElementById('garminChecks');
 const garminStatusText = document.getElementById('garminStatusText');
+const garminLoginForm = document.getElementById('garminLoginForm');
+const garminEmail = document.getElementById('garminEmail');
+const garminPassword = document.getElementById('garminPassword');
+const garminPasswordGroup = document.getElementById('garminPasswordGroup');
+const garminMfaGroup = document.getElementById('garminMfaGroup');
+const garminMfaCode = document.getElementById('garminMfaCode');
+const garminLoginMessage = document.getElementById('garminLoginMessage');
+const btnGarminLogin = document.getElementById('btnGarminLogin');
+const btnGarminCancel = document.getElementById('btnGarminCancel');
 
 const GARMIN_CHECK_LABELS = {
     php: 'PHP compatível',
@@ -34,6 +43,24 @@ function renderGarminDiagnostics(diagnostics) {
         garminChecks.appendChild(item);
     });
     garminChecks.classList.add('show');
+}
+
+function showGarminLoginMessage(text, type) {
+    if (!garminLoginMessage) return;
+    garminLoginMessage.textContent = text || '';
+    garminLoginMessage.className = type ? `perfil-message ${type} show` : 'perfil-message';
+}
+
+function setGarminConnected() {
+    if (garminStatusText) garminStatusText.textContent = 'Conectado';
+    if (garminPassword) garminPassword.value = '';
+    garminLoginForm?.classList.remove('show');
+    if (btnConectarGarmin) {
+        btnConectarGarmin.style.display = '';
+        btnConectarGarmin.disabled = false;
+        btnConectarGarmin.dataset.mode = 'disconnect';
+        btnConectarGarmin.textContent = 'Desconectar Garmin';
+    }
 }
 
 function showMessage(text, type) {
@@ -65,6 +92,21 @@ if (btnConectarGarmin) {
     btnConectarGarmin.addEventListener('click', async () => {
         btnConectarGarmin.disabled = true;
         try {
+            if (btnConectarGarmin.dataset.mode === 'disconnect') {
+                const disconnectResponse = await fetch(`${API_BASE}/garmin/disconnect`, {
+                    method: 'POST',
+                    credentials: 'include',
+                });
+                const disconnectData = await disconnectResponse.json();
+                if (!disconnectResponse.ok || disconnectData?.error) {
+                    throw new Error(disconnectData?.error || 'Não foi possível desconectar o Garmin.');
+                }
+                btnConectarGarmin.dataset.mode = '';
+                btnConectarGarmin.textContent = 'Conectar Garmin';
+                if (garminStatusText) garminStatusText.textContent = 'Não conectado';
+                btnConectarGarmin.disabled = false;
+                return;
+            }
             const response = await fetch(`${API_BASE}/garmin/status`, { credentials: 'include' });
             const data = await response.json();
             if (!response.ok || data?.pilot_enabled !== true) {
@@ -72,9 +114,13 @@ if (btnConectarGarmin) {
             }
             renderGarminDiagnostics(data.diagnostics);
             garminSecurityNote?.classList.add('show');
-            if (data.diagnostics?.ready) {
-                if (garminStatusText) garminStatusText.textContent = 'Ambiente validado';
-                btnConectarGarmin.textContent = 'Diagnóstico concluído';
+            if (data.connected) {
+                setGarminConnected();
+            } else if (data.diagnostics?.ready) {
+                if (garminStatusText) garminStatusText.textContent = 'Pronto para conectar';
+                btnConectarGarmin.style.display = 'none';
+                garminLoginForm?.classList.add('show');
+                garminEmail?.focus();
             } else {
                 if (garminStatusText) garminStatusText.textContent = 'Ambiente incompleto';
                 btnConectarGarmin.textContent = 'Verificar novamente';
@@ -83,6 +129,66 @@ if (btnConectarGarmin) {
         } catch (err) {
             showMessage(err.message || 'Não foi possível iniciar a conexão Garmin.', 'error');
             btnConectarGarmin.disabled = false;
+        }
+    });
+}
+
+if (garminLoginForm) {
+    garminLoginForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        if (btnGarminLogin) btnGarminLogin.disabled = true;
+        showGarminLoginMessage('', '');
+        const isMfa = garminMfaGroup?.hidden === false;
+        try {
+            const response = await fetch(`${API_BASE}/garmin/${isMfa ? 'mfa' : 'connect'}`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(isMfa
+                    ? { code: (garminMfaCode?.value || '').trim() }
+                    : { email: (garminEmail?.value || '').trim(), password: garminPassword?.value || '' }),
+            });
+            const data = await response.json();
+            if (data?.status === 'captcha_required') {
+                throw new Error('A Garmin solicitou CAPTCHA ao servidor. O teste foi interrompido; não tente novamente agora.');
+            }
+            if (data?.status === 'invalid_credentials') {
+                throw new Error('A Garmin não aceitou as credenciais. Confirme o login no site antes de uma nova tentativa.');
+            }
+            if (!response.ok || data?.error) {
+                throw new Error(data?.error || 'Não foi possível conectar ao Garmin.');
+            }
+            if (data?.status === 'mfa_required') {
+                if (garminPassword) garminPassword.value = '';
+                if (garminPasswordGroup) garminPasswordGroup.hidden = true;
+                if (garminMfaGroup) garminMfaGroup.hidden = false;
+                if (btnGarminLogin) btnGarminLogin.textContent = 'Validar código';
+                showGarminLoginMessage('Digite o código MFA enviado pela Garmin.', 'success');
+                garminMfaCode?.focus();
+                return;
+            }
+            if (data?.status === 'connected') {
+                showGarminLoginMessage('Conta Garmin conectada com sucesso.', 'success');
+                setGarminConnected();
+                return;
+            }
+            throw new Error('Resposta inesperada do Garmin Connect.');
+        } catch (err) {
+            showGarminLoginMessage(err.message || 'Erro ao conectar.', 'error');
+        } finally {
+            if (btnGarminLogin) btnGarminLogin.disabled = false;
+        }
+    });
+}
+
+if (btnGarminCancel) {
+    btnGarminCancel.addEventListener('click', () => {
+        if (garminPassword) garminPassword.value = '';
+        garminLoginForm?.classList.remove('show');
+        if (btnConectarGarmin) {
+            btnConectarGarmin.style.display = '';
+            btnConectarGarmin.disabled = false;
+            btnConectarGarmin.textContent = 'Conectar Garmin';
         }
     });
 }
