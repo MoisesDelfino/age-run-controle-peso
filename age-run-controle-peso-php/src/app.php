@@ -3306,6 +3306,60 @@ if ($method === 'PUT' && $path === '/api/performance/rps') {
     ]);
 }
 
+if ($method === 'POST' && $path === '/api/performance/testes') {
+    $usuarioId = requireAuth();
+    $input = jsonInput();
+    $tempoSegundos = parseRaceTimeToSeconds($input['tempo'] ?? null);
+    $distanciaKm = isset($input['distancia_km']) ? (float) $input['distancia_km'] : 0.0;
+    $criadoEm = isset($input['criado_em']) && !empty($input['criado_em']) ? (string) $input['criado_em'] : null;
+
+    if ($tempoSegundos === -1 || $tempoSegundos === null || $tempoSegundos <= 0) {
+        jsonResponse(['error' => 'Tempo do teste inválido'], 400);
+    }
+
+    if ($distanciaKm <= 0 || $distanciaKm > 1000) {
+        jsonResponse(['error' => 'Distância do teste inválida'], 400);
+    }
+
+    if ($criadoEm !== null) {
+        $data = DateTimeImmutable::createFromFormat('!Y-m-d', $criadoEm);
+        if (!$data || $data->format('Y-m-d') !== $criadoEm) {
+            jsonResponse(['error' => 'Data do teste inválida'], 400);
+        }
+    }
+
+    $paceSegundosKm = $tempoSegundos / $distanciaKm;
+
+    try {
+        // O próprio atleta é o autor do registro. Testes não usam o fluxo de aprovação dos RPs.
+        $testeId = insertRpTesteHistoricoCompat(
+            $usuarioId,
+            $usuarioId,
+            $tempoSegundos,
+            $distanciaKm,
+            $paceSegundosKm,
+            $criadoEm
+        );
+    } catch (Throwable $e) {
+        error_log('[AgeRun PHP] Falha ao salvar teste do atleta: ' . $e->getMessage());
+        jsonResponse(['error' => 'Erro ao salvar teste'], 500);
+    }
+
+    jsonResponse([
+        'success' => true,
+        'message' => 'Teste registrado com sucesso',
+        'teste' => [
+            'id' => $testeId,
+            'tempo_segundos' => $tempoSegundos,
+            'tempo_formatado' => formatSecondsToRaceTime($tempoSegundos),
+            'distancia_km' => $distanciaKm,
+            'pace_segundos_km' => $paceSegundosKm,
+            'pace_formatado' => formatPace($paceSegundosKm),
+            'criado_em' => $criadoEm,
+        ],
+    ], 201);
+}
+
 if ($method === 'GET' && $path === '/api/performance/grupos') {
     $usuarioId = requireAuth();
     $rows = dbFetchAll('SELECT id, nome, rp_5k, rp_10k, rp_21k, rp_42k, rp_5k_status, rp_10k_status, rp_21k_status, rp_42k_status FROM usuarios');

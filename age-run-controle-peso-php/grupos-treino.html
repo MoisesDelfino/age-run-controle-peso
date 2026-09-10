@@ -96,6 +96,38 @@
                     </div>
                     <div id="rpMessage" class="message"></div>
                 </form>
+
+                <div class="coach-rp-test-panel athlete-test-panel">
+                    <div class="coach-rp-test-panel-header">
+                        <div>
+                            <strong class="coach-rp-test-title">Testes</strong>
+                            <div class="group-meta">Informe tempo e distância para calcular o pace automaticamente.</div>
+                        </div>
+                    </div>
+                    <form id="athleteTestForm" class="coach-rp-test-controls">
+                        <div class="coach-rp-test-field">
+                            <label class="group-meta" for="athleteTestTime">Tempo</label>
+                            <input id="athleteTestTime" class="coach-rp-test-input" type="text" placeholder="12:00" required>
+                        </div>
+                        <div class="coach-rp-test-field">
+                            <label class="group-meta" for="athleteTestDistance">Distância (km)</label>
+                            <input id="athleteTestDistance" class="coach-rp-test-input" type="number" min="0.01" max="1000" step="0.01" placeholder="2" required>
+                        </div>
+                        <div class="coach-rp-test-field">
+                            <label class="group-meta" for="athleteTestDate">Data do teste</label>
+                            <input id="athleteTestDate" class="coach-rp-test-input" type="date" required>
+                        </div>
+                        <div class="coach-rp-test-preview">
+                            <span class="group-meta">Pace calculado</span>
+                            <strong id="athleteTestPace" class="coach-rp-test-pace">Pace: -</strong>
+                        </div>
+                        <div class="coach-rp-test-buttons">
+                            <button type="submit" class="btn btn-secondary">Salvar teste</button>
+                        </div>
+                    </form>
+                    <div id="athleteTestMessage" class="message"></div>
+                    <div id="athleteLastTest" class="coach-rp-test-history-list"></div>
+                </div>
             </div>
         </section>
 
@@ -161,6 +193,6 @@
 
     <script src="theme.js?v=2026052203"></script>
     <script src="menu.js?v=202605302205"></script>
-    <script src="grupos-treino.js?v=2026061801"></script>
+    <script src="grupos-treino.js?v=2026091001"></script>
 </body>
 </html>

@@ -15,6 +15,13 @@ const groupHigherLevel = document.getElementById('groupHigherLevel');
 const groupLowerLevel = document.getElementById('groupLowerLevel');
 const groupsNotice = document.getElementById('groupsNotice');
 const welcomeSection = document.querySelector('.welcome-section');
+const athleteTestForm = document.getElementById('athleteTestForm');
+const athleteTestTime = document.getElementById('athleteTestTime');
+const athleteTestDistance = document.getElementById('athleteTestDistance');
+const athleteTestDate = document.getElementById('athleteTestDate');
+const athleteTestPace = document.getElementById('athleteTestPace');
+const athleteTestMessage = document.getElementById('athleteTestMessage');
+const athleteLastTest = document.getElementById('athleteLastTest');
 
 const statusBadgeMap = {
     rp_5k_status: document.getElementById('statusRp5k'),
@@ -150,6 +157,97 @@ function fillRpInputs(data) {
     }
 
     renderRpStatuses(data);
+    if (Object.prototype.hasOwnProperty.call(data, 'ultimo_teste')) {
+        renderAthleteLastTest(data.ultimo_teste);
+    }
+}
+
+function renderAthleteLastTest(teste) {
+    if (!athleteLastTest) return;
+    if (!teste) {
+        athleteLastTest.innerHTML = '<div class="group-meta coach-rp-test-empty">Nenhum teste registrado ainda.</div>';
+        return;
+    }
+
+    athleteLastTest.innerHTML = `
+        <article class="coach-rp-test-history-item">
+            <div class="coach-rp-test-history-main">
+                <div class="coach-rp-test-chip-row">
+                    <strong class="coach-rp-test-chip">${teste.tempo_formatado || '-'}</strong>
+                    <span class="coach-rp-test-chip">${formatDistanceKm(teste.distancia_km)}</span>
+                    <span class="coach-rp-test-chip coach-rp-test-chip-accent">${teste.pace_formatado || '-'}</span>
+                </div>
+                <div class="coach-rp-test-meta-row"><span>${teste.criado_em_formatado || '-'}</span></div>
+            </div>
+        </article>`;
+}
+
+function formatDistanceKm(value) {
+    const distance = Number(value);
+    if (!Number.isFinite(distance) || distance <= 0) return '-';
+    return `${distance.toLocaleString('pt-BR', { maximumFractionDigits: 2 })} km`;
+}
+
+function updateAthleteTestPace() {
+    if (!athleteTestPace) return;
+    const seconds = parseRpToSeconds(athleteTestTime?.value?.trim());
+    const distance = Number(String(athleteTestDistance?.value || '').replace(',', '.'));
+    athleteTestPace.textContent = seconds && Number.isFinite(distance) && distance > 0
+        ? `Pace: ${secondsToPaceDisplay(seconds, distance)}`
+        : 'Pace: -';
+}
+
+function showAthleteTestMessage(text, type = 'info') {
+    if (!athleteTestMessage) return;
+    athleteTestMessage.textContent = text;
+    athleteTestMessage.className = `message ${type}`;
+    athleteTestMessage.style.display = 'block';
+}
+
+function getLocalIsoDate() {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+async function saveAthleteTest(event) {
+    event.preventDefault();
+    const time = athleteTestTime?.value?.trim() || '';
+    const distance = Number(String(athleteTestDistance?.value || '').replace(',', '.'));
+    const testDate = athleteTestDate?.value || '';
+    const seconds = parseRpToSeconds(time);
+
+    if (!seconds || !Number.isFinite(distance) || distance <= 0 || !testDate) {
+        showAthleteTestMessage('Preencha tempo, distância e data com valores válidos.', 'error');
+        return;
+    }
+
+    const submitButton = athleteTestForm?.querySelector('button[type="submit"]');
+    if (submitButton) submitButton.disabled = true;
+
+    try {
+        const response = await fetch(`${API_BASE}/performance/testes`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ tempo: time, distancia_km: distance, criado_em: testDate })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Erro ao salvar teste');
+
+        showAthleteTestMessage('✅ Teste salvo com sucesso!', 'success');
+        athleteTestForm.reset();
+        athleteTestDate.value = getLocalIsoDate();
+        updateAthleteTestPace();
+        await Promise.all([carregarRps(), carregarGruposTreino()]);
+    } catch (error) {
+        console.error('Erro ao salvar teste:', error);
+        showAthleteTestMessage(`❌ ${error.message}`, 'error');
+    } finally {
+        if (submitButton) submitButton.disabled = false;
+    }
 }
 
 async function carregarRps() {
@@ -401,6 +499,13 @@ if (btnLogout) {
 if (rpForm) {
     rpForm.addEventListener('submit', salvarRps);
 }
+
+if (athleteTestDate && !athleteTestDate.value) {
+    athleteTestDate.value = getLocalIsoDate();
+}
+athleteTestTime?.addEventListener('input', updateAthleteTestPace);
+athleteTestDistance?.addEventListener('input', updateAthleteTestPace);
+athleteTestForm?.addEventListener('submit', saveAthleteTest);
 
 document.getElementById('rpConfirmOk')?.addEventListener('click', executarSalvarRps);
 
