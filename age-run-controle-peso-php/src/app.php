@@ -893,8 +893,11 @@ function insertRpTesteHistoricoCompat(
     int $tempoSegundos,
     float $distanciaKm,
     float $paceSegundosKm,
-    ?string $criadoEm = null
+    ?string $criadoEm = null,
+    string $origem = 'treinador'
 ): ?int {
+    ensureRpTestesTable();
+    ensureRpTesteOriginColumns();
     $baseValues = [
         'usuario_id' => $alvoUsuarioId,
         'treinador_id' => $treinadorId,
@@ -902,6 +905,8 @@ function insertRpTesteHistoricoCompat(
         'tempo_segundos' => $tempoSegundos,
         'distancia_km' => $distanciaKm,
         'pace_segundos_km' => $paceSegundosKm,
+        'origem' => $origem,
+        'cadastrado_em' => date('Y-m-d H:i:s'),
     ];
 
     if ($criadoEm !== null) {
@@ -909,6 +914,7 @@ function insertRpTesteHistoricoCompat(
     }
 
     $candidates = [
+        ['usuario_id', 'treinador_id', 'prova', 'tempo_segundos', 'distancia_km', 'pace_segundos_km', 'origem', 'cadastrado_em'],
         ['usuario_id', 'treinador_id', 'prova', 'tempo_segundos', 'distancia_km', 'pace_segundos_km'],
         ['usuario_id', 'treinador_id', 'tempo_segundos', 'distancia_km', 'pace_segundos_km'],
         ['usuario_id', 'treinador_id', 'prova', 'tempo_segundos', 'distancia_km'],
@@ -921,6 +927,7 @@ function insertRpTesteHistoricoCompat(
     if ($criadoEm !== null) {
         array_unshift(
             $candidates,
+            ['usuario_id', 'treinador_id', 'prova', 'tempo_segundos', 'distancia_km', 'pace_segundos_km', 'criado_em', 'origem', 'cadastrado_em'],
             ['usuario_id', 'treinador_id', 'prova', 'tempo_segundos', 'distancia_km', 'pace_segundos_km', 'criado_em'],
             ['usuario_id', 'treinador_id', 'tempo_segundos', 'distancia_km', 'pace_segundos_km', 'criado_em']
         );
@@ -985,6 +992,8 @@ function insertRpTesteHistoricoCompat(
         'distancia_km' => $distanciaKm,
         'pace_segundos_km' => $paceSegundosKm,
         'criado_em' => $criadoEm ?? date('Y-m-d H:i:s'),
+        'origem' => $origem,
+        'cadastrado_em' => $baseValues['cadastrado_em'],
         'treinador_nome' => null,
         'source' => 'file-fallback',
     ]);
@@ -1374,6 +1383,33 @@ function ensureRpTestesRevisoesTable(): void
     dbExecute('CREATE TABLE IF NOT EXISTS rp_testes_revisoes (teste_id INT NOT NULL, usuario_id INT NOT NULL, treinador_id INT NOT NULL, revisado_em DATETIME DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (teste_id, usuario_id))');
 }
 
+function ensureRpTesteOriginColumns(): void
+{
+    $driver = strtolower((string) (appConfig()['db']['driver'] ?? 'mysql'));
+    try {
+        if (!safeDbColumnExists('rp_testes_historico', 'origem')) {
+            if ($driver === 'pgsql' || $driver === 'postgres' || $driver === 'postgresql') {
+                dbExecute("ALTER TABLE rp_testes_historico ADD COLUMN IF NOT EXISTS origem VARCHAR(20) DEFAULT 'treinador'");
+            } elseif ($driver === 'sqlite') {
+                dbExecute("ALTER TABLE rp_testes_historico ADD COLUMN origem TEXT DEFAULT 'treinador'");
+            } else {
+                dbExecute("ALTER TABLE rp_testes_historico ADD COLUMN origem VARCHAR(20) DEFAULT 'treinador'");
+            }
+        }
+        if (!safeDbColumnExists('rp_testes_historico', 'cadastrado_em')) {
+            if ($driver === 'pgsql' || $driver === 'postgres' || $driver === 'postgresql') {
+                dbExecute('ALTER TABLE rp_testes_historico ADD COLUMN IF NOT EXISTS cadastrado_em TIMESTAMP NULL');
+            } elseif ($driver === 'sqlite') {
+                dbExecute('ALTER TABLE rp_testes_historico ADD COLUMN cadastrado_em DATETIME NULL');
+            } else {
+                dbExecute('ALTER TABLE rp_testes_historico ADD COLUMN cadastrado_em DATETIME NULL');
+            }
+        }
+    } catch (Throwable $e) {
+        error_log('[AgeRun PHP] Falha ao preparar origem dos testes: ' . $e->getMessage());
+    }
+}
+
 function markRpTesteReviewed(int $testeId, int $usuarioId, int $treinadorId): void
 {
     ensureRpTestesRevisoesTable();
@@ -1501,7 +1537,10 @@ function buildRpTestesHistoricoMap(array $usuarioIds): array
 
     $hasProva = safeDbColumnExists('rp_testes_historico', 'prova');
     $hasDistancia = safeDbColumnExists('rp_testes_historico', 'distancia_km');
+    ensureRpTesteOriginColumns();
     $hasPace = safeDbColumnExists('rp_testes_historico', 'pace_segundos_km');
+    $hasOrigem = safeDbColumnExists('rp_testes_historico', 'origem');
+    $hasCadastradoEm = safeDbColumnExists('rp_testes_historico', 'cadastrado_em');
 
     try {
         $rows = dbFetchAll(
@@ -1510,6 +1549,8 @@ function buildRpTestesHistoricoMap(array $usuarioIds): array
                 . 'h.tempo_segundos, '
                 . ($hasDistancia ? 'h.distancia_km' : 'NULL AS distancia_km') . ', '
                 . ($hasPace ? 'h.pace_segundos_km' : 'NULL AS pace_segundos_km') . ', '
+                . ($hasOrigem ? 'h.origem' : "'treinador' AS origem") . ', '
+                . ($hasCadastradoEm ? 'h.cadastrado_em' : 'NULL AS cadastrado_em') . ', '
                 . 'h.criado_em, '
                 . 't.nome AS treinador_nome '
             . 'FROM rp_testes_historico h '
@@ -1584,10 +1625,12 @@ function buildRpTestesHistoricoMap(array $usuarioIds): array
 
         $historico[$usuarioId] ??= [];
         $criadoEm = $row['criado_em'] ?? null;
-        $enviadoPorAtleta = (int) ($row['treinador_id'] ?? 0) === $usuarioId;
-        // O cadastro pelo atleta foi disponibilizado em 10/09/2026; a data informada é a data
-        // de realização do teste e pode ser anterior, portanto a autoria identifica a fila.
-        $requerRevisao = $enviadoPorAtleta;
+        $origem = strtolower((string) ($row['origem'] ?? 'treinador'));
+        $cadastradoEm = $row['cadastrado_em'] ?? null;
+        $enviadoPorAtleta = $origem === 'atleta';
+        $requerRevisao = $enviadoPorAtleta
+            && $cadastradoEm !== null
+            && substr((string) $cadastradoEm, 0, 10) >= '2026-09-10';
         $revisaoKey = $usuarioId . ':' . $testeId;
 
         $historico[$usuarioId][] = [
@@ -1601,6 +1644,8 @@ function buildRpTestesHistoricoMap(array $usuarioIds): array
             'criado_em' => $criadoEm,
             'treinador_id' => (int) ($row['treinador_id'] ?? 0),
             'treinador_nome' => (string) ($row['treinador_nome'] ?? ''),
+            'origem' => $origem,
+            'cadastrado_em' => $cadastradoEm,
             'enviado_por_atleta' => $enviadoPorAtleta,
             'requer_revisao' => $requerRevisao,
             'revisado_em' => $revisoes[$revisaoKey] ?? null,
@@ -3388,7 +3433,8 @@ if ($method === 'POST' && $path === '/api/performance/testes') {
             $tempoSegundos,
             $distanciaKm,
             $paceSegundosKm,
-            $criadoEm
+            $criadoEm,
+            'atleta'
         );
     } catch (Throwable $e) {
         error_log('[AgeRun PHP] Falha ao salvar teste do atleta: ' . $e->getMessage());

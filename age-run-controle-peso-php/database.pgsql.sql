@@ -34,7 +34,9 @@ CREATE TABLE IF NOT EXISTS rp_testes_historico (
   tempo_segundos INTEGER NOT NULL,
   distancia_km DOUBLE PRECISION NOT NULL,
   pace_segundos_km DOUBLE PRECISION NOT NULL,
-  criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  origem VARCHAR(20) DEFAULT 'treinador',
+  cadastrado_em TIMESTAMP NULL
 );
 
 CREATE TABLE IF NOT EXISTS rp_testes_revisoes (

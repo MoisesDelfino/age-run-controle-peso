@@ -237,7 +237,8 @@ function renderCoachTesteHistorico(usuario) {
 function getPendingAthleteTests(usuarios) {
     return (usuarios || []).flatMap((usuario) => (usuario.rp_testes_historico || [])
         .filter((teste) => teste.requer_revisao && !teste.revisado_em)
-        .map((teste) => ({ usuario, teste })));
+        .map((teste) => ({ usuario, teste })))
+        .sort((a, b) => String(b.teste.cadastrado_em || '').localeCompare(String(a.teste.cadastrado_em || '')));
 }
 
 function renderPendingAthleteTests(usuarios) {
@@ -262,7 +263,10 @@ function renderPendingAthleteTests(usuarios) {
                     <span class="coach-rp-test-chip">${formatDistanceKm(teste.distancia_km)}</span>
                     <span class="coach-rp-test-chip coach-rp-test-chip-accent">${teste.pace_formatado || formatPace(teste.pace_segundos_km)}</span>
                 </div>
-                <div class="coach-rp-test-meta-row"><span>${formatCoachHistoryDate(teste.criado_em)}</span></div>
+                <div class="coach-rp-test-meta-row">
+                    <span>Cadastrado em: ${formatCoachHistoryDate(teste.cadastrado_em)}</span>
+                    <span>Data do teste: ${formatCoachHistoryDate(teste.criado_em)}</span>
+                </div>
             </div>
             <div class="coach-rp-test-history-actions">
                 <button class="btn btn-secondary pending-test-validate" data-user-id="${usuario.usuario_id}" data-test-id="${teste.id}">Validar</button>

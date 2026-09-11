@@ -35,6 +35,8 @@ CREATE TABLE IF NOT EXISTS rp_testes_historico (
     distancia_km DECIMAL(10,4) NOT NULL,
     pace_segundos_km DECIMAL(10,4) NOT NULL,
     criado_em DATETIME DEFAULT CURRENT_TIMESTAMP,
+    origem VARCHAR(20) DEFAULT 'treinador',
+    cadastrado_em DATETIME NULL,
     CONSTRAINT fk_rp_testes_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
     CONSTRAINT fk_rp_testes_treinador FOREIGN KEY (treinador_id) REFERENCES usuarios(id) ON DELETE CASCADE
 );
