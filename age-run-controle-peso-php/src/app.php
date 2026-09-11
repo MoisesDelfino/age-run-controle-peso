@@ -913,6 +913,26 @@ function insertRpTesteHistoricoCompat(
         $baseValues['criado_em'] = $criadoEm;
     }
 
+    $auditColumns = [];
+    $auditNow = date('Y-m-d H:i:s');
+    foreach (['aud_dh_criacao' => $auditNow, 'aud_criado_por' => $treinadorId] as $column => $value) {
+        if (safeDbColumnExists('rp_testes_historico', $column)) {
+            $baseValues[$column] = $value;
+            $auditColumns[] = $column;
+        }
+    }
+    foreach (['aud_dh_alteracao', 'aud_dh_altecao'] as $column) {
+        if (safeDbColumnExists('rp_testes_historico', $column)) {
+            $baseValues[$column] = $auditNow;
+            $auditColumns[] = $column;
+            break;
+        }
+    }
+    if (safeDbColumnExists('rp_testes_historico', 'aud_alterado_por')) {
+        $baseValues['aud_alterado_por'] = $treinadorId;
+        $auditColumns[] = 'aud_alterado_por';
+    }
+
     $candidates = [
         ['usuario_id', 'treinador_id', 'prova', 'tempo_segundos', 'distancia_km', 'pace_segundos_km', 'origem', 'cadastrado_em'],
         ['usuario_id', 'treinador_id', 'prova', 'tempo_segundos', 'distancia_km', 'pace_segundos_km'],
@@ -931,6 +951,20 @@ function insertRpTesteHistoricoCompat(
             ['usuario_id', 'treinador_id', 'prova', 'tempo_segundos', 'distancia_km', 'pace_segundos_km', 'criado_em'],
             ['usuario_id', 'treinador_id', 'tempo_segundos', 'distancia_km', 'pace_segundos_km', 'criado_em']
         );
+    }
+    if ($auditColumns) {
+        $columns = ['usuario_id', 'treinador_id', 'prova', 'tempo_segundos', 'distancia_km', 'pace_segundos_km'];
+        if ($criadoEm !== null) {
+            $columns[] = 'criado_em';
+        }
+        if (safeDbColumnExists('rp_testes_historico', 'origem')) {
+            $columns[] = 'origem';
+        }
+        if (safeDbColumnExists('rp_testes_historico', 'cadastrado_em')) {
+            $columns[] = 'cadastrado_em';
+        }
+        array_push($columns, ...$auditColumns);
+        array_unshift($candidates, $columns);
     }
 
     $attemptErrors = [];
@@ -1541,6 +1575,8 @@ function buildRpTestesHistoricoMap(array $usuarioIds): array
     $hasPace = safeDbColumnExists('rp_testes_historico', 'pace_segundos_km');
     $hasOrigem = safeDbColumnExists('rp_testes_historico', 'origem');
     $hasCadastradoEm = safeDbColumnExists('rp_testes_historico', 'cadastrado_em');
+    $hasAudDhCriacao = safeDbColumnExists('rp_testes_historico', 'aud_dh_criacao');
+    $hasAudCriadoPor = safeDbColumnExists('rp_testes_historico', 'aud_criado_por');
 
     try {
         $rows = dbFetchAll(
@@ -1551,6 +1587,8 @@ function buildRpTestesHistoricoMap(array $usuarioIds): array
                 . ($hasPace ? 'h.pace_segundos_km' : 'NULL AS pace_segundos_km') . ', '
                 . ($hasOrigem ? 'h.origem' : "'treinador' AS origem") . ', '
                 . ($hasCadastradoEm ? 'h.cadastrado_em' : 'NULL AS cadastrado_em') . ', '
+                . ($hasAudDhCriacao ? 'h.aud_dh_criacao' : 'NULL AS aud_dh_criacao') . ', '
+                . ($hasAudCriadoPor ? 'h.aud_criado_por' : 'NULL AS aud_criado_por') . ', '
                 . 'h.criado_em, '
                 . 't.nome AS treinador_nome '
             . 'FROM rp_testes_historico h '
@@ -1626,8 +1664,13 @@ function buildRpTestesHistoricoMap(array $usuarioIds): array
         $historico[$usuarioId] ??= [];
         $criadoEm = $row['criado_em'] ?? null;
         $origem = strtolower((string) ($row['origem'] ?? 'treinador'));
-        $cadastradoEm = $row['cadastrado_em'] ?? null;
-        $enviadoPorAtleta = $origem === 'atleta';
+        $audDhCriacao = $row['aud_dh_criacao'] ?? null;
+        $audCriadoPor = $row['aud_criado_por'] ?? null;
+        $temAuditoriaCriacao = $hasAudDhCriacao && $hasAudCriadoPor && $audDhCriacao !== null;
+        $cadastradoEm = $temAuditoriaCriacao ? $audDhCriacao : ($row['cadastrado_em'] ?? null);
+        $enviadoPorAtleta = $temAuditoriaCriacao
+            ? (string) $audCriadoPor === (string) $usuarioId
+            : $origem === 'atleta';
         $requerRevisao = $enviadoPorAtleta
             && $cadastradoEm !== null
             && substr((string) $cadastradoEm, 0, 10) >= '2026-09-10';
@@ -1646,6 +1689,8 @@ function buildRpTestesHistoricoMap(array $usuarioIds): array
             'treinador_nome' => (string) ($row['treinador_nome'] ?? ''),
             'origem' => $origem,
             'cadastrado_em' => $cadastradoEm,
+            'aud_dh_criacao' => $audDhCriacao,
+            'aud_criado_por' => $audCriadoPor,
             'enviado_por_atleta' => $enviadoPorAtleta,
             'requer_revisao' => $requerRevisao,
             'revisado_em' => $revisoes[$revisaoKey] ?? null,
@@ -4040,7 +4085,7 @@ if ($method === 'POST' && preg_match('#^/api/treinador/usuarios/(\d+)/testes$#',
 }
 
 if ($method === 'PUT' && preg_match('#^/api/treinador/usuarios/(\d+)/testes/(\d+)$#', $path, $matches) === 1) {
-    requireTrainerAuth();
+    $treinadorId = requireTrainerAuth();
 
     $alvoUsuarioId = (int) $matches[1];
     $testeId = (int) $matches[2];
@@ -4146,6 +4191,18 @@ if ($method === 'PUT' && preg_match('#^/api/treinador/usuarios/(\d+)/testes/(\d+
         if ($criadoEm !== null && safeDbColumnExists('rp_testes_historico', 'criado_em')) {
             $setParts[] = 'criado_em = :criado_em';
             $params[':criado_em'] = $criadoEm;
+        }
+
+        foreach (['aud_dh_alteracao', 'aud_dh_altecao'] as $auditDateColumn) {
+            if (safeDbColumnExists('rp_testes_historico', $auditDateColumn)) {
+                $setParts[] = $auditDateColumn . ' = :aud_dh_alteracao';
+                $params[':aud_dh_alteracao'] = date('Y-m-d H:i:s');
+                break;
+            }
+        }
+        if (safeDbColumnExists('rp_testes_historico', 'aud_alterado_por')) {
+            $setParts[] = 'aud_alterado_por = :aud_alterado_por';
+            $params[':aud_alterado_por'] = $treinadorId;
         }
 
         try {
