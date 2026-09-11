@@ -1334,7 +1334,7 @@ function closeConfirmModal(result = false) {
     }
 }
 
-function openConfirmModal({ title, message, warning }) {
+function openConfirmModal({ title, message, warning, confirmLabel = 'Excluir', danger = true, info = 'Esta ação não pode ser desfeita.' }) {
     let modal = document.getElementById('coachConfirmModal');
     if (!modal) {
         modal = document.createElement('div');
@@ -1345,7 +1345,7 @@ function openConfirmModal({ title, message, warning }) {
                 <h3 id="coachConfirmTitle"></h3>
                 <p id="coachConfirmMessage" class="modal-text"></p>
                 <p id="coachConfirmWarning" class="modal-warning"></p>
-                <p class="modal-info">Esta ação não pode ser desfeita.</p>
+                <p id="coachConfirmInfo" class="modal-info"></p>
                 <div class="modal-actions">
                     <button type="button" id="coachConfirmCancel" class="btn btn-secondary">Cancelar</button>
                     <button type="button" id="coachConfirmOk" class="btn btn-danger">Excluir</button>
@@ -1376,6 +1376,10 @@ function openConfirmModal({ title, message, warning }) {
     modal.querySelector('#coachConfirmTitle').textContent = title || 'Confirmar exclusão';
     modal.querySelector('#coachConfirmMessage').textContent = message || 'Tem certeza que deseja excluir este item?';
     modal.querySelector('#coachConfirmWarning').textContent = warning || '';
+    modal.querySelector('#coachConfirmInfo').textContent = info || '';
+    const confirmButton = modal.querySelector('#coachConfirmOk');
+    confirmButton.textContent = confirmLabel;
+    confirmButton.className = `btn ${danger ? 'btn-danger' : 'btn-primary'}`;
     modal.style.display = 'flex';
 
     return new Promise((resolve) => {
@@ -1484,6 +1488,16 @@ if (coachUsersContainer) {
             }
 
             const editing = editingTests[usuarioId] || null;
+            const pace = calcularPaceTeste(parseRaceTimeToSeconds(tempo), distanciaKm);
+            const confirmed = await openConfirmModal({
+                title: editing?.id ? 'Confirmar edição do teste' : 'Confirmar cadastro do teste',
+                message: `${tempo} em ${formatDistanceKm(distanciaKm)} (${pace ? formatPace(pace) : '-'}) — ${dataTeste ? formatCoachHistoryDate(dataTeste) : 'data atual'}.`,
+                warning: editing?.id ? 'O teste será atualizado com estes dados.' : 'Um novo teste será adicionado ao histórico.',
+                confirmLabel: editing?.id ? 'Salvar edição' : 'Salvar teste',
+                danger: false,
+                info: 'Confira os dados antes de confirmar.'
+            });
+            if (!confirmed) return;
             if (editing?.id) {
                    atualizarTesteTreinador(usuarioId, editing.id, tempo, distanciaKm, dataTeste);
             } else {
@@ -1550,6 +1564,15 @@ pendingTestsList?.addEventListener('click', async (event) => {
     const validateButton = event.target.closest('.pending-test-validate');
     if (validateButton) {
         try {
+            const confirmed = await openConfirmModal({
+                title: 'Confirmar validação do teste',
+                message: 'Confirma que os dados deste teste estão corretos?',
+                warning: 'O teste será removido da fila de revisão e continuará disponível nas métricas.',
+                confirmLabel: 'Validar teste',
+                danger: false,
+                info: 'Você ainda poderá editar o teste pelo histórico do atleta.'
+            });
+            if (!confirmed) return;
             validateButton.disabled = true;
             await validarTesteTreinador(validateButton.dataset.userId, validateButton.dataset.testId);
         } catch (error) {

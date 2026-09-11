@@ -22,6 +22,7 @@ const athleteTestDate = document.getElementById('athleteTestDate');
 const athleteTestPace = document.getElementById('athleteTestPace');
 const athleteTestMessage = document.getElementById('athleteTestMessage');
 const athleteLastTest = document.getElementById('athleteLastTest');
+let athleteTestConfirmResolver = null;
 
 const statusBadgeMap = {
     rp_5k_status: document.getElementById('statusRp5k'),
@@ -212,6 +213,59 @@ function getLocalIsoDate() {
     return `${year}-${month}-${day}`;
 }
 
+function closeAthleteTestConfirm(result = false) {
+    const modal = document.getElementById('athleteTestConfirmModal');
+    if (modal) modal.style.display = 'none';
+    if (athleteTestConfirmResolver) {
+        const resolve = athleteTestConfirmResolver;
+        athleteTestConfirmResolver = null;
+        resolve(result);
+    }
+}
+
+function openAthleteTestConfirm({ time, distance, testDate, pace }) {
+    let modal = document.getElementById('athleteTestConfirmModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'athleteTestConfirmModal';
+        modal.className = 'rp-confirm-modal';
+        modal.setAttribute('role', 'dialog');
+        modal.setAttribute('aria-modal', 'true');
+        modal.innerHTML = `
+            <div class="rp-confirm-backdrop"></div>
+            <div class="rp-confirm-box">
+                <h3>Confirmar cadastro do teste</h3>
+                <p class="rp-confirm-subtitle">Confira os dados antes de salvar:</p>
+                <table class="rp-confirm-table">
+                    <tbody>
+                        <tr><th>Tempo</th><td data-confirm-field="time"></td></tr>
+                        <tr><th>Distância</th><td data-confirm-field="distance"></td></tr>
+                        <tr><th>Data do teste</th><td data-confirm-field="date"></td></tr>
+                        <tr><th>Pace</th><td data-confirm-field="pace"></td></tr>
+                    </tbody>
+                </table>
+                <div class="rp-confirm-actions">
+                    <button type="button" class="btn btn-secondary" data-confirm-action="cancel">Cancelar</button>
+                    <button type="button" class="btn btn-primary" data-confirm-action="ok">Salvar teste</button>
+                </div>
+            </div>`;
+        document.body.appendChild(modal);
+        modal.querySelector('.rp-confirm-backdrop').addEventListener('click', () => closeAthleteTestConfirm(false));
+        modal.querySelector('[data-confirm-action="cancel"]').addEventListener('click', () => closeAthleteTestConfirm(false));
+        modal.querySelector('[data-confirm-action="ok"]').addEventListener('click', () => closeAthleteTestConfirm(true));
+    }
+
+    modal.querySelector('[data-confirm-field="time"]').textContent = time;
+    modal.querySelector('[data-confirm-field="distance"]').textContent = formatDistanceKm(distance);
+    modal.querySelector('[data-confirm-field="date"]').textContent = testDate.split('-').reverse().join('/');
+    modal.querySelector('[data-confirm-field="pace"]').textContent = secondsToPaceDisplay(pace, 1);
+    modal.style.display = 'flex';
+
+    return new Promise((resolve) => {
+        athleteTestConfirmResolver = resolve;
+    });
+}
+
 async function saveAthleteTest(event) {
     event.preventDefault();
     const time = athleteTestTime?.value?.trim() || '';
@@ -223,6 +277,14 @@ async function saveAthleteTest(event) {
         showAthleteTestMessage('Preencha tempo, distância e data com valores válidos.', 'error');
         return;
     }
+
+    const confirmed = await openAthleteTestConfirm({
+        time,
+        distance,
+        testDate,
+        pace: seconds / distance
+    });
+    if (!confirmed) return;
 
     const submitButton = athleteTestForm?.querySelector('button[type="submit"]');
     if (submitButton) submitButton.disabled = true;
