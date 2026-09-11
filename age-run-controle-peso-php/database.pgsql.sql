@@ -37,6 +37,14 @@ CREATE TABLE IF NOT EXISTS rp_testes_historico (
   criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS rp_testes_revisoes (
+  teste_id BIGINT NOT NULL,
+  usuario_id INTEGER NOT NULL,
+  treinador_id INTEGER NOT NULL,
+  revisado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (teste_id, usuario_id)
+);
+
 CREATE INDEX IF NOT EXISTS idx_pesagens_usuario_id ON pesagens(usuario_id);
 CREATE INDEX IF NOT EXISTS idx_pesagens_data ON pesagens(data_pesagem);
 CREATE INDEX IF NOT EXISTS idx_pesagens_excluido ON pesagens(excluido);

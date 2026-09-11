@@ -1357,6 +1357,33 @@ function ensureRpTestesTable(): void
     }
 }
 
+function ensureRpTestesRevisoesTable(): void
+{
+    $driver = strtolower((string) (appConfig()['db']['driver'] ?? 'mysql'));
+
+    if ($driver === 'sqlite') {
+        dbExecute('CREATE TABLE IF NOT EXISTS rp_testes_revisoes (teste_id INTEGER NOT NULL, usuario_id INTEGER NOT NULL, treinador_id INTEGER NOT NULL, revisado_em DATETIME DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (teste_id, usuario_id))');
+        return;
+    }
+
+    if ($driver === 'pgsql' || $driver === 'postgres' || $driver === 'postgresql') {
+        dbExecute('CREATE TABLE IF NOT EXISTS rp_testes_revisoes (teste_id BIGINT NOT NULL, usuario_id INTEGER NOT NULL, treinador_id INTEGER NOT NULL, revisado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (teste_id, usuario_id))');
+        return;
+    }
+
+    dbExecute('CREATE TABLE IF NOT EXISTS rp_testes_revisoes (teste_id INT NOT NULL, usuario_id INT NOT NULL, treinador_id INT NOT NULL, revisado_em DATETIME DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (teste_id, usuario_id))');
+}
+
+function markRpTesteReviewed(int $testeId, int $usuarioId, int $treinadorId): void
+{
+    ensureRpTestesRevisoesTable();
+    dbExecute('DELETE FROM rp_testes_revisoes WHERE teste_id = :teste_id AND usuario_id = :usuario_id', [':teste_id' => $testeId, ':usuario_id' => $usuarioId]);
+    dbExecute(
+        'INSERT INTO rp_testes_revisoes (teste_id, usuario_id, treinador_id, revisado_em) VALUES (:teste_id, :usuario_id, :treinador_id, :revisado_em)',
+        [':teste_id' => $testeId, ':usuario_id' => $usuarioId, ':treinador_id' => $treinadorId, ':revisado_em' => date('Y-m-d H:i:s')]
+    );
+}
+
 function ensureDbHealthChecksTable(): void
 {
     try {
@@ -1504,6 +1531,19 @@ function buildRpTestesHistoricoMap(array $usuarioIds): array
         $rows = array_merge($rows, $fallbackRows);
     }
 
+    $revisoes = [];
+    try {
+        ensureRpTestesRevisoesTable();
+        foreach (dbFetchAll(
+            'SELECT teste_id, usuario_id, revisado_em FROM rp_testes_revisoes WHERE usuario_id IN (' . implode(', ', $placeholders) . ')',
+            $params
+        ) as $revisao) {
+            $revisoes[(int) ($revisao['usuario_id'] ?? 0) . ':' . (int) ($revisao['teste_id'] ?? 0)] = $revisao['revisado_em'] ?? null;
+        }
+    } catch (Throwable $e) {
+        error_log('[AgeRun PHP] Falha ao carregar revisões de testes: ' . $e->getMessage());
+    }
+
     $historico = [];
     foreach ($rows as $row) {
         $usuarioId = (int) ($row['usuario_id'] ?? 0);
@@ -1543,6 +1583,13 @@ function buildRpTestesHistoricoMap(array $usuarioIds): array
         }
 
         $historico[$usuarioId] ??= [];
+        $criadoEm = $row['criado_em'] ?? null;
+        $enviadoPorAtleta = (int) ($row['treinador_id'] ?? 0) === $usuarioId;
+        // O cadastro pelo atleta foi disponibilizado em 10/09/2026; a data informada é a data
+        // de realização do teste e pode ser anterior, portanto a autoria identifica a fila.
+        $requerRevisao = $enviadoPorAtleta;
+        $revisaoKey = $usuarioId . ':' . $testeId;
+
         $historico[$usuarioId][] = [
             'id' => $testeId,
             'prova' => $prova !== '' ? $prova : null,
@@ -1551,9 +1598,12 @@ function buildRpTestesHistoricoMap(array $usuarioIds): array
             'distancia_km' => $distancia,
             'pace_segundos_km' => $paceSegundosKm,
             'pace_formatado' => formatPace($paceSegundosKm),
-            'criado_em' => $row['criado_em'] ?? null,
+            'criado_em' => $criadoEm,
             'treinador_id' => (int) ($row['treinador_id'] ?? 0),
             'treinador_nome' => (string) ($row['treinador_nome'] ?? ''),
+            'enviado_por_atleta' => $enviadoPorAtleta,
+            'requer_revisao' => $requerRevisao,
+            'revisado_em' => $revisoes[$revisaoKey] ?? null,
         ];
     }
 
@@ -3869,6 +3919,31 @@ if ($method === 'PUT' && preg_match('#^/api/treinador/rps/(\d+)/aprovacao$#', $p
         'success' => true,
         'message' => sprintf('Status %s atualizado para %s', $prova, $status),
     ]);
+}
+
+if ($method === 'PUT' && preg_match('#^/api/treinador/usuarios/(\d+)/testes/(\d+)/revisao$#', $path, $matches) === 1) {
+    $treinadorId = requireTrainerAuth();
+    $alvoUsuarioId = (int) $matches[1];
+    $testeId = (int) $matches[2];
+    $historicoMap = buildRpTestesHistoricoMap([$alvoUsuarioId]);
+    $teste = null;
+
+    foreach ($historicoMap[$alvoUsuarioId] ?? [] as $item) {
+        if ((int) ($item['id'] ?? 0) === $testeId) {
+            $teste = $item;
+            break;
+        }
+    }
+
+    if (!$teste) {
+        jsonResponse(['error' => 'Teste não encontrado para este usuário'], 404);
+    }
+    if (empty($teste['requer_revisao'])) {
+        jsonResponse(['error' => 'Este teste não requer revisão'], 400);
+    }
+
+    markRpTesteReviewed($testeId, $alvoUsuarioId, $treinadorId);
+    jsonResponse(['success' => true, 'message' => 'Teste validado com sucesso']);
 }
 
 if ($method === 'POST' && preg_match('#^/api/treinador/usuarios/(\d+)/testes$#', $path, $matches) === 1) {

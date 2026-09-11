@@ -39,6 +39,14 @@ CREATE TABLE IF NOT EXISTS rp_testes_historico (
     CONSTRAINT fk_rp_testes_treinador FOREIGN KEY (treinador_id) REFERENCES usuarios(id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS rp_testes_revisoes (
+    teste_id INT NOT NULL,
+    usuario_id INT NOT NULL,
+    treinador_id INT NOT NULL,
+    revisado_em DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (teste_id, usuario_id)
+);
+
 CREATE INDEX idx_pesagens_usuario_id ON pesagens(usuario_id);
 CREATE INDEX idx_pesagens_data ON pesagens(data_pesagem);
 CREATE INDEX idx_pesagens_excluido ON pesagens(excluido);

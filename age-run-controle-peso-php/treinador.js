@@ -17,6 +17,8 @@ const kpiComBio = document.getElementById('kpiComBio');
 const kpiSemRp = document.getElementById('kpiSemRp');
 const coachGroupsSummary = document.getElementById('coachGroupsSummary');
 const coachShootingGroupsSummary = document.getElementById('coachShootingGroupsSummary');
+const pendingTestsList = document.getElementById('pendingTestsList');
+const pendingTestsCount = document.getElementById('pendingTestsCount');
 
 let usuariosCache = [];
 let termoBuscaAtual = '';
@@ -230,6 +232,43 @@ function renderCoachTesteHistorico(usuario) {
             `).join('')}
         </div>
     `;
+}
+
+function getPendingAthleteTests(usuarios) {
+    return (usuarios || []).flatMap((usuario) => (usuario.rp_testes_historico || [])
+        .filter((teste) => teste.requer_revisao && !teste.revisado_em)
+        .map((teste) => ({ usuario, teste })));
+}
+
+function renderPendingAthleteTests(usuarios) {
+    if (!pendingTestsList) return;
+    const pendentes = getPendingAthleteTests(usuarios);
+    if (pendingTestsCount) {
+        pendingTestsCount.textContent = `${pendentes.length} pendente(s)`;
+        pendingTestsCount.classList.toggle('coach-pending-ok', pendentes.length === 0);
+    }
+
+    if (!pendentes.length) {
+        pendingTestsList.innerHTML = '<div class="group-meta coach-rp-test-empty">Nenhum teste aguardando revisão.</div>';
+        return;
+    }
+
+    pendingTestsList.innerHTML = pendentes.map(({ usuario, teste }) => `
+        <article class="coach-rp-test-history-item">
+            <div class="coach-rp-test-history-main">
+                <strong>${usuario.nome}</strong>
+                <div class="coach-rp-test-chip-row">
+                    <span class="coach-rp-test-chip">${teste.tempo_formatado || formatRaceTime(teste.tempo_segundos)}</span>
+                    <span class="coach-rp-test-chip">${formatDistanceKm(teste.distancia_km)}</span>
+                    <span class="coach-rp-test-chip coach-rp-test-chip-accent">${teste.pace_formatado || formatPace(teste.pace_segundos_km)}</span>
+                </div>
+                <div class="coach-rp-test-meta-row"><span>${formatCoachHistoryDate(teste.criado_em)}</span></div>
+            </div>
+            <div class="coach-rp-test-history-actions">
+                <button class="btn btn-secondary pending-test-validate" data-user-id="${usuario.usuario_id}" data-test-id="${teste.id}">Validar</button>
+                <button class="btn pending-test-edit" data-user-id="${usuario.usuario_id}" data-test-id="${teste.id}" data-tempo="${teste.tempo_formatado || formatRaceTime(teste.tempo_segundos)}" data-distancia="${teste.distancia_km}" data-data="${normalizeCoachDateToIso(teste.criado_em)}">Corrigir</button>
+            </div>
+        </article>`).join('');
 }
 
 function renderCoachTestePanel(usuario) {
@@ -1126,6 +1165,7 @@ async function carregarPainelTreinador() {
         });
 
         atualizarKpis(usuariosCache);
+        renderPendingAthleteTests(usuariosCache);
         renderResumoGruposTreino(usuariosCache);
         renderResumoGruposTiro(usuariosCache);
 
@@ -1217,7 +1257,11 @@ async function atualizarTesteTreinador(usuarioId, testeId, tempo, distanciaKm, d
             throw new Error(data.error || 'Erro ao atualizar teste');
         }
 
+        const deveValidar = Boolean(editingTests[usuarioId]?.requerRevisao);
         delete editingTests[usuarioId];
+        if (deveValidar) {
+            await validarTesteTreinador(usuarioId, testeId, false);
+        }
         if (coachPanelMessage) {
             coachPanelMessage.textContent = `Teste atualizado: ${data.teste?.tempo_formatado || tempo} em ${formatDistanceKm(data.teste?.distancia_km || distanciaKm)} (${data.teste?.pace_formatado || '-'})`;
         }
@@ -1229,6 +1273,18 @@ async function atualizarTesteTreinador(usuarioId, testeId, tempo, distanciaKm, d
             coachPanelMessage.textContent = `Erro: ${error.message}`;
         }
     }
+}
+
+async function validarTesteTreinador(usuarioId, testeId, recarregar = true) {
+    const response = await fetch(`${API_BASE}/treinador/usuarios/${usuarioId}/testes/${testeId}/revisao`, {
+        method: 'PUT',
+        credentials: 'include'
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Erro ao validar teste');
+
+    if (coachPanelMessage) coachPanelMessage.textContent = data.message || 'Teste validado com sucesso';
+    if (recarregar) await carregarPainelTreinador();
 }
 
 async function excluirTesteTreinador(usuarioId, testeId) {
@@ -1485,6 +1541,38 @@ if (coachUsersContainer) {
         filtrarUsuarios();
     });
 }
+
+pendingTestsList?.addEventListener('click', async (event) => {
+    const validateButton = event.target.closest('.pending-test-validate');
+    if (validateButton) {
+        try {
+            validateButton.disabled = true;
+            await validarTesteTreinador(validateButton.dataset.userId, validateButton.dataset.testId);
+        } catch (error) {
+            if (coachPanelMessage) coachPanelMessage.textContent = `Erro: ${error.message}`;
+            validateButton.disabled = false;
+        }
+        return;
+    }
+
+    const editButton = event.target.closest('.pending-test-edit');
+    if (!editButton) return;
+    const usuarioId = editButton.dataset.userId;
+    editingTests[usuarioId] = {
+        id: Number(editButton.dataset.testId),
+        tempo: editButton.dataset.tempo || '',
+        distancia: editButton.dataset.distancia || '',
+        data: editButton.dataset.data || '',
+        requerRevisao: true
+    };
+    expandedUserId = Number(usuarioId);
+    kpiFiltroAtual = 'ativos';
+    termoBuscaAtual = '';
+    if (coachSearchInput) coachSearchInput.value = '';
+    atualizarEstadoKpiCards();
+    filtrarUsuarios();
+    coachUsersContainer?.querySelector(`.coach-user-accordion[data-user-id="${usuarioId}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
 
 if (coachUsersContainer) {
     coachUsersContainer.addEventListener('input', (event) => {
