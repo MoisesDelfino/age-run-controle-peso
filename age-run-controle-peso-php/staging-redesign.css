@@ -1141,10 +1141,12 @@ body.dark-mode.staging-redesign .staging-height-toggle .material-icons {
     min-width: 110px;
 }
 
-.staging-redesign .nav-menu {
-    position: sticky;
-    top: 0;
-    z-index: 100;
+@media (min-width: 769px) {
+    .staging-redesign .nav-menu {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+    }
 }
 
 .staging-redesign .nav-list {
@@ -1391,6 +1393,31 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
     .staging-redesign .container,
     .staging-redesign .main-content > .container {
         padding-inline: 14px;
+    }
+
+    .staging-redesign .nav-menu {
+        position: fixed;
+        top: 0;
+        left: -290px;
+        z-index: 1000;
+        width: min(82vw, 280px);
+        height: 100dvh;
+        margin: 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+    }
+
+    .staging-redesign .nav-menu.active {
+        left: 0;
+    }
+
+    .staging-redesign .menu-overlay {
+        z-index: 999;
+    }
+
+    .staging-redesign .menu-toggle {
+        position: relative;
+        z-index: 1001;
     }
 
     .staging-redesign main:not(.staging-weighing),
