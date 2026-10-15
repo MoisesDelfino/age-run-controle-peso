@@ -1889,6 +1889,7 @@ function mapRunnerForGroup(array $user, float $myScore, ?float $scoreOverride = 
     return [
         'usuario_id' => (int) ($user['id'] ?? 0),
         'nome' => (string) ($user['nome'] ?? ''),
+        'foto_perfil' => isset($user['foto_perfil']) && is_string($user['foto_perfil']) ? $user['foto_perfil'] : null,
         'rp_5k' => isset($user['rp_5k']) ? (int) $user['rp_5k'] : null,
         'rp_10k' => isset($user['rp_10k']) ? (int) $user['rp_10k'] : null,
         'rp_21k' => isset($user['rp_21k']) ? (int) $user['rp_21k'] : null,
@@ -3521,7 +3522,8 @@ if ($method === 'POST' && $path === '/api/performance/testes') {
 
 if ($method === 'GET' && $path === '/api/performance/grupos') {
     $usuarioId = requireAuth();
-    $rows = dbFetchAll('SELECT id, nome, rp_5k, rp_10k, rp_21k, rp_42k, rp_5k_status, rp_10k_status, rp_21k_status, rp_42k_status FROM usuarios');
+    $fotoPerfilSelect = dbColumnExists('usuarios', 'foto_perfil') ? 'foto_perfil' : 'NULL AS foto_perfil';
+    $rows = dbFetchAll('SELECT id, nome, ' . $fotoPerfilSelect . ', rp_5k, rp_10k, rp_21k, rp_42k, rp_5k_status, rp_10k_status, rp_21k_status, rp_42k_status FROM usuarios');
 
     $usuarioLogado = null;
     foreach ($rows as $row) {
@@ -3686,8 +3688,9 @@ if ($method === 'GET' && $path === '/api/performance/grupos') {
 if ($method === 'GET' && $path === '/api/admin/todos-grupos') {
     requireTrainerAuth();
 
+    $fotoPerfilSelect = dbColumnExists('usuarios', 'foto_perfil') ? 'foto_perfil' : 'NULL AS foto_perfil';
     $rows = dbFetchAll(
-        'SELECT id, nome, email, rp_5k, rp_10k, rp_21k, rp_42k, rp_5k_status, rp_10k_status, rp_21k_status, rp_42k_status FROM usuarios ORDER BY nome ASC'
+        'SELECT id, nome, email, ' . $fotoPerfilSelect . ', rp_5k, rp_10k, rp_21k, rp_42k, rp_5k_status, rp_10k_status, rp_21k_status, rp_42k_status FROM usuarios ORDER BY nome ASC'
     );
 
     $allIds = array_map(static fn ($r) => (int) ($r['id'] ?? 0), $rows);
@@ -3710,6 +3713,7 @@ if ($method === 'GET' && $path === '/api/admin/todos-grupos') {
             'id'                    => $uid,
             'nome'                  => (string) ($row['nome'] ?? ''),
             'email'                 => (string) ($row['email'] ?? ''),
+            'foto_perfil'           => isset($row['foto_perfil']) && is_string($row['foto_perfil']) ? $row['foto_perfil'] : null,
             'ritmo_medio_seg_km'    => $score,
             'ritmo_medio_formatado' => formatPace($score),
             'fonte'                 => $fonteLabel,
