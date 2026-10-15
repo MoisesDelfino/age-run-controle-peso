@@ -22,6 +22,8 @@
         document.body.classList.add(`staging-page-${pageSlug}`);
         document.body.classList.toggle('staging-auth-page', Boolean(document.querySelector('.auth-container')));
 
+        document.querySelectorAll('footer, .footer').forEach((footer) => footer.remove());
+
         const banner = document.createElement('div');
         banner.className = 'staging-environment-banner';
         banner.setAttribute('role', 'status');
