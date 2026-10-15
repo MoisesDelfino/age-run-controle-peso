@@ -1795,6 +1795,294 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
     }
 }
 
+/* Painéis mobile: abas compactas e conteúdo restrito ao viewport. */
+@media (max-width: 720px) {
+    .staging-redesign .staging-mobile-tabs {
+        width: 100%;
+        height: 62px;
+        min-height: 62px;
+        max-height: 62px;
+        margin: 0 !important;
+        padding: 4px;
+        align-self: start;
+    }
+
+    .staging-redesign .staging-mobile-tab {
+        height: 52px;
+        min-height: 52px;
+        max-height: 52px;
+        padding: 4px;
+    }
+
+    .staging-redesign.staging-page-grupos-treino main.home-content {
+        height: 100%;
+        padding: 10px 12px 12px;
+        display: grid;
+        grid-template-rows: 62px minmax(0, 1fr);
+        align-content: stretch;
+        gap: 12px;
+        overflow: hidden;
+    }
+
+    .staging-redesign.staging-page-grupos-treino .rp-section:has(.staging-mobile-panel.is-mobile-active),
+    .staging-redesign.staging-page-grupos-treino .grupos-section.is-mobile-active {
+        min-height: 0;
+        height: 100%;
+        overflow: hidden;
+    }
+
+    .staging-redesign.staging-page-grupos-treino .rp-section > .card,
+    .staging-redesign.staging-page-grupos-treino .grupos-section > .card {
+        height: 100%;
+        min-height: 0;
+        padding: 14px;
+        overflow: hidden;
+    }
+
+    .staging-redesign.staging-page-grupos-treino .rp-section > .card:has(#rpForm.is-mobile-active),
+    .staging-redesign.staging-page-grupos-treino .rp-section > .card:has(.athlete-test-panel.is-mobile-active) {
+        display: block;
+    }
+
+    .staging-redesign.staging-page-grupos-treino .rp-form,
+    .staging-redesign.staging-page-grupos-treino .athlete-test-panel {
+        height: 100%;
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    .staging-redesign.staging-page-grupos-treino .rp-grid {
+        gap: 8px 10px;
+    }
+
+    .staging-redesign.staging-page-grupos-treino .rp-grid input,
+    .staging-redesign.staging-page-grupos-treino .coach-rp-test-input {
+        min-height: 46px;
+        padding: 9px 12px;
+    }
+
+    .staging-redesign.staging-page-grupos-treino .rp-grid label,
+    .staging-redesign.staging-page-grupos-treino .coach-rp-test-field label {
+        margin-bottom: 5px;
+        font-size: 0.76rem;
+    }
+
+    .staging-redesign.staging-page-grupos-treino .rp-actions .btn {
+        min-height: 44px;
+    }
+
+    .staging-redesign.staging-page-grupos-treino .athlete-test-panel {
+        padding: 0;
+    }
+
+    .staging-redesign.staging-page-grupos-treino .coach-rp-test-panel-header {
+        margin-bottom: 8px;
+    }
+
+    .staging-redesign.staging-page-grupos-treino .coach-rp-test-history-list {
+        max-height: 84px;
+        overflow-y: auto;
+    }
+
+    .staging-redesign.staging-page-grupos-treino .grupos-section .card {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .staging-redesign.staging-page-grupos-treino .grupos-section .card > h2 {
+        flex: 0 0 auto;
+        margin-bottom: 8px;
+        font-size: 1rem;
+    }
+
+    .staging-redesign.staging-page-grupos-treino .groups-grid,
+    .staging-redesign.staging-page-grupos-treino .grupos-grid {
+        flex: 1 1 auto;
+        min-height: 0;
+        max-height: none;
+        overflow-y: auto;
+    }
+
+    .staging-redesign.staging-page-bioimpedancia .main-content {
+        overflow: hidden;
+    }
+
+    .staging-redesign.staging-page-bioimpedancia .main-content > .container {
+        height: 100%;
+        min-height: 0;
+        padding: 10px 12px 12px;
+        display: grid;
+        grid-template-rows: 62px minmax(0, 1fr);
+        gap: 12px;
+        overflow: hidden;
+    }
+
+    .staging-redesign.staging-page-bioimpedancia .bioimpedancia-page,
+    .staging-redesign.staging-page-bioimpedancia .staging-mobile-panel.is-mobile-active {
+        min-height: 0;
+        height: 100%;
+        overflow: hidden;
+    }
+
+    .staging-redesign.staging-page-bioimpedancia .staging-mobile-panel {
+        padding: 12px;
+    }
+
+    .staging-redesign.staging-page-bioimpedancia .staging-mobile-panel > h2,
+    .staging-redesign.staging-page-bioimpedancia .staging-mobile-panel > .subtitle-medium {
+        display: none;
+    }
+
+    .staging-redesign.staging-page-bioimpedancia .imc-container {
+        height: 100%;
+        min-height: 0;
+    }
+
+    .staging-redesign.staging-page-bioimpedancia .imc-card {
+        height: 100%;
+        min-height: 0;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        overflow: hidden;
+        box-shadow: none;
+    }
+
+    .staging-redesign.staging-page-bioimpedancia .imc-header {
+        flex: 0 0 auto;
+        flex-direction: row;
+        justify-content: center;
+        gap: 14px;
+        margin: 0;
+        padding: 0 0 8px;
+        text-align: left;
+    }
+
+    .staging-redesign.staging-page-bioimpedancia .imc-value-circle {
+        width: 82px;
+        height: 82px;
+        border-width: 3px;
+    }
+
+    .staging-redesign.staging-page-bioimpedancia .imc-value-circle .imc-number {
+        font-size: 1.65rem;
+    }
+
+    .staging-redesign.staging-page-bioimpedancia .imc-value-circle .imc-label {
+        font-size: 0.65rem;
+    }
+
+    .staging-redesign.staging-page-bioimpedancia .imc-classification {
+        flex: 0 1 auto;
+    }
+
+    .staging-redesign.staging-page-bioimpedancia .classification-badge {
+        padding: 7px 10px;
+        font-size: 0.72rem;
+        white-space: nowrap;
+    }
+
+    .staging-redesign.staging-page-bioimpedancia .imc-details-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 7px;
+        margin: 0;
+    }
+
+    .staging-redesign.staging-page-bioimpedancia .imc-detail-item {
+        min-width: 0;
+        min-height: 64px;
+        gap: 7px;
+        padding: 7px 8px;
+    }
+
+    .staging-redesign.staging-page-bioimpedancia .imc-detail-icon {
+        font-size: 1.05rem;
+    }
+
+    .staging-redesign.staging-page-bioimpedancia .imc-detail-label {
+        font-size: 0.66rem;
+    }
+
+    .staging-redesign.staging-page-bioimpedancia .imc-detail-value {
+        font-size: 0.78rem;
+        line-height: 1.2;
+    }
+
+    .staging-redesign.staging-page-bioimpedancia .imc-progress-section {
+        flex: 0 0 auto;
+        padding: 9px 10px;
+    }
+
+    .staging-redesign.staging-page-bioimpedancia .progress-title {
+        margin-bottom: 6px;
+        font-size: 0.75rem;
+    }
+
+    .staging-redesign.staging-page-bioimpedancia .progress-bar-bg {
+        height: 22px;
+        margin-bottom: 4px;
+    }
+
+    .staging-redesign.staging-page-bioimpedancia .progress-info,
+    .staging-redesign.staging-page-bioimpedancia .progress-percentage {
+        font-size: 0.7rem;
+    }
+
+    .staging-redesign.staging-page-bioimpedancia .imc-card > .info-box {
+        margin: 0;
+        padding: 8px 10px;
+        font-size: 0.72rem;
+    }
+
+    .staging-redesign.staging-page-bioimpedancia .form-bioimpedancia {
+        height: 100%;
+        min-height: 0;
+        gap: 8px;
+        overflow: hidden;
+    }
+
+    .staging-redesign.staging-page-bioimpedancia .form-bioimpedancia .form-row {
+        gap: 8px;
+    }
+
+    .staging-redesign.staging-page-bioimpedancia .form-bioimpedancia .form-group {
+        margin: 0;
+    }
+
+    .staging-redesign.staging-page-bioimpedancia .form-bioimpedancia label {
+        margin-bottom: 3px;
+        font-size: 0.68rem;
+    }
+
+    .staging-redesign.staging-page-bioimpedancia .form-bioimpedancia input {
+        min-height: 40px;
+        padding: 8px 10px;
+    }
+
+    .staging-redesign.staging-page-bioimpedancia .form-info {
+        margin: 0;
+        padding: 7px 9px;
+        font-size: 0.68rem;
+    }
+
+    .staging-redesign.staging-page-bioimpedancia .form-actions {
+        margin: 0;
+        gap: 8px;
+    }
+
+    .staging-redesign.staging-page-bioimpedancia .form-actions .btn {
+        min-height: 40px;
+        padding: 8px 10px;
+    }
+
+    .staging-redesign.staging-page-bioimpedancia .historico-bio-container {
+        height: 100%;
+        max-height: none;
+        overflow-y: auto;
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     .staging-redesign *,
     .staging-redesign *::before,
