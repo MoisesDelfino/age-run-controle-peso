@@ -3001,6 +3001,252 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
     }
 }
 
+/* Ferramentas operacionais: treinador, consultas e auditoria. */
+@media (max-width: 720px) {
+    .staging-redesign.staging-page-treinador main.home-content,
+    .staging-redesign.staging-page-monitoramento main.home-content {
+        padding: 9px 10px 10px;
+        overflow: hidden;
+    }
+
+    .staging-redesign.staging-page-treinador .coach-panel-section,
+    .staging-redesign.staging-page-treinador .coach-panel-section > .card,
+    .staging-redesign.staging-page-monitoramento .query-layout {
+        height: 100%;
+        min-height: 0;
+        margin: 0;
+    }
+
+    .staging-redesign.staging-page-treinador .coach-panel-section > .card,
+    .staging-redesign.staging-page-monitoramento .query-layout {
+        padding: 12px;
+        display: grid;
+        grid-template-rows: 62px minmax(0, 1fr);
+        gap: 10px;
+        overflow: hidden;
+    }
+
+    .staging-redesign.staging-page-treinador .staging-mobile-panel.is-mobile-active,
+    .staging-redesign.staging-page-monitoramento .staging-mobile-panel.is-mobile-active {
+        height: 100%;
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    .staging-redesign.staging-page-treinador .staging-coach-summary.is-mobile-active {
+        display: flex !important;
+        flex-direction: column;
+    }
+
+    .staging-redesign.staging-page-treinador .staging-coach-summary > h2 {
+        margin: 0 0 5px;
+        font-size: 1rem;
+    }
+
+    .staging-redesign.staging-page-treinador .staging-coach-summary > .welcome-text {
+        margin-bottom: 9px;
+        font-size: 0.7rem;
+    }
+
+    .staging-redesign.staging-page-treinador .coach-kpi-grid {
+        flex: 1 1 auto;
+        min-height: 0;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-rows: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .staging-redesign.staging-page-treinador .coach-kpi-card {
+        min-height: 0;
+        padding: 10px;
+    }
+
+    .staging-redesign.staging-page-treinador .coach-kpi-label {
+        font-size: 0.68rem;
+    }
+
+    .staging-redesign.staging-page-treinador .coach-kpi-value {
+        font-size: 1.35rem;
+    }
+
+    .staging-redesign.staging-page-treinador .coach-rp-test-panel.is-mobile-active {
+        padding: 12px;
+        display: flex !important;
+        flex-direction: column;
+    }
+
+    .staging-redesign.staging-page-treinador .coach-rp-test-panel-header {
+        flex: 0 0 auto;
+    }
+
+    .staging-redesign.staging-page-treinador .coach-rp-test-history-list {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+    }
+
+    .staging-redesign.staging-page-treinador .staging-coach-users.is-mobile-active {
+        display: flex !important;
+        flex-direction: column;
+    }
+
+    .staging-redesign.staging-page-treinador .coach-toolbar {
+        flex: 0 0 auto;
+        margin-bottom: 8px;
+    }
+
+    .staging-redesign.staging-page-treinador .coach-toolbar .form-group {
+        margin: 0;
+    }
+
+    .staging-redesign.staging-page-treinador .coach-users-list {
+        max-height: none;
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+    }
+
+    .staging-redesign.staging-page-monitoramento .staging-mobile-tabs {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .staging-redesign.staging-page-monitoramento .db-tool-grid,
+    .staging-redesign.staging-page-monitoramento .db-tool-panel {
+        width: 100%;
+        max-width: none;
+    }
+
+    .staging-redesign.staging-page-monitoramento .db-tool-grid > .db-tool-panel,
+    .staging-redesign.staging-page-monitoramento .query-layout > .db-tool-panel.is-mobile-active {
+        height: 100%;
+        min-height: 0;
+        padding: 10px;
+        overflow: hidden;
+    }
+
+    .staging-redesign.staging-page-monitoramento .db-reset-panel {
+        padding: 9px;
+    }
+
+    .staging-redesign.staging-page-monitoramento .db-reset-panel .db-caption,
+    .staging-redesign.staging-page-monitoramento .db-shortcuts,
+    .staging-redesign.staging-page-monitoramento .query-layout > .db-tool-panel > div:first-child .db-caption {
+        display: none;
+    }
+
+    .staging-redesign.staging-page-monitoramento .db-reset-controls {
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 7px;
+    }
+
+    .staging-redesign.staging-page-monitoramento .db-editor-wrap {
+        min-height: 0;
+    }
+
+    .staging-redesign.staging-page-monitoramento .db-tool-editor {
+        min-height: 150px;
+        height: clamp(150px, 30dvh, 250px);
+    }
+
+    .staging-redesign.staging-page-monitoramento .db-tool-result {
+        height: 100%;
+        min-height: 0;
+        overflow: auto;
+    }
+
+    .staging-redesign.staging-page-monitoramento-acessos main.home-content {
+        padding: 9px 10px 10px;
+        overflow: hidden;
+    }
+
+    .staging-redesign.staging-page-monitoramento-acessos .access-layout {
+        height: 100%;
+        min-height: 0;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+        overflow: hidden;
+    }
+
+    .staging-redesign.staging-page-monitoramento-acessos .access-toolbar {
+        flex: 0 0 auto;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .staging-redesign.staging-page-monitoramento-acessos .access-meta {
+        min-width: 0;
+        gap: 2px;
+        display: flex;
+        flex-direction: column;
+        font-size: 0.7rem;
+    }
+
+    .staging-redesign.staging-page-monitoramento-acessos #btnRefreshAccess {
+        width: auto;
+        min-height: 42px;
+        padding: 8px 12px;
+        font-size: 0.72rem;
+    }
+
+    .staging-redesign.staging-page-monitoramento-acessos .access-message {
+        flex: 0 0 auto;
+        margin: 0;
+        padding: 8px 10px;
+        font-size: 0.72rem;
+    }
+
+    .staging-redesign.staging-page-monitoramento-acessos .access-table-wrap {
+        flex: 1 1 auto;
+        min-height: 0;
+        max-height: none;
+        border: 0;
+        overflow-y: auto;
+    }
+
+    .staging-redesign.staging-page-monitoramento-acessos .access-table,
+    .staging-redesign.staging-page-monitoramento-acessos .access-table tbody {
+        display: block;
+    }
+
+    .staging-redesign.staging-page-monitoramento-acessos .access-table thead {
+        display: none;
+    }
+
+    .staging-redesign.staging-page-monitoramento-acessos .access-table tr {
+        margin-bottom: 8px;
+        padding: 8px 10px;
+        display: grid;
+        gap: 4px;
+        border: 1px solid var(--staging-line);
+        border-radius: 12px;
+        background: var(--staging-surface);
+    }
+
+    .staging-redesign.staging-page-monitoramento-acessos .access-table td {
+        min-width: 0;
+        padding: 2px 0;
+        display: grid;
+        grid-template-columns: 78px minmax(0, 1fr);
+        gap: 8px;
+        border: 0;
+        font-size: 0.68rem;
+        overflow-wrap: anywhere;
+    }
+
+    .staging-redesign.staging-page-monitoramento-acessos .access-table td::before {
+        content: attr(data-label);
+        color: var(--staging-muted);
+        font-size: 0.58rem;
+        font-weight: 700;
+        letter-spacing: 0.035em;
+        text-transform: uppercase;
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     .staging-redesign *,
     .staging-redesign *::before,

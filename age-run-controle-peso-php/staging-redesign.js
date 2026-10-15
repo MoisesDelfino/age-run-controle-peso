@@ -60,7 +60,8 @@
             };
 
             const enhanceLinks = () => {
-                navList.querySelectorAll('.nav-link:not([data-staging-nav-ready])').forEach((link) => {
+                navList.querySelectorAll('.nav-link').forEach((link) => {
+                    if (link.dataset.stagingNavReady === 'true' && link.querySelector('.staging-nav-label')) return;
                     const pathname = new URL(link.href, window.location.origin).pathname.replace(/^\/dev|^\/controle/, '');
                     const icon = iconMap[pathname] || 'circle';
                     const label = link.textContent.replace(/^[^\p{L}\p{N}]+/u, '').trim();
@@ -240,6 +241,61 @@
                 { key: 'register', label: 'Registrar', icon: 'add_circle_outline', section: register },
                 { key: 'history', label: 'Histórico', icon: 'history', section: history }
             ], page);
+        }
+
+        if (path.endsWith('/treinador')) {
+            const card = main.querySelector('.coach-panel-section > .card');
+            const heading = card?.querySelector(':scope > h2');
+            const description = card?.querySelector(':scope > .welcome-text');
+            const kpis = card?.querySelector(':scope > .coach-kpi-grid');
+            const pending = card?.querySelector(':scope > .coach-rp-test-panel');
+            const toolbar = card?.querySelector(':scope > .coach-toolbar');
+            const usersContent = toolbar?.nextElementSibling;
+
+            if (card && heading && kpis && pending && toolbar && usersContent) {
+                const summary = document.createElement('section');
+                summary.className = 'staging-coach-summary';
+                card.prepend(summary);
+                summary.append(heading);
+                if (description) summary.append(description);
+                summary.append(kpis);
+
+                const users = document.createElement('section');
+                users.className = 'staging-coach-users';
+                pending.after(users);
+                users.append(toolbar, usersContent);
+
+                setupMobilePanels([
+                    { key: 'summary', label: 'Resumo', icon: 'dashboard', section: summary },
+                    { key: 'reviews', label: 'Revisões', icon: 'fact_check', section: pending },
+                    { key: 'athletes', label: 'Atletas', icon: 'groups', section: users }
+                ], summary);
+            }
+        }
+
+        if (path.endsWith('/monitoramento')) {
+            const layout = main.querySelector('.query-layout');
+            const editor = layout?.querySelector(':scope > .db-tool-grid');
+            const result = layout?.querySelector(':scope > .db-tool-panel');
+            setupMobilePanels([
+                { key: 'editor', label: 'Editor', icon: 'terminal', section: editor },
+                { key: 'result', label: 'Resultado', icon: 'table_view', section: result }
+            ], editor);
+        }
+
+        if (path.endsWith('/monitoramento-acessos')) {
+            const table = main.querySelector('.access-table');
+            const applyAccessLabels = () => {
+                const labels = Array.from(table?.querySelectorAll('thead th') || []).map((cell) => cell.textContent.trim());
+                table?.querySelectorAll('tbody tr').forEach((row) => {
+                    row.querySelectorAll('td').forEach((cell, index) => {
+                        if (labels[index]) cell.dataset.label = labels[index];
+                    });
+                });
+            };
+            applyAccessLabels();
+            const tbody = table?.querySelector('tbody');
+            if (tbody) new MutationObserver(applyAccessLabels).observe(tbody, { childList: true, subtree: true });
         }
 
         if (path.endsWith('/grupos-treino')) {
