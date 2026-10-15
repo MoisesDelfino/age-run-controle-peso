@@ -74,17 +74,13 @@ function loadProfilePhotoSource(file) {
             reject(new Error(`A imagem possui ${sizeMb} MB. O limite é 20 MB.`));
             return;
         }
-        const reader = new FileReader();
-        reader.onload = () => {
-            if (typeof reader.result !== 'string' || !reader.result.startsWith('data:image/')) {
-                reject(new Error('O arquivo selecionado não contém uma imagem válida.'));
-                return;
-            }
-            resolve(reader.result);
-        };
-        reader.onerror = () => reject(new Error('Não foi possível ler a imagem. Verifique o acesso aos arquivos e tente novamente.'));
-        reader.onabort = () => reject(new Error('A leitura da imagem foi cancelada.'));
-        reader.readAsDataURL(file);
+        try {
+            const objectUrl = URL.createObjectURL(file);
+            if (!objectUrl) throw new Error('URL temporária indisponível');
+            resolve({ url: objectUrl, revoke: true });
+        } catch (error) {
+            reject(new Error('O navegador não conseguiu acessar a foto selecionada. Tente abrir pela Galeria ou reinicie a câmera.'));
+        }
     });
 }
 
@@ -114,8 +110,11 @@ function drawProfilePhotoEditor() {
 
 function openProfilePhotoEditor(source, fileInfo = {}) {
     if (!source || !perfilPhotoEditor) return;
+    const sourceUrl = typeof source === 'string' ? source : source.url;
+    const shouldRevoke = typeof source === 'object' && source.revoke === true;
     const image = new Image();
     image.onload = () => {
+        if (shouldRevoke) URL.revokeObjectURL(sourceUrl);
         if (!image.naturalWidth || !image.naturalHeight) {
             showMessage('A imagem não possui dimensões válidas.', 'error');
             return;
@@ -130,12 +129,13 @@ function openProfilePhotoEditor(source, fileInfo = {}) {
         drawProfilePhotoEditor();
     };
     image.onerror = () => {
+        if (shouldRevoke) URL.revokeObjectURL(sourceUrl);
         const isHeic = /hei[cf]/i.test(fileInfo.type || '') || /\.hei[cf]$/i.test(fileInfo.name || '');
         showMessage(isHeic
             ? 'Este celular não conseguiu converter a foto HEIC. Altere a câmera para “Mais compatível” ou envie em JPG.'
             : 'Não foi possível decodificar a imagem. O arquivo pode estar corrompido ou o celular pode estar sem memória disponível.', 'error');
     };
-    image.src = source;
+    image.src = sourceUrl;
 }
 
 function closeProfilePhotoEditor() {
