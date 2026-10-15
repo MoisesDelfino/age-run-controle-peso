@@ -52,6 +52,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // Equalizar alturas dos cards em desktop
 function equalizarAlturas() {
+    if (document.documentElement.classList.contains('staging-redesign')) {
+        document.querySelectorAll('.stats-section .card, .lista-section .card').forEach((card) => {
+            card.style.height = '';
+        });
+        return;
+    }
+
     // Só executar em desktop (>= 1200px)
     if (window.innerWidth < 1200) {
         // Limpar alturas forçadas em mobile/tablet
@@ -280,6 +287,7 @@ async function registrarPesagem(peso, data) {
             showMessage('Pesagem registrada com sucesso! 🎉', 'success');
             pesagemForm.reset();
             await carregarHistorico();
+            window.dispatchEvent(new CustomEvent('pesagem:registered'));
         } else {
             showMessage(result.error || 'Erro ao registrar pesagem', 'error');
         }
@@ -379,11 +387,11 @@ function renderizarHistorico(pesagens) {
                     <span class="historico-data">${dataFormatada}</span>
                 </div>
                 <div class="historico-actions">
-                    <button class="btn-edit" onclick="editarPesagem(${pesagem.id}, ${pesoPesagem})" title="Editar">
-                        ✏️
+                    <button class="btn-edit" onclick="editarPesagem(${pesagem.id}, ${pesoPesagem})" title="Editar" aria-label="Editar pesagem de ${dataFormatada}">
+                        <span class="material-icons" aria-hidden="true">edit</span>
                     </button>
-                    <button class="btn-delete" onclick="excluirPesagem(${pesagem.id}, ${pesoPesagem})" title="Excluir">
-                        🗑️
+                    <button class="btn-delete" onclick="excluirPesagem(${pesagem.id}, ${pesoPesagem})" title="Excluir" aria-label="Excluir pesagem de ${dataFormatada}">
+                        <span class="material-icons" aria-hidden="true">delete_outline</span>
                     </button>
                 </div>
             </div>

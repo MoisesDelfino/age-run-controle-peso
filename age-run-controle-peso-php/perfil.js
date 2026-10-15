@@ -22,6 +22,165 @@ const garminMfaCode = document.getElementById('garminMfaCode');
 const garminLoginMessage = document.getElementById('garminLoginMessage');
 const btnGarminLogin = document.getElementById('btnGarminLogin');
 const btnGarminCancel = document.getElementById('btnGarminCancel');
+const perfilPhotoInput = document.getElementById('perfilPhotoInput');
+const perfilCameraInput = document.getElementById('perfilCameraInput');
+const perfilCameraButton = document.getElementById('perfilCameraButton');
+const perfilCameraModal = document.getElementById('perfilCameraModal');
+const perfilCameraVideo = document.getElementById('perfilCameraVideo');
+const perfilCameraCapture = document.getElementById('perfilCameraCapture');
+const perfilPhotoImage = document.getElementById('perfilPhotoImage');
+const perfilPhotoInitial = document.getElementById('perfilPhotoInitial');
+const perfilPhotoRemove = document.getElementById('perfilPhotoRemove');
+const perfilPhotoAdjust = document.getElementById('perfilPhotoAdjust');
+const perfilPhotoEditor = document.getElementById('perfilPhotoEditor');
+const perfilPhotoCanvas = document.getElementById('perfilPhotoCanvas');
+const perfilPhotoZoom = document.getElementById('perfilPhotoZoom');
+const perfilPhotoReset = document.getElementById('perfilPhotoReset');
+const perfilPhotoApply = document.getElementById('perfilPhotoApply');
+let perfilPhotoData = null;
+let photoEditorImage = null;
+let photoEditorOffsetX = 0;
+let photoEditorOffsetY = 0;
+let photoEditorZoom = 1;
+let photoEditorDrag = null;
+let perfilMessageTimer = null;
+let perfilCameraStream = null;
+
+function renderProfilePhoto(photo, name) {
+    perfilPhotoData = photo || null;
+    if (perfilPhotoInitial) {
+        perfilPhotoInitial.textContent = String(name || 'U').trim().charAt(0).toUpperCase() || 'U';
+        perfilPhotoInitial.hidden = Boolean(perfilPhotoData);
+    }
+    if (perfilPhotoImage) {
+        perfilPhotoImage.src = perfilPhotoData || '';
+        perfilPhotoImage.hidden = !perfilPhotoData;
+    }
+    if (perfilPhotoRemove) perfilPhotoRemove.hidden = !perfilPhotoData;
+    if (perfilPhotoAdjust) perfilPhotoAdjust.hidden = !perfilPhotoData;
+}
+
+function loadProfilePhotoSource(file) {
+    return new Promise((resolve, reject) => {
+        if (!file) {
+            reject(new Error('Nenhuma imagem foi selecionada.'));
+            return;
+        }
+        const extension = String(file.name || '').split('.').pop().toLowerCase();
+        const supportedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
+        const supportedExtensions = ['jpg', 'jpeg', 'png', 'webp', 'heic', 'heif'];
+        if ((file.type && !supportedTypes.includes(file.type)) || (!file.type && !supportedExtensions.includes(extension))) {
+            const detected = file.type || (extension ? `.${extension}` : 'desconhecido');
+            reject(new Error(`Formato ${detected} não suportado. Use JPG, PNG, WebP ou HEIC.`));
+            return;
+        }
+        if (file.size > 20 * 1024 * 1024) {
+            const sizeMb = (file.size / (1024 * 1024)).toFixed(1).replace('.', ',');
+            reject(new Error(`A imagem possui ${sizeMb} MB. O limite é 20 MB.`));
+            return;
+        }
+        try {
+            const objectUrl = URL.createObjectURL(file);
+            if (!objectUrl) throw new Error('URL temporária indisponível');
+            resolve({ url: objectUrl, revoke: true });
+        } catch (error) {
+            reject(new Error('O navegador não conseguiu acessar a foto selecionada. Tente abrir pela Galeria ou reinicie a câmera.'));
+        }
+    });
+}
+
+function drawProfilePhotoEditor() {
+    if (!photoEditorImage || !perfilPhotoCanvas) return;
+    const context = perfilPhotoCanvas.getContext('2d');
+    if (!context) {
+        showMessage('O navegador não conseguiu iniciar o editor de imagem.', 'error');
+        return;
+    }
+    const canvasSize = perfilPhotoCanvas.width;
+    const coverScale = Math.max(canvasSize / photoEditorImage.naturalWidth, canvasSize / photoEditorImage.naturalHeight);
+    const scale = coverScale * photoEditorZoom;
+    const width = photoEditorImage.naturalWidth * scale;
+    const height = photoEditorImage.naturalHeight * scale;
+    const maxX = Math.max(0, (width - canvasSize) / 2);
+    const maxY = Math.max(0, (height - canvasSize) / 2);
+    photoEditorOffsetX = Math.max(-maxX, Math.min(maxX, photoEditorOffsetX));
+    photoEditorOffsetY = Math.max(-maxY, Math.min(maxY, photoEditorOffsetY));
+    try {
+        context.clearRect(0, 0, canvasSize, canvasSize);
+        context.drawImage(photoEditorImage, (canvasSize - width) / 2 + photoEditorOffsetX, (canvasSize - height) / 2 + photoEditorOffsetY, width, height);
+    } catch (error) {
+        showMessage('O celular não conseguiu renderizar a foto. Feche outros aplicativos para liberar memória e tente novamente.', 'error');
+    }
+}
+
+function openProfilePhotoEditor(source, fileInfo = {}) {
+    if (!source || !perfilPhotoEditor) return;
+    const sourceUrl = typeof source === 'string' ? source : source.url;
+    const shouldRevoke = typeof source === 'object' && source.revoke === true;
+    const image = new Image();
+    image.onload = () => {
+        if (shouldRevoke) URL.revokeObjectURL(sourceUrl);
+        if (!image.naturalWidth || !image.naturalHeight) {
+            showMessage('A imagem não possui dimensões válidas.', 'error');
+            return;
+        }
+        photoEditorImage = image;
+        photoEditorOffsetX = 0;
+        photoEditorOffsetY = 0;
+        photoEditorZoom = 1;
+        if (perfilPhotoZoom) perfilPhotoZoom.value = '1';
+        perfilPhotoEditor.hidden = false;
+        document.body.classList.add('perfil-photo-editor-open');
+        drawProfilePhotoEditor();
+    };
+    image.onerror = () => {
+        if (shouldRevoke) URL.revokeObjectURL(sourceUrl);
+        const isHeic = /hei[cf]/i.test(fileInfo.type || '') || /\.hei[cf]$/i.test(fileInfo.name || '');
+        showMessage(isHeic
+            ? 'Este celular não conseguiu converter a foto HEIC. Altere a câmera para “Mais compatível” ou envie em JPG.'
+            : 'Não foi possível decodificar a imagem. O arquivo pode estar corrompido ou o celular pode estar sem memória disponível.', 'error');
+    };
+    image.src = sourceUrl;
+}
+
+function closeProfilePhotoEditor() {
+    if (perfilPhotoEditor) perfilPhotoEditor.hidden = true;
+    document.body.classList.remove('perfil-photo-editor-open');
+    photoEditorDrag = null;
+}
+
+function closeProfileCamera() {
+    perfilCameraStream?.getTracks().forEach((track) => track.stop());
+    perfilCameraStream = null;
+    if (perfilCameraVideo) perfilCameraVideo.srcObject = null;
+    if (perfilCameraModal) perfilCameraModal.hidden = true;
+    document.body.classList.remove('perfil-photo-editor-open');
+}
+
+async function openProfileCamera() {
+    if (!navigator.mediaDevices?.getUserMedia) {
+        perfilCameraInput?.click();
+        return;
+    }
+    try {
+        perfilCameraStream = await navigator.mediaDevices.getUserMedia({
+            audio: false,
+            video: { facingMode: 'user', width: { ideal: 1920 }, height: { ideal: 1920 } }
+        });
+        perfilCameraVideo.srcObject = perfilCameraStream;
+        perfilCameraModal.hidden = false;
+        document.body.classList.add('perfil-photo-editor-open');
+        await perfilCameraVideo.play();
+    } catch (error) {
+        closeProfileCamera();
+        const messages = {
+            NotAllowedError: 'A permissão da câmera foi negada. Libere o acesso nas configurações do navegador.',
+            NotFoundError: 'Nenhuma câmera foi encontrada neste dispositivo.',
+            NotReadableError: 'A câmera está sendo usada por outro aplicativo. Feche-o e tente novamente.'
+        };
+        showMessage(messages[error.name] || 'Não foi possível abrir a câmera. Tente usar a Galeria.', 'error');
+    }
+}
 
 const GARMIN_CHECK_LABELS = {
     php: 'PHP compatível',
@@ -65,8 +224,23 @@ function setGarminConnected() {
 
 function showMessage(text, type) {
     if (!perfilMessage) return;
-    perfilMessage.textContent = text || '';
-    perfilMessage.className = type ? `perfil-message ${type} show` : 'perfil-message';
+    if (perfilMessageTimer) clearTimeout(perfilMessageTimer);
+    if (!text || !type) {
+        perfilMessage.replaceChildren();
+        perfilMessage.className = 'perfil-message';
+        return;
+    }
+    const icon = document.createElement('span');
+    icon.className = 'material-icons perfil-message-icon';
+    icon.setAttribute('aria-hidden', 'true');
+    icon.textContent = type === 'success' ? 'check_circle' : 'error_outline';
+    const copy = document.createElement('span');
+    copy.textContent = text;
+    perfilMessage.replaceChildren(icon, copy);
+    perfilMessage.className = `perfil-message ${type} show`;
+    perfilMessageTimer = setTimeout(() => {
+        perfilMessage.classList.remove('show');
+    }, type === 'success' ? 3800 : 6000);
 }
 
 async function carregarPerfil() {
@@ -85,8 +259,109 @@ async function carregarPerfil() {
     if (perfilEmail) perfilEmail.value = data.email || '';
     if (perfilSexo) perfilSexo.value = (data.sexo || 'masculino').toLowerCase();
     if (perfilAltura) perfilAltura.value = data.altura != null ? String(data.altura) : '';
+    renderProfilePhoto(data.foto_perfil, data.nome);
     if (garminCard) garminCard.hidden = data.garmin_pilot_enabled !== true;
 }
+
+async function handleProfilePhotoSelection(input) {
+    const file = input?.files?.[0];
+    if (!file) return;
+    try {
+        const source = await loadProfilePhotoSource(file);
+        openProfilePhotoEditor(source, { name: file.name, type: file.type, size: file.size });
+    } catch (error) {
+        input.value = '';
+        showMessage(error.message, 'error');
+    }
+}
+
+perfilPhotoInput?.addEventListener('change', () => handleProfilePhotoSelection(perfilPhotoInput));
+perfilCameraInput?.addEventListener('change', () => handleProfilePhotoSelection(perfilCameraInput));
+perfilCameraButton?.addEventListener('click', openProfileCamera);
+perfilPhotoAdjust?.addEventListener('click', () => openProfilePhotoEditor(perfilPhotoData));
+
+perfilCameraModal?.querySelectorAll('[data-camera-close]').forEach((button) => button.addEventListener('click', closeProfileCamera));
+
+perfilCameraCapture?.addEventListener('click', () => {
+    const width = perfilCameraVideo?.videoWidth || 0;
+    const height = perfilCameraVideo?.videoHeight || 0;
+    if (!width || !height) {
+        showMessage('A câmera ainda está iniciando. Aguarde um instante e tente novamente.', 'error');
+        return;
+    }
+    try {
+        const maxDimension = 1920;
+        const scale = Math.min(1, maxDimension / Math.max(width, height));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(width * scale);
+        canvas.height = Math.round(height * scale);
+        const context = canvas.getContext('2d');
+        if (!context) throw new Error('Editor indisponível');
+        context.translate(canvas.width, 0);
+        context.scale(-1, 1);
+        context.drawImage(perfilCameraVideo, 0, 0, canvas.width, canvas.height);
+        const photo = canvas.toDataURL('image/jpeg', 0.92);
+        closeProfileCamera();
+        openProfilePhotoEditor(photo, { type: 'image/jpeg', name: 'camera.jpg' });
+    } catch (error) {
+        showMessage('Não foi possível capturar a foto. Libere memória no celular ou use a Galeria.', 'error');
+    }
+});
+
+perfilPhotoZoom?.addEventListener('input', () => {
+    photoEditorZoom = Number(perfilPhotoZoom.value) || 1;
+    drawProfilePhotoEditor();
+});
+
+perfilPhotoReset?.addEventListener('click', () => {
+    photoEditorOffsetX = 0;
+    photoEditorOffsetY = 0;
+    photoEditorZoom = 1;
+    if (perfilPhotoZoom) perfilPhotoZoom.value = '1';
+    drawProfilePhotoEditor();
+});
+
+perfilPhotoApply?.addEventListener('click', () => {
+    if (!perfilPhotoCanvas) return;
+    try {
+        const result = perfilPhotoCanvas.toDataURL('image/jpeg', 0.9);
+        if (!result || result === 'data:,') throw new Error('Falha ao gerar a imagem final.');
+        if (result.length > 2500000) throw new Error('A foto final ficou maior que o limite permitido.');
+        renderProfilePhoto(result, perfilNome?.value);
+        closeProfilePhotoEditor();
+        showMessage('Enquadramento pronto. Salve as alterações para confirmar.', 'success');
+    } catch (error) {
+        showMessage(`${error.message || 'Não foi possível finalizar a foto'} Libere memória no celular e tente novamente.`, 'error');
+    }
+});
+
+perfilPhotoEditor?.querySelectorAll('[data-photo-editor-close]').forEach((button) => button.addEventListener('click', closeProfilePhotoEditor));
+
+perfilPhotoCanvas?.addEventListener('pointerdown', (event) => {
+    photoEditorDrag = { x: event.clientX, y: event.clientY, offsetX: photoEditorOffsetX, offsetY: photoEditorOffsetY };
+    perfilPhotoCanvas.setPointerCapture(event.pointerId);
+});
+
+perfilPhotoCanvas?.addEventListener('pointermove', (event) => {
+    if (!photoEditorDrag) return;
+    const ratio = perfilPhotoCanvas.width / perfilPhotoCanvas.getBoundingClientRect().width;
+    photoEditorOffsetX = photoEditorDrag.offsetX + (event.clientX - photoEditorDrag.x) * ratio;
+    photoEditorOffsetY = photoEditorDrag.offsetY + (event.clientY - photoEditorDrag.y) * ratio;
+    drawProfilePhotoEditor();
+});
+
+['pointerup', 'pointercancel'].forEach((eventName) => perfilPhotoCanvas?.addEventListener(eventName, () => { photoEditorDrag = null; }));
+
+perfilPhotoRemove?.addEventListener('click', () => {
+    if (perfilPhotoInput) perfilPhotoInput.value = '';
+    if (perfilCameraInput) perfilCameraInput.value = '';
+    renderProfilePhoto(null, perfilNome?.value);
+    showMessage('Foto removida. Salve as alterações para confirmar.', 'success');
+});
+
+perfilNome?.addEventListener('input', () => {
+    if (!perfilPhotoData && perfilPhotoInitial) perfilPhotoInitial.textContent = perfilNome.value.trim().charAt(0).toUpperCase() || 'U';
+});
 
 if (btnConectarGarmin) {
     btnConectarGarmin.addEventListener('click', async () => {
@@ -212,7 +487,7 @@ if (perfilForm) {
         }
 
         try {
-            const body = { nome, sexo };
+            const body = { nome, sexo, foto_perfil: perfilPhotoData };
             if (altura !== null && !Number.isNaN(altura)) body.altura = altura;
 
             const response = await fetch(`${API_BASE}/usuario/perfil`, {
@@ -228,6 +503,18 @@ if (perfilForm) {
             }
 
             showMessage('Perfil atualizado com sucesso!', 'success');
+            document.querySelectorAll('.user-menu-inicial, .user-menu-summary-avatar').forEach((headerAvatar) => {
+                headerAvatar.textContent = '';
+                if (perfilPhotoData) {
+                    const avatarImage = document.createElement('img');
+                    avatarImage.src = perfilPhotoData;
+                    avatarImage.alt = '';
+                    headerAvatar.appendChild(avatarImage);
+                } else {
+                    headerAvatar.textContent = nome.charAt(0).toUpperCase() || 'U';
+                }
+            });
+            document.querySelector('.btn-user-menu')?.classList.toggle('has-photo', Boolean(perfilPhotoData));
         } catch (err) {
             showMessage(err.message || 'Erro ao salvar.', 'error');
         } finally {

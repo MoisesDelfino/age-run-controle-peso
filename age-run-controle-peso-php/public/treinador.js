@@ -257,7 +257,10 @@ function renderPendingAthleteTests(usuarios) {
     pendingTestsList.innerHTML = pendentes.map(({ usuario, teste }) => `
         <article class="coach-rp-test-history-item">
             <div class="coach-rp-test-history-main">
-                <strong>${usuario.nome}</strong>
+                <div class="coach-review-athlete">
+                    <span class="coach-review-avatar">${String(usuario.nome || 'U').trim().charAt(0).toUpperCase()}</span>
+                    <strong>${usuario.nome}</strong>
+                </div>
                 <div class="coach-rp-test-chip-row">
                     <span class="coach-rp-test-chip">${teste.tempo_formatado || formatRaceTime(teste.tempo_segundos)}</span>
                     <span class="coach-rp-test-chip">${formatDistanceKm(teste.distancia_km)}</span>
@@ -269,8 +272,8 @@ function renderPendingAthleteTests(usuarios) {
                 </div>
             </div>
             <div class="coach-rp-test-history-actions">
-                <button class="btn btn-secondary pending-test-validate" data-user-id="${usuario.usuario_id}" data-test-id="${teste.id}">Validar</button>
                 <button class="btn pending-test-edit" data-user-id="${usuario.usuario_id}" data-test-id="${teste.id}" data-tempo="${teste.tempo_formatado || formatRaceTime(teste.tempo_segundos)}" data-distancia="${teste.distancia_km}" data-data="${normalizeCoachDateToIso(teste.criado_em)}">Corrigir</button>
+                <button class="btn btn-secondary pending-test-validate" data-user-id="${usuario.usuario_id}" data-test-id="${teste.id}">Validar</button>
             </div>
         </article>`).join('');
 }
@@ -1073,10 +1076,13 @@ function renderCoachSummary(usuario, expanded) {
 
     return `
         <button class="coach-user-summary" data-user-id="${usuario.usuario_id}" aria-expanded="${expanded ? 'true' : 'false'}">
-            <div class="coach-summary-main">
-                <strong>${usuario.nome}</strong>
-                <span class="coach-summary-email">${usuario.email || '-'}</span>
-                ${pendenciaChip}
+            <div class="coach-summary-identity">
+                <span class="coach-summary-avatar">${String(usuario.nome || 'U').trim().charAt(0).toUpperCase()}</span>
+                <div class="coach-summary-main">
+                    <strong>${usuario.nome}</strong>
+                    <span class="coach-summary-email">${usuario.email || '-'}</span>
+                    ${pendenciaChip}
+                </div>
             </div>
             <div class="coach-summary-metrics">
                 <span>IMC: ${formatNumero(usuario.imc)}</span>

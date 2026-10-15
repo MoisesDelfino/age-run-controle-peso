@@ -111,7 +111,7 @@ function ensureOwnerMonitorLinks(isOwner) {
     });
 }
 
-function injectUserDropdown(nome) {
+function injectUserDropdown(nome, fotoPerfil) {
     const headerActions = document.querySelector('.header-actions');
     if (!headerActions || document.getElementById('userMenuDropdown')) return;
 
@@ -121,6 +121,7 @@ function injectUserDropdown(nome) {
     // Escapa o inicial para evitar XSS
     const raw = String(nome || 'U').charAt(0).toUpperCase();
     const inicial = raw.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const safeName = String(nome || 'Usuário').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
     // Oculta o botão original — os scripts de cada página ainda o encontram pelo id
     const originalLogout = document.getElementById('btnLogout');
@@ -134,16 +135,32 @@ function injectUserDropdown(nome) {
             <span class="user-menu-inicial">${inicial}</span>
         </button>
         <div id="userMenuPanel" class="user-menu-panel" hidden>
+            <div class="user-menu-summary">
+                <span class="user-menu-summary-avatar">${inicial}</span>
+                <span class="user-menu-summary-copy"><strong>${safeName}</strong><small>Conta Age Run</small></span>
+            </div>
+            <div class="user-menu-divider"></div>
             <a href="${perfilHref}" class="user-menu-item">
-                <span class="material-icons">person</span> Meu Perfil
+                <span class="material-icons">person_outline</span><span>Meu perfil</span><span class="material-icons user-menu-chevron">chevron_right</span>
             </a>
             <button type="button" class="user-menu-item user-menu-logout">
-                <span class="material-icons">logout</span> Sair
+                <span class="material-icons">logout</span><span>Sair</span>
             </button>
         </div>
     `;
 
     headerActions.appendChild(dropdown);
+
+    if (fotoPerfil) {
+        dropdown.querySelector('.btn-user-menu')?.classList.add('has-photo');
+        dropdown.querySelectorAll('.user-menu-inicial, .user-menu-summary-avatar').forEach((avatar) => {
+            avatar.textContent = '';
+            const image = document.createElement('img');
+            image.src = fotoPerfil;
+            image.alt = '';
+            avatar.appendChild(image);
+        });
+    }
 
     const toggle = document.getElementById('userMenuToggle');
     const panel = document.getElementById('userMenuPanel');
@@ -235,7 +252,7 @@ async function aplicarPermissoesMenu() {
         });
 
         ensureOwnerMonitorLinks(isOwner);
-        injectUserDropdown(data.nome);
+        injectUserDropdown(data.nome, data.foto_perfil);
 
         if (!isMulher) return;
 
