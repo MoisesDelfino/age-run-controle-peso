@@ -1,7 +1,9 @@
 (function initStagingHomeTraining() {
-    if (!(window.location.pathname === '/dev/home' || window.location.pathname === '/dev/home/')) return;
+    const isStaging = window.location.pathname === '/dev/home' || window.location.pathname === '/dev/home/';
+    const isProduction = window.location.pathname === '/controle/home' || window.location.pathname === '/controle/home/';
+    if (!isStaging && !isProduction) return;
 
-    const apiBase = '/dev/api';
+    const apiBase = isStaging ? '/dev/api' : '/controle/api';
     const rpFields = [
         { key: '5k', apiKey: 'rp_5k', distance: 5 },
         { key: '10k', apiKey: 'rp_10k', distance: 10 },

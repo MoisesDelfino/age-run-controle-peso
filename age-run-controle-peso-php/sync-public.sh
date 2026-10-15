@@ -20,6 +20,7 @@ cadastro.html
 effects.css
 staging-redesign.css
 staging-redesign.js
+staging-home-training.js
 grupos-treino.html
 grupos-treino.js
 home.html

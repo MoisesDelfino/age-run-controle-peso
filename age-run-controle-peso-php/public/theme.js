@@ -1,17 +1,19 @@
 (function() {
     const isStagingPath = window.location.pathname === '/dev' || window.location.pathname.startsWith('/dev/');
-    if (isStagingPath) {
+    const isProductionPath = window.location.pathname === '/controle' || window.location.pathname.startsWith('/controle/');
+    const redesignBasePath = isStagingPath ? '/dev' : '/controle';
+    if (isStagingPath || isProductionPath) {
         if (!document.querySelector('link[data-staging-redesign]')) {
             const stagingStyles = document.createElement('link');
             stagingStyles.rel = 'stylesheet';
-            stagingStyles.href = '/dev/staging-redesign.css?v=2026101550';
+            stagingStyles.href = `${redesignBasePath}/staging-redesign.css?v=2026101551`;
             stagingStyles.dataset.stagingRedesign = 'true';
             document.head.appendChild(stagingStyles);
         }
 
         if (!document.querySelector('script[data-staging-redesign]')) {
             const stagingScript = document.createElement('script');
-            stagingScript.src = '/dev/staging-redesign.js?v=2026101522';
+            stagingScript.src = `${redesignBasePath}/staging-redesign.js?v=2026101523`;
             stagingScript.dataset.stagingRedesign = 'true';
             document.head.appendChild(stagingScript);
         }
