@@ -650,6 +650,19 @@ body.dark-mode.staging-redesign .staging-weighing .historico-item:hover {
     display: none;
 }
 
+.staging-redesign.staging-page-grupos-treino .staging-relocated-training {
+    display: none !important;
+}
+
+.staging-redesign.staging-page-home .staging-home-training-card {
+    padding: 18px;
+}
+
+.staging-redesign.staging-page-home .staging-home-training-card .rp-grid,
+.staging-redesign.staging-page-home .staging-home-training-card .coach-rp-test-controls {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 @media (max-width: 720px) {
     body.staging-redesign {
         overflow-x: hidden;
@@ -2089,11 +2102,15 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
         height: 100%;
         min-height: 0;
         padding: 10px 12px 12px;
+        display: grid;
+        grid-template-rows: 62px minmax(0, 1fr);
+        gap: 12px;
         overflow: hidden;
     }
 
     .staging-redesign.staging-page-home .home-stats-section,
-    .staging-redesign.staging-page-home .home-stats-section > .card {
+    .staging-redesign.staging-page-home .home-stats-section > .card,
+    .staging-redesign.staging-page-home .staging-home-training-card {
         height: 100%;
         min-height: 0;
         margin: 0;
@@ -2191,6 +2208,78 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
 
     .staging-redesign.staging-page-home .home-level-tag {
         font-size: 0.54rem;
+    }
+
+    .staging-redesign.staging-page-home .staging-home-training-card {
+        padding: 14px;
+        overflow: hidden;
+    }
+
+    .staging-redesign.staging-page-home .staging-home-training-card .rp-form,
+    .staging-redesign.staging-page-home .staging-home-training-card .coach-rp-test-controls {
+        height: 100%;
+        min-height: 0;
+    }
+
+    .staging-redesign.staging-page-home .staging-home-training-card .rp-grid,
+    .staging-redesign.staging-page-home .staging-home-training-card .coach-rp-test-controls {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px 10px;
+    }
+
+    .staging-redesign.staging-page-home .staging-home-training-card .form-group,
+    .staging-redesign.staging-page-home .staging-home-training-card .coach-rp-test-field {
+        min-width: 0;
+        margin: 0;
+    }
+
+    .staging-redesign.staging-page-home .staging-home-training-card label {
+        min-width: 0;
+        margin-bottom: 5px;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 2px 6px;
+        font-size: 0.72rem;
+    }
+
+    .staging-redesign.staging-page-home .staging-home-training-card label > span:first-child {
+        white-space: nowrap;
+    }
+
+    .staging-redesign.staging-page-home .staging-home-training-card .rp-status-badge,
+    .staging-redesign.staging-page-home .staging-home-training-card .rp-pace-inline {
+        margin-left: 0;
+        white-space: nowrap;
+    }
+
+    .staging-redesign.staging-page-home .staging-home-training-card input {
+        width: 100%;
+        min-height: 46px;
+        padding: 9px 11px;
+    }
+
+    .staging-redesign.staging-page-home .staging-home-training-card .rp-actions {
+        margin-top: 12px;
+    }
+
+    .staging-redesign.staging-page-home .staging-home-training-card .rp-actions .btn {
+        min-height: 44px;
+    }
+
+    .staging-redesign.staging-page-home .staging-home-training-card .rp-pace-summary {
+        margin-top: 8px;
+        font-size: 0.82rem;
+    }
+
+    .staging-redesign.staging-page-home .staging-home-training-card .coach-rp-test-history-list {
+        max-height: 92px;
+        margin-top: 10px;
+        overflow-y: auto;
+    }
+
+    .staging-redesign.staging-page-grupos-treino main.home-content {
+        grid-template-rows: minmax(0, 1fr);
     }
 
     .staging-redesign.staging-page-grupos-treino .rp-grid label {

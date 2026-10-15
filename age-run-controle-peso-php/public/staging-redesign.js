@@ -87,14 +87,9 @@
 
         if (path.endsWith('/grupos-treino')) {
             const rp = main.querySelector('.rp-section');
-            const records = rp?.querySelector('#rpForm');
-            const tests = rp?.querySelector('.athlete-test-panel');
             const groups = main.querySelector('.grupos-section');
-            setupMobilePanels([
-                { key: 'records', label: 'Recordes', icon: 'timer', section: records },
-                { key: 'tests', label: 'Testes', icon: 'speed', section: tests },
-                { key: 'groups', label: 'Grupos', icon: 'groups', section: groups }
-            ], rp);
+            rp?.classList.add('staging-relocated-training');
+            groups?.classList.add('is-mobile-active');
         }
 
         if (path.endsWith('/home')) {
@@ -102,20 +97,67 @@
 
             const section = main.querySelector('.home-stats-section');
             if (section) {
-                const intro = document.createElement('section');
-                intro.className = 'staging-page-intro';
-                intro.innerHTML = `
-                    <div>
-                        <span class="staging-eyebrow">Seu painel</span>
-                        <h2>Olá! Vamos acompanhar sua evolução?</h2>
-                        <p>Veja seus principais indicadores e mantenha seus registros em dia.</p>
-                    </div>
-                    <a class="staging-primary-action" href="./pesagem">
-                        <span class="material-icons" aria-hidden="true">add</span>
-                        Registrar pesagem
-                    </a>
-                `;
-                section.before(intro);
+                const records = document.createElement('section');
+                records.className = 'card staging-home-training-card';
+                records.innerHTML = `
+                    <form id="homeRpForm" class="rp-form">
+                        <div class="rp-grid">
+                            ${[
+                                ['5k', '5 km'],
+                                ['10k', '10 km'],
+                                ['21k', 'Meia Maratona (21k)'],
+                                ['42k', 'Maratona (42k)']
+                            ].map(([key, label]) => `
+                                <div class="form-group">
+                                    <label for="homeRp${key}"><span>${label}</span><span id="homeStatusRp${key}" class="rp-status-badge status-sem-rp">Sem RP</span><span id="homePaceRp${key}" class="rp-pace-inline"></span></label>
+                                    <input type="text" id="homeRp${key}" placeholder="mm:ss ou hh:mm:ss">
+                                </div>`).join('')}
+                        </div>
+                        <div class="rp-actions">
+                            <button type="submit" class="btn btn-primary">Salvar RPs</button>
+                            <span id="homeRpPaceSummary" class="rp-pace-summary"></span>
+                        </div>
+                        <div id="homeRpMessage" class="message" role="status"></div>
+                    </form>`;
+
+                const tests = document.createElement('section');
+                tests.className = 'card staging-home-training-card';
+                tests.innerHTML = `
+                    <form id="homeAthleteTestForm" class="coach-rp-test-controls">
+                        <div class="coach-rp-test-field">
+                            <label class="group-meta" for="homeAthleteTestTime">Tempo</label>
+                            <input id="homeAthleteTestTime" class="coach-rp-test-input" type="text" placeholder="12:00" required>
+                        </div>
+                        <div class="coach-rp-test-field">
+                            <label class="group-meta" for="homeAthleteTestDistance">Distância (km)</label>
+                            <input id="homeAthleteTestDistance" class="coach-rp-test-input" type="number" min="0.01" max="1000" step="0.01" placeholder="2" required>
+                        </div>
+                        <div class="coach-rp-test-field">
+                            <label class="group-meta" for="homeAthleteTestDate">Data do teste</label>
+                            <input id="homeAthleteTestDate" class="coach-rp-test-input" type="date" required>
+                        </div>
+                        <div class="coach-rp-test-preview">
+                            <span class="group-meta">Pace calculado</span>
+                            <strong id="homeAthleteTestPace" class="coach-rp-test-pace">Pace: -</strong>
+                        </div>
+                        <div class="coach-rp-test-buttons">
+                            <button type="submit" class="btn btn-secondary">Salvar teste</button>
+                        </div>
+                    </form>
+                    <div id="homeAthleteTestMessage" class="message" role="status"></div>
+                    <div id="homeAthleteLastTest" class="coach-rp-test-history-list"></div>`;
+
+                section.after(records, tests);
+                setupMobilePanels([
+                    { key: 'levels', label: 'Nível', icon: 'pets', section },
+                    { key: 'records', label: 'Recordes', icon: 'timer', section: records },
+                    { key: 'tests', label: 'Testes', icon: 'speed', section: tests }
+                ], section);
+
+                const trainingScript = document.createElement('script');
+                trainingScript.src = '/dev/staging-home-training.js?v=2026101501';
+                trainingScript.dataset.stagingHomeTraining = 'true';
+                document.body.appendChild(trainingScript);
             }
         }
 
