@@ -1665,6 +1665,68 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
     }
 }
 
+@media (max-width: 720px) {
+    .staging-redesign .staging-page-tabs {
+        margin: 0 0 12px;
+    }
+
+    .staging-redesign .staging-mobile-panel {
+        display: none !important;
+        margin: 0 !important;
+    }
+
+    .staging-redesign .staging-mobile-panel.is-mobile-active {
+        display: block !important;
+        animation: staging-panel-in 0.18s ease-out;
+    }
+
+    .staging-redesign.staging-page-grupos-treino .welcome-section {
+        display: none;
+    }
+
+    .staging-redesign.staging-page-grupos-treino .rp-section > .card,
+    .staging-redesign.staging-page-grupos-treino .grupos-section > .card,
+    .staging-redesign.staging-page-bioimpedancia .staging-mobile-panel {
+        margin: 0 !important;
+    }
+
+    .staging-redesign.staging-page-grupos-treino .rp-grid,
+    .staging-redesign.staging-page-bioimpedancia .form-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 9px;
+    }
+
+    .staging-redesign.staging-page-grupos-treino .coach-rp-test-panel {
+        margin-top: 10px;
+        padding: 12px;
+    }
+
+    .staging-redesign.staging-page-grupos-treino .coach-rp-test-controls {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .staging-redesign.staging-page-grupos-treino .groups-grid {
+        max-height: calc(100dvh - 250px);
+        overflow-y: auto;
+    }
+
+    .staging-redesign.staging-page-bioimpedancia .welcome-message {
+        display: none;
+    }
+
+    .staging-redesign.staging-page-bioimpedancia .bioimpedancia-page {
+        display: block;
+    }
+
+    .staging-redesign.staging-page-bioimpedancia .form-bioimpedancia,
+    .staging-redesign.staging-page-bioimpedancia .historico-bio-container {
+        max-height: calc(100dvh - 250px);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     .staging-redesign *,
     .staging-redesign *::before,

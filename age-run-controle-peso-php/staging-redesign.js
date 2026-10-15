@@ -34,6 +34,66 @@
         const main = document.querySelector('main');
         if (!main) return;
 
+        const setupMobilePanels = (items, insertBefore) => {
+            const validItems = items.filter((item) => item.section);
+            if (validItems.length < 2 || !insertBefore) return;
+
+            const tabs = document.createElement('div');
+            tabs.className = 'staging-mobile-tabs staging-page-tabs';
+            tabs.setAttribute('role', 'tablist');
+            tabs.setAttribute('aria-label', 'Áreas da página');
+            tabs.innerHTML = validItems.map((item, index) => `
+                <button type="button" class="staging-mobile-tab${index === 0 ? ' is-active' : ''}" role="tab" aria-selected="${index === 0}" data-target="${item.key}">
+                    <span class="material-icons" aria-hidden="true">${item.icon}</span>
+                    <span>${item.label}</span>
+                </button>
+            `).join('');
+            insertBefore.before(tabs);
+
+            validItems.forEach((item, index) => {
+                item.section.classList.add('staging-mobile-panel');
+                item.section.dataset.mobilePanel = item.key;
+                item.section.classList.toggle('is-mobile-active', index === 0);
+            });
+
+            const selectPanel = (target) => {
+                tabs.querySelectorAll('.staging-mobile-tab').forEach((tab) => {
+                    const selected = tab.dataset.target === target;
+                    tab.classList.toggle('is-active', selected);
+                    tab.setAttribute('aria-selected', String(selected));
+                });
+                validItems.forEach((item) => {
+                    item.section.classList.toggle('is-mobile-active', item.key === target);
+                });
+            };
+
+            tabs.addEventListener('click', (event) => {
+                const tab = event.target.closest('.staging-mobile-tab');
+                if (tab) selectPanel(tab.dataset.target);
+            });
+        };
+
+        if (path.endsWith('/bioimpedancia')) {
+            const page = main.querySelector('.bioimpedancia-page');
+            const health = page?.querySelector('.imc-section-full');
+            const register = page?.querySelector('.bioimpedancia-section-full');
+            const history = page?.querySelector('.historico-bio-section');
+            setupMobilePanels([
+                { key: 'health', label: 'Saúde', icon: 'favorite_border', section: health },
+                { key: 'register', label: 'Registrar', icon: 'add_circle_outline', section: register },
+                { key: 'history', label: 'Histórico', icon: 'history', section: history }
+            ], page);
+        }
+
+        if (path.endsWith('/grupos-treino')) {
+            const rp = main.querySelector('.rp-section');
+            const groups = main.querySelector('.grupos-section');
+            setupMobilePanels([
+                { key: 'records', label: 'Recordes', icon: 'timer', section: rp },
+                { key: 'groups', label: 'Grupos', icon: 'groups', section: groups }
+            ], rp);
+        }
+
         if (path.endsWith('/home')) {
             main.classList.add('staging-home');
 

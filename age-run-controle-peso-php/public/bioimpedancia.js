@@ -6,9 +6,11 @@ var API_BASE = API_BASE || (window.location.hostname === 'localhost'
 
 const API_BASE_CANDIDATES = window.location.hostname === 'localhost'
     ? [API_BASE]
-    : (window.location.pathname.startsWith('/controle')
+    : (window.location.pathname.startsWith('/dev')
+        ? ['/dev/api']
+        : (window.location.pathname.startsWith('/controle')
         ? ['/controle/api', '/api']
-        : ['/api', '/controle/api']);
+        : ['/api', '/controle/api']));
 
 async function fetchJsonFromApi(path, options = {}) {
     const normalizedPath = String(path || '').startsWith('/') ? String(path) : `/${String(path || '')}`;
