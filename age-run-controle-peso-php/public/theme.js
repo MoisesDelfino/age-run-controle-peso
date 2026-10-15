@@ -11,7 +11,7 @@
 
         if (!document.querySelector('script[data-staging-redesign]')) {
             const stagingScript = document.createElement('script');
-            stagingScript.src = '/dev/staging-redesign.js?v=2026101515';
+            stagingScript.src = '/dev/staging-redesign.js?v=2026101516';
             stagingScript.dataset.stagingRedesign = 'true';
             document.head.appendChild(stagingScript);
         }

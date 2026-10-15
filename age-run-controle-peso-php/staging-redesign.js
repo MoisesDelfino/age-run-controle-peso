@@ -88,7 +88,7 @@
             moreSheet.innerHTML = `
                 <div class="staging-more-handle" aria-hidden="true"></div>
                 <div class="staging-more-heading">
-                    <div><strong>Mais opções</strong><span>Acesse recursos complementares</span></div>
+                    <div><strong>Mais opções</strong></div>
                     <button type="button" class="staging-more-close" aria-label="Fechar"><span class="material-icons">close</span></button>
                 </div>
                 <div class="staging-more-links"></div>`;
