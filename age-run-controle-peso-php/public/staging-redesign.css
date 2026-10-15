@@ -2544,6 +2544,11 @@ body.coach-photo-viewer-open {
     font-size: 0.82rem;
 }
 
+.staging-redesign .passkey-register-button[hidden],
+.staging-redesign .passkey-credential-list[hidden] {
+    display: none !important;
+}
+
 .staging-redesign .passkey-status {
     grid-column: 1 / -1;
     padding: 11px 13px;
