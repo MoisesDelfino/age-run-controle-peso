@@ -823,6 +823,10 @@ body.dark-mode.staging-redesign.staging-page-home .staging-mobile-tab.is-active 
     display: none !important;
 }
 
+.staging-redesign.staging-page-home .staging-home-training-card.is-test-form-open #homeAthleteLastTest {
+    display: none !important;
+}
+
 .staging-redesign.staging-page-home .staging-test-form-cancel {
     border: 1px solid var(--staging-line);
     background: transparent;

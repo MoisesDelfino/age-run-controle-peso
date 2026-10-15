@@ -116,6 +116,8 @@
     const testDistance = document.getElementById('homeAthleteTestDistance');
     const testDate = document.getElementById('homeAthleteTestDate');
     const testPace = document.getElementById('homeAthleteTestPace');
+    const testHistory = document.getElementById('homeAthleteLastTest');
+    const testCard = testForm?.closest('.staging-home-training-card');
 
     const setTestFormOpen = (open) => {
         if (!testForm || !testFormToggle) return;
@@ -123,6 +125,8 @@
         testForm.classList.toggle('is-open', open);
         testFormToggle.setAttribute('aria-expanded', String(open));
         testFormToggle.classList.toggle('is-open', open);
+        testCard?.classList.toggle('is-test-form-open', open);
+        testHistory?.setAttribute('aria-hidden', String(open));
         testFormToggle.querySelector('.material-icons').textContent = open ? 'close' : 'add';
         testFormToggle.querySelector('span:last-child').textContent = open ? 'Fechar cadastro' : 'Cadastrar teste';
         if (open) testTime?.focus();

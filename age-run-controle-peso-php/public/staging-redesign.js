@@ -460,7 +460,7 @@
                 ], section);
 
                 const trainingScript = document.createElement('script');
-                trainingScript.src = '/dev/staging-home-training.js?v=2026101503';
+                trainingScript.src = '/dev/staging-home-training.js?v=2026101504';
                 trainingScript.dataset.stagingHomeTraining = 'true';
                 document.body.appendChild(trainingScript);
             }
