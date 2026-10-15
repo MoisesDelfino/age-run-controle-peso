@@ -115,21 +115,34 @@
                     return [route, link];
                 }));
 
+                const isAdmin = Boolean(navList.querySelector('.owner-monitor-link, .owner-access-link'));
+                const isTrainer = document.body.classList.contains('is-trainer') && !isAdmin;
+                const usesMore = isAdmin || isTrainer;
+
                 bottomNav.innerHTML = coreRoutes.map((route) => {
                     const source = byRoute.get(route);
                     if (!source) return '';
                     const icon = source.querySelector('.staging-nav-icon')?.textContent || 'circle';
-                    const label = source.querySelector('.staging-nav-label')?.textContent || '';
+                    const sourceLabel = source.querySelector('.staging-nav-label')?.textContent || '';
+                    const label = route === '/grupos-treino' ? 'Grupos' : sourceLabel;
                     const active = source.classList.contains('active');
                     return `<a class="staging-bottom-item${active ? ' is-active' : ''}" href="${source.href}"${active ? ' aria-current="page"' : ''}><span class="material-icons">${icon}</span><span>${label}</span></a>`;
-                }).join('') + `
+                }).join('') + (usesMore ? `
                     <button type="button" class="staging-bottom-item staging-bottom-more" aria-expanded="false">
                         <span class="material-icons">apps</span><span>Mais</span>
-                    </button>`;
+                    </button>` : (() => {
+                        const bio = byRoute.get('/bioimpedancia');
+                        if (!bio) return '';
+                        const icon = bio.querySelector('.staging-nav-icon')?.textContent || 'analytics';
+                        const active = bio.classList.contains('active');
+                        return `<a class="staging-bottom-item${active ? ' is-active' : ''}" href="${bio.href}"${active ? ' aria-current="page"' : ''}><span class="material-icons">${icon}</span><span>Bio</span></a>`;
+                    })());
 
                 const secondary = links.filter((link) => {
                     const route = new URL(link.href, window.location.origin).pathname.replace(/^\/dev|^\/controle/, '');
-                    return !coreRoutes.includes(route);
+                    if (isTrainer) return route === '/treinador';
+                    if (isAdmin) return !coreRoutes.includes(route);
+                    return false;
                 });
                 const target = moreSheet.querySelector('.staging-more-links');
                 target.innerHTML = secondary.map((source) => {
@@ -141,10 +154,13 @@
 
                 bottomNav.querySelector('.staging-bottom-more')?.addEventListener('click', openMore);
                 target.querySelectorAll('a').forEach((link) => link.addEventListener('click', closeMore));
+                if (!usesMore) closeMore();
             };
 
             renderBottomNavigation();
             new MutationObserver(renderBottomNavigation).observe(navList, { childList: true, subtree: true });
+            new MutationObserver(renderBottomNavigation).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+            window.setTimeout(renderBottomNavigation, 800);
             moreOverlay.addEventListener('click', closeMore);
             moreSheet.querySelector('.staging-more-close')?.addEventListener('click', closeMore);
             document.addEventListener('keydown', (event) => {
