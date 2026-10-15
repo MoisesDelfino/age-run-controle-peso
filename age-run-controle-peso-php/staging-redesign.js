@@ -303,6 +303,38 @@
             const groups = main.querySelector('.grupos-section');
             rp?.classList.add('staging-relocated-training');
             groups?.classList.add('is-mobile-active');
+
+            const grid = groups?.querySelector('.groups-grid');
+            const columns = Array.from(grid?.querySelectorAll('.group-column') || []);
+            if (grid && columns.length) {
+                const labels = [
+                    { label: 'Mesmo ritmo', icon: 'group' },
+                    { label: 'Mais rápidos', icon: 'trending_up' },
+                    { label: 'Para apoiar', icon: 'volunteer_activism' }
+                ];
+                const tabs = document.createElement('div');
+                tabs.className = 'staging-group-tabs';
+                tabs.setAttribute('role', 'tablist');
+                tabs.setAttribute('aria-label', 'Categorias de grupos');
+                tabs.innerHTML = columns.map((column, index) => `
+                    <button type="button" class="staging-group-tab${index === 0 ? ' is-active' : ''}" data-group-index="${index}" role="tab" aria-selected="${index === 0}">
+                        <span class="material-icons" aria-hidden="true">${labels[index]?.icon || 'group'}</span>
+                        <span>${labels[index]?.label || `Grupo ${index + 1}`}</span>
+                    </button>`).join('');
+                grid.before(tabs);
+                columns.forEach((column, index) => column.classList.toggle('is-active', index === 0));
+                tabs.addEventListener('click', (event) => {
+                    const button = event.target.closest('.staging-group-tab');
+                    if (!button) return;
+                    const selectedIndex = Number(button.dataset.groupIndex);
+                    tabs.querySelectorAll('.staging-group-tab').forEach((tab, index) => {
+                        const selected = index === selectedIndex;
+                        tab.classList.toggle('is-active', selected);
+                        tab.setAttribute('aria-selected', String(selected));
+                    });
+                    columns.forEach((column, index) => column.classList.toggle('is-active', index === selectedIndex));
+                });
+            }
         }
 
         if (path.endsWith('/home')) {
