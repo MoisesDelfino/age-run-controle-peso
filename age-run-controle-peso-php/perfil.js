@@ -23,6 +23,7 @@ const garminLoginMessage = document.getElementById('garminLoginMessage');
 const btnGarminLogin = document.getElementById('btnGarminLogin');
 const btnGarminCancel = document.getElementById('btnGarminCancel');
 const perfilPhotoInput = document.getElementById('perfilPhotoInput');
+const perfilCameraInput = document.getElementById('perfilCameraInput');
 const perfilPhotoImage = document.getElementById('perfilPhotoImage');
 const perfilPhotoInitial = document.getElementById('perfilPhotoInitial');
 const perfilPhotoRemove = document.getElementById('perfilPhotoRemove');
@@ -138,20 +139,24 @@ async function carregarPerfil() {
     if (garminCard) garminCard.hidden = data.garmin_pilot_enabled !== true;
 }
 
-perfilPhotoInput?.addEventListener('change', async () => {
-    const file = perfilPhotoInput.files?.[0];
+async function handleProfilePhotoSelection(input) {
+    const file = input?.files?.[0];
     if (!file) return;
     try {
         renderProfilePhoto(await prepareProfilePhoto(file), perfilNome?.value);
         showMessage('Foto pronta. Salve as alterações para confirmar.', 'success');
     } catch (error) {
-        perfilPhotoInput.value = '';
+        input.value = '';
         showMessage(error.message, 'error');
     }
-});
+}
+
+perfilPhotoInput?.addEventListener('change', () => handleProfilePhotoSelection(perfilPhotoInput));
+perfilCameraInput?.addEventListener('change', () => handleProfilePhotoSelection(perfilCameraInput));
 
 perfilPhotoRemove?.addEventListener('click', () => {
     if (perfilPhotoInput) perfilPhotoInput.value = '';
+    if (perfilCameraInput) perfilCameraInput.value = '';
     renderProfilePhoto(null, perfilNome?.value);
     showMessage('Foto removida. Salve as alterações para confirmar.', 'success');
 });

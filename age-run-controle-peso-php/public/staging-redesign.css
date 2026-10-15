@@ -1764,6 +1764,16 @@ body.dark-mode.staging-redesign .staging-height-toggle .material-icons {
     font-size: 18px;
 }
 
+.staging-redesign.staging-page-perfil .perfil-photo-camera {
+    border-color: var(--primary-color);
+    background: var(--primary-color);
+    color: #fff;
+}
+
+.staging-redesign.staging-page-perfil .perfil-photo-gallery {
+    background: transparent;
+}
+
 .staging-redesign.staging-page-perfil .perfil-photo-remove {
     min-height: 36px;
     padding: 6px 10px;
@@ -2619,6 +2629,15 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
     .staging-redesign.staging-page-perfil .perfil-photo-preview {
         width: 72px;
         height: 72px;
+    }
+
+    .staging-redesign.staging-page-perfil .perfil-photo-actions {
+        gap: 6px;
+    }
+
+    .staging-redesign.staging-page-perfil .perfil-photo-select {
+        padding: 7px 10px;
+        font-size: 0.7rem;
     }
 
     .staging-redesign .staging-mobile-panel {

@@ -284,14 +284,18 @@
                     </div>
                     <div class="perfil-photo-content">
                         <strong>Foto de perfil</strong>
-                        <span>JPG, PNG ou WebP. A imagem será ajustada automaticamente.</span>
                         <div class="perfil-photo-actions">
-                            <label for="perfilPhotoInput" class="btn perfil-photo-select">
+                            <label for="perfilCameraInput" class="btn perfil-photo-select perfil-photo-camera">
                                 <span class="material-icons" aria-hidden="true">photo_camera</span>
-                                Escolher foto
+                                Tirar foto
+                            </label>
+                            <label for="perfilPhotoInput" class="btn perfil-photo-select perfil-photo-gallery">
+                                <span class="material-icons" aria-hidden="true">photo_library</span>
+                                Galeria
                             </label>
                             <button type="button" id="perfilPhotoRemove" class="perfil-photo-remove" hidden>Remover</button>
                         </div>
+                        <input type="file" id="perfilCameraInput" accept="image/*" capture="user" hidden>
                         <input type="file" id="perfilPhotoInput" accept="image/jpeg,image/png,image/webp" hidden>
                     </div>
                 </div>
@@ -367,8 +371,8 @@
         </div>
     </footer>
 
-    <script src="theme.js?v=2026101533"></script>
+    <script src="theme.js?v=2026101534"></script>
     <script src="menu.js?v=2026101501"></script>
-    <script src="perfil.js?v=2026101501"></script>
+    <script src="perfil.js?v=2026101502"></script>
 </body>
 </html>
