@@ -168,7 +168,26 @@
             });
         }
 
+        document.querySelectorAll('h1, .title-desktop').forEach((element) => {
+            if (element.textContent.trim().toLowerCase() === 'controle de peso') {
+                element.textContent = 'Performance, saúde e evolução';
+            }
+        });
+
         const path = window.location.pathname.replace(/\/$/, '');
+
+        if (path.endsWith('/login')) {
+            const authHeader = document.querySelector('.auth-header');
+            const title = authHeader?.querySelector('h1');
+            if (title) title.textContent = 'Sua evolução na corrida';
+            if (authHeader && !authHeader.querySelector('.staging-auth-subtitle')) {
+                const subtitle = document.createElement('p');
+                subtitle.className = 'staging-auth-subtitle';
+                subtitle.textContent = 'Performance, saúde e resultados em um só lugar.';
+                title?.after(subtitle);
+            }
+        }
+
         const main = document.querySelector('main');
         if (!main) return;
 
