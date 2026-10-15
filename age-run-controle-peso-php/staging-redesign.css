@@ -2425,9 +2425,12 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
 
     .staging-redesign.staging-page-home .staging-home-training-card {
         padding: 14px;
-        display: flex !important;
         flex-direction: column;
         overflow: hidden;
+    }
+
+    .staging-redesign.staging-page-home .staging-home-training-card.is-mobile-active {
+        display: flex !important;
     }
 
     .staging-redesign.staging-page-home .staging-home-training-card .rp-form,
@@ -2492,8 +2495,33 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
         flex: 1 1 auto;
         min-height: 0;
         max-height: none;
-        margin-top: 10px;
+        margin-top: 0;
+        padding-top: 10px;
+        border-top: 1px solid var(--staging-line);
         overflow-y: auto;
+    }
+
+    .staging-redesign.staging-page-home .staging-home-training-card .coach-rp-test-controls {
+        flex: 0 0 auto;
+        margin-bottom: 10px;
+    }
+
+    .staging-redesign.staging-page-home .staging-home-training-card .coach-rp-test-buttons {
+        grid-column: 1 / -1;
+    }
+
+    .staging-redesign.staging-page-home .staging-home-training-card .coach-rp-test-buttons .btn {
+        width: 100%;
+        min-height: 44px;
+    }
+
+    .staging-redesign.staging-page-home .staging-test-history-title {
+        margin: 0 0 8px;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        padding: 2px 0 6px;
+        background: var(--staging-card);
     }
 
     .staging-redesign.staging-page-grupos-treino main.home-content {
