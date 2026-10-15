@@ -257,12 +257,9 @@
                 const searchInput = toolbar.querySelector('#coachSearchInput');
                 if (searchLabel) searchLabel.textContent = 'Buscar atleta';
                 if (searchInput) searchInput.placeholder = 'Nome ou e-mail';
-                const summary = document.createElement('section');
-                summary.className = 'staging-coach-summary';
-                card.prepend(summary);
-                summary.append(heading);
-                if (description) summary.append(description);
-                summary.append(kpis);
+                heading.remove();
+                description?.remove();
+                kpis.remove();
 
                 const users = document.createElement('section');
                 users.className = 'staging-coach-users';
@@ -270,10 +267,9 @@
                 users.append(toolbar, usersContent);
 
                 setupMobilePanels([
-                    { key: 'summary', label: 'Resumo', icon: 'dashboard', section: summary },
                     { key: 'reviews', label: 'Revisões', icon: 'fact_check', section: pending },
                     { key: 'athletes', label: 'Atletas', icon: 'groups', section: users }
-                ], summary);
+                ], pending);
 
                 const pendingList = pending.querySelector('#pendingTestsList');
                 const pendingCount = pending.querySelector('#pendingTestsCount');
