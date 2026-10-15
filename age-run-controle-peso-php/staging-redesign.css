@@ -1393,9 +1393,9 @@ body.dark-mode.staging-redesign .staging-height-toggle .material-icons {
 /* Autenticação e primeiro acesso */
 .staging-redesign.staging-auth-page {
     background:
-        radial-gradient(circle at 15% 15%, rgba(139, 195, 74, 0.12), transparent 34%),
-        radial-gradient(circle at 85% 85%, rgba(123, 31, 162, 0.12), transparent 34%),
-        var(--light-color);
+        radial-gradient(circle at 12% 12%, rgba(139, 195, 74, 0.16), transparent 28%),
+        radial-gradient(circle at 88% 86%, rgba(142, 32, 181, 0.34), transparent 40%),
+        linear-gradient(155deg, #160d1b 0%, #0f0d11 55%, #211027 100%);
 }
 
 .staging-redesign.staging-auth-page .auth-container {
@@ -1409,11 +1409,11 @@ body.dark-mode.staging-redesign .staging-height-toggle .material-icons {
     overflow: hidden;
     max-width: 440px;
     padding: clamp(24px, 5vw, 38px);
-    border: 1px solid rgba(123, 31, 162, 0.18);
+    border: 1px solid rgba(174, 91, 202, 0.42);
     border-radius: 22px;
-    background: var(--staging-surface);
-    color: var(--staging-ink);
-    box-shadow: 0 22px 60px rgba(54, 28, 61, 0.16);
+    background: linear-gradient(155deg, #291d2d 0%, #1d181f 60%, #241528 100%);
+    color: #f7f2f8;
+    box-shadow: 0 24px 70px rgba(8, 4, 10, 0.55), 0 0 38px rgba(123, 31, 162, 0.12);
 }
 
 .staging-redesign.staging-auth-page .auth-box::before {
@@ -1431,7 +1431,7 @@ body.dark-mode.staging-redesign .staging-height-toggle .material-icons {
 }
 
 .staging-redesign.staging-auth-page .auth-header h1 {
-    color: var(--staging-ink);
+    color: #f7f2f8;
     margin-bottom: 7px;
     font-size: clamp(1.4rem, 4vw, 1.72rem);
     font-weight: 700;
@@ -1441,7 +1441,7 @@ body.dark-mode.staging-redesign .staging-height-toggle .material-icons {
 .staging-redesign.staging-auth-page .staging-auth-subtitle {
     max-width: 330px;
     margin: 0 auto;
-    color: var(--staging-muted);
+    color: #cdbfd1;
     font-size: 0.82rem;
     line-height: 1.5;
 }
@@ -1449,43 +1449,64 @@ body.dark-mode.staging-redesign .staging-height-toggle .material-icons {
 .staging-redesign.staging-auth-page .auth-header p,
 .staging-redesign.staging-auth-page .auth-form label,
 .staging-redesign.staging-auth-page .auth-footer {
-    color: var(--staging-muted);
+    color: #d2c5d5;
 }
 
 .staging-redesign.staging-auth-page .auth-form input,
 .staging-redesign.staging-auth-page .auth-form select {
-    border-color: #d8d5da;
+    border-color: #604368;
     border-radius: 12px;
-    background: var(--white);
-    color: var(--dark-color);
+    background: #2c2230;
+    color: #fbf7fc;
 }
 
 .staging-redesign.staging-auth-page .auth-form input:focus,
 .staging-redesign.staging-auth-page .auth-form select:focus {
-    border-color: var(--secondary-color);
-    box-shadow: 0 0 0 4px rgba(123, 31, 162, 0.11);
+    border-color: #b765d0;
+    background: #332637;
+    box-shadow: 0 0 0 4px rgba(156, 39, 176, 0.22);
 }
 
 .staging-redesign.staging-auth-page .auth-form input::placeholder {
-    color: #8a858c;
+    color: #a99eac;
 }
 
 .staging-redesign.staging-auth-page .forgot-password a,
 .staging-redesign.staging-auth-page .auth-footer a,
 .staging-redesign.staging-auth-page .auth-inline-action {
-    color: var(--secondary-color);
+    color: #dda0eb;
 }
 
 .staging-redesign.staging-auth-page .auth-form .btn-primary {
     min-height: 50px;
     border-radius: 12px;
-    background: var(--primary-color);
-    box-shadow: 0 8px 20px rgba(139, 195, 74, 0.2);
+    background: linear-gradient(135deg, #8fce45 0%, #73aa34 100%);
+    color: #fff;
+    box-shadow: 0 10px 25px rgba(139, 195, 74, 0.25);
+}
+
+.staging-redesign.staging-auth-page .auth-form .btn-primary:hover {
+    background: linear-gradient(135deg, #9bdc50 0%, #7bb63a 100%);
+}
+
+.staging-redesign.staging-auth-page .toggle-password {
+    color: #d7a1e4;
+}
+
+.staging-redesign.staging-auth-page .auth-form input:-webkit-autofill,
+.staging-redesign.staging-auth-page .auth-form input:-webkit-autofill:hover,
+.staging-redesign.staging-auth-page .auth-form input:-webkit-autofill:focus {
+    -webkit-text-fill-color: #fbf7fc;
+    caret-color: #fbf7fc;
+    -webkit-box-shadow: 0 0 0 1000px #2c2230 inset;
+    box-shadow: 0 0 0 1000px #2c2230 inset;
+    border-color: #604368;
+    transition: background-color 9999s ease-out 0s;
 }
 
 .staging-redesign.staging-auth-page .auth-footer {
     padding-top: 18px;
-    border-top-color: var(--staging-line);
+    border-top-color: #4d3852;
 }
 
 /* Home */
