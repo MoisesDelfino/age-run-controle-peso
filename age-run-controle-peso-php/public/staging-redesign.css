@@ -1903,8 +1903,6 @@ body.dark-mode.staging-redesign .nav-link.active .staging-nav-icon {
 
 .staging-redesign.staging-page-perfil .perfil-grid {
     width: 100%;
-    display: grid;
-    gap: 18px;
     grid-template-columns: minmax(0, 680px);
     justify-content: center;
 }
@@ -2458,288 +2456,6 @@ body.dark-mode.staging-redesign .nav-link.active .staging-nav-icon {
 
 body.coach-photo-viewer-open {
     overflow: hidden;
-}
-
-.staging-redesign .passkey-divider {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    color: var(--staging-muted);
-    font-size: 0.78rem;
-}
-
-.staging-redesign .passkey-divider::before,
-.staging-redesign .passkey-divider::after {
-    content: '';
-    height: 1px;
-    flex: 1;
-    background: var(--staging-line);
-}
-
-.staging-redesign .passkey-login-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 9px;
-    border: 1px solid rgba(142, 32, 181, 0.55);
-    background: rgba(142, 32, 181, 0.08);
-    color: var(--secondary-color);
-}
-
-.staging-redesign .passkey-login-button .material-icons {
-    font-size: 23px;
-}
-
-.staging-redesign .passkey-card {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 10px 14px;
-    padding: 14px 16px;
-    border-color: rgba(142, 32, 181, 0.34);
-}
-
-.staging-redesign .passkey-heading {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-}
-
-.staging-redesign .passkey-heading > .material-icons {
-    width: 38px;
-    height: 38px;
-    display: grid;
-    place-items: center;
-    flex: 0 0 auto;
-    border-radius: 11px;
-    background: rgba(142, 32, 181, 0.14);
-    color: #bf62d3;
-}
-
-.staging-redesign .passkey-heading h2,
-.staging-redesign .passkey-heading p {
-    margin: 0;
-}
-
-.staging-redesign .passkey-heading h2 {
-    color: var(--staging-ink);
-    font-size: 1rem;
-}
-
-.staging-redesign .passkey-heading p {
-    font-size: 0.78rem;
-    line-height: 1.35;
-}
-
-.staging-redesign .passkey-heading p {
-    color: var(--staging-muted);
-}
-
-.staging-redesign .passkey-register-button {
-    width: fit-content;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 7px;
-    min-height: 42px;
-    padding: 9px 14px;
-    font-size: 0.82rem;
-}
-
-.staging-redesign .passkey-register-button[hidden],
-.staging-redesign .passkey-credential-list[hidden] {
-    display: none !important;
-}
-
-.staging-redesign .passkey-status {
-    grid-column: 1 / -1;
-    padding: 11px 13px;
-    border-radius: 11px;
-    font-size: 0.85rem;
-}
-
-.staging-redesign .passkey-status.success {
-    border: 1px solid rgba(34, 197, 94, 0.45);
-    background: rgba(34, 197, 94, 0.12);
-    color: #9ee6b3;
-}
-
-.staging-redesign .passkey-status.error {
-    border: 1px solid rgba(239, 68, 68, 0.45);
-    background: rgba(239, 68, 68, 0.12);
-    color: #f7a7a7;
-}
-
-.staging-redesign .passkey-credential-list {
-    grid-column: 1 / -1;
-    display: grid;
-    gap: 6px;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-}
-
-.staging-redesign .passkey-registered-tag {
-    width: fit-content;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 7px 11px;
-    border: 1px solid rgba(34, 197, 94, 0.45);
-    border-radius: 999px;
-    background: rgba(34, 197, 94, 0.12);
-    color: #9ee6b3;
-    font-size: 0.78rem;
-    font-weight: 600;
-}
-
-.staging-redesign .passkey-registered-tag .material-icons {
-    font-size: 17px;
-}
-
-.staging-redesign .passkey-registered-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-}
-
-.staging-redesign .passkey-delete-button {
-    min-height: 32px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-    padding: 6px 10px;
-    border: 1px solid rgba(239, 68, 68, 0.4);
-    border-radius: 10px;
-    background: rgba(239, 68, 68, 0.1);
-    color: #f5a0a0;
-    font: inherit;
-    font-size: 0.72rem;
-    font-weight: 600;
-    cursor: pointer;
-}
-
-.staging-redesign .passkey-delete-button .material-icons {
-    font-size: 17px;
-}
-
-.passkey-confirm-modal[hidden] {
-    display: none !important;
-}
-
-.passkey-confirm-modal {
-    position: fixed;
-    inset: 0;
-    z-index: 13000;
-    display: grid;
-    place-items: center;
-    padding: 20px;
-}
-
-.passkey-confirm-backdrop {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    border: 0;
-    background: rgba(8, 7, 10, 0.78);
-    backdrop-filter: blur(6px);
-}
-
-.passkey-confirm-dialog {
-    position: relative;
-    z-index: 1;
-    width: min(100%, 420px);
-    display: grid;
-    grid-template-columns: 46px minmax(0, 1fr);
-    gap: 12px;
-    padding: 18px;
-    border: 1px solid rgba(142, 32, 181, 0.42);
-    border-radius: 18px;
-    background: #211d23;
-    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.45);
-    color: #f5f2f6;
-}
-
-.passkey-confirm-icon {
-    width: 46px;
-    height: 46px;
-    display: grid;
-    place-items: center;
-    border-radius: 14px;
-    background: rgba(239, 68, 68, 0.13);
-    color: #ff9d9d;
-}
-
-.passkey-confirm-copy h2,
-.passkey-confirm-copy p {
-    margin: 0;
-}
-
-.passkey-confirm-copy h2 {
-    font-size: 1.05rem;
-}
-
-.passkey-confirm-copy p {
-    margin-top: 5px;
-    color: #cfc7d0;
-    font-size: 0.82rem;
-    line-height: 1.45;
-}
-
-.passkey-confirm-actions {
-    grid-column: 1 / -1;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-top: 4px;
-}
-
-.passkey-confirm-actions .btn {
-    min-height: 42px;
-}
-
-.passkey-confirm-cancel {
-    border: 1px solid rgba(194, 123, 213, 0.4);
-    background: transparent;
-    color: #d99de6;
-}
-
-.passkey-confirm-remove {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    border: 1px solid rgba(239, 68, 68, 0.52);
-    background: rgba(239, 68, 68, 0.16);
-    color: #ffadad;
-}
-
-body.passkey-confirm-open {
-    overflow: hidden;
-}
-
-@media (max-width: 680px) {
-    .staging-redesign .passkey-register-button {
-        width: auto;
-    }
-
-    .staging-redesign .passkey-card {
-        grid-template-columns: minmax(0, 1fr) auto;
-        gap: 6px 10px;
-        padding: 9px 12px;
-    }
-
-    .staging-redesign .passkey-register-button {
-        min-width: 0;
-        padding: 8px 12px;
-        font-size: 0.76rem;
-    }
-
-    .staging-redesign .passkey-register-button .material-icons {
-        font-size: 18px;
-    }
 }
 
 body.dark-mode.staging-redesign.staging-page-treinador .coach-summary-avatar,
@@ -3520,15 +3236,13 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
     }
 
     .staging-redesign.staging-page-perfil .perfil-grid {
-        height: auto;
+        height: 100%;
         min-height: 0;
-        align-content: start;
-        gap: 10px;
     }
 
     .staging-redesign.staging-page-perfil .perfil-grid > .card {
         position: relative;
-        height: auto;
+        height: 100%;
         min-height: 0;
         margin: 0;
         padding: 12px 14px;
@@ -3537,7 +3251,7 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
     }
 
     .staging-redesign.staging-page-perfil .perfil-heading {
-        margin-bottom: 8px;
+        margin-bottom: 10px;
         gap: 10px;
     }
 
@@ -3568,7 +3282,7 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
 
     .staging-redesign.staging-page-perfil .perfil-form {
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 7px 9px;
+        gap: 9px;
     }
 
     .staging-redesign.staging-page-perfil .perfil-photo-field,
@@ -3582,8 +3296,8 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
     }
 
     .staging-redesign.staging-page-perfil .perfil-photo-field {
-        min-height: 94px;
-        padding: 8px 10px;
+        min-height: 102px;
+        padding: 10px 12px;
         grid-template-columns: 64px minmax(0, 1fr);
         align-items: center;
         gap: 12px;
@@ -3622,7 +3336,7 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
 
     .staging-redesign.staging-page-perfil .perfil-form input,
     .staging-redesign.staging-page-perfil .perfil-form select {
-        min-height: 38px;
+        min-height: 40px;
         padding: 7px 10px;
         font-size: 0.78rem;
     }
@@ -3636,9 +3350,9 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
     }
 
     .staging-redesign.staging-page-perfil #btnSalvarPerfil {
-        min-height: 38px;
+        min-height: 42px;
         margin-top: 1px;
-        padding: 6px 12px;
+        padding: 8px 12px;
         font-size: 0.76rem;
     }
 
