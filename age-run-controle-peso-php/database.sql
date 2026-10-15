@@ -49,6 +49,20 @@ CREATE TABLE IF NOT EXISTS rp_testes_revisoes (
     PRIMARY KEY (teste_id, usuario_id)
 );
 
+CREATE TABLE IF NOT EXISTS webauthn_credentials (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    usuario_id INT NOT NULL,
+    credential_id VARCHAR(512) NOT NULL UNIQUE,
+    public_key_cose TEXT NOT NULL,
+    sign_count BIGINT UNSIGNED DEFAULT 0,
+    transports TEXT NULL,
+    nome VARCHAR(120) NULL,
+    criado_em DATETIME DEFAULT CURRENT_TIMESTAMP,
+    ultimo_uso_em DATETIME NULL,
+    INDEX idx_webauthn_usuario (usuario_id),
+    CONSTRAINT fk_webauthn_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+);
+
 CREATE INDEX idx_pesagens_usuario_id ON pesagens(usuario_id);
 CREATE INDEX idx_pesagens_data ON pesagens(data_pesagem);
 CREATE INDEX idx_pesagens_excluido ON pesagens(excluido);
