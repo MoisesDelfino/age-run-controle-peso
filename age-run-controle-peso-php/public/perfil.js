@@ -39,6 +39,7 @@ let photoEditorOffsetX = 0;
 let photoEditorOffsetY = 0;
 let photoEditorZoom = 1;
 let photoEditorDrag = null;
+let perfilMessageTimer = null;
 
 function renderProfilePhoto(photo, name) {
     perfilPhotoData = photo || null;
@@ -60,8 +61,8 @@ function loadProfilePhotoSource(file) {
             reject(new Error('Escolha uma imagem JPG, PNG ou WebP.'));
             return;
         }
-        if (file.size > 8 * 1024 * 1024) {
-            reject(new Error('A imagem deve ter no máximo 8 MB.'));
+        if (file.size > 20 * 1024 * 1024) {
+            reject(new Error('A imagem deve ter no máximo 20 MB.'));
             return;
         }
         const reader = new FileReader();
@@ -152,8 +153,23 @@ function setGarminConnected() {
 
 function showMessage(text, type) {
     if (!perfilMessage) return;
-    perfilMessage.textContent = text || '';
-    perfilMessage.className = type ? `perfil-message ${type} show` : 'perfil-message';
+    if (perfilMessageTimer) clearTimeout(perfilMessageTimer);
+    if (!text || !type) {
+        perfilMessage.replaceChildren();
+        perfilMessage.className = 'perfil-message';
+        return;
+    }
+    const icon = document.createElement('span');
+    icon.className = 'material-icons perfil-message-icon';
+    icon.setAttribute('aria-hidden', 'true');
+    icon.textContent = type === 'success' ? 'check_circle' : 'error_outline';
+    const copy = document.createElement('span');
+    copy.textContent = text;
+    perfilMessage.replaceChildren(icon, copy);
+    perfilMessage.className = `perfil-message ${type} show`;
+    perfilMessageTimer = setTimeout(() => {
+        perfilMessage.classList.remove('show');
+    }, type === 'success' ? 3800 : 6000);
 }
 
 async function carregarPerfil() {
@@ -206,7 +222,7 @@ perfilPhotoReset?.addEventListener('click', () => {
 
 perfilPhotoApply?.addEventListener('click', () => {
     if (!perfilPhotoCanvas) return;
-    renderProfilePhoto(perfilPhotoCanvas.toDataURL('image/jpeg', 0.82), perfilNome?.value);
+    renderProfilePhoto(perfilPhotoCanvas.toDataURL('image/jpeg', 0.9), perfilNome?.value);
     closeProfilePhotoEditor();
     showMessage('Enquadramento pronto. Salve as alterações para confirmar.', 'success');
 });

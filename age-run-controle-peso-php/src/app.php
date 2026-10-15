@@ -2637,7 +2637,7 @@ if ($method === 'PUT' && $path === '/api/usuario/perfil') {
         jsonResponse(['error' => 'Sexo inválido'], 400);
     }
     if ($fotoPerfil !== null) {
-        if (strlen($fotoPerfil) > 450000 || preg_match('#^data:image/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$#', $fotoPerfil) !== 1) {
+        if (strlen($fotoPerfil) > 2500000 || preg_match('#^data:image/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$#', $fotoPerfil) !== 1) {
             jsonResponse(['error' => 'Foto de perfil inválida ou muito grande'], 400);
         }
     }

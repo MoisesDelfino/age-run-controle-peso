@@ -2129,6 +2129,51 @@ body.dark-mode.staging-redesign .nav-link.active .staging-nav-icon {
     cursor: not-allowed;
 }
 
+.staging-redesign.staging-page-perfil #perfilMessage.show {
+    position: fixed;
+    top: 88px;
+    right: 18px;
+    z-index: 1300;
+    width: min(calc(100vw - 36px), 380px);
+    min-height: 52px;
+    margin: 0;
+    padding: 11px 13px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-radius: 14px;
+    color: #f3f8ed;
+    font-size: 0.76rem;
+    line-height: 1.35;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.32);
+    animation: staging-profile-toast-in 0.24s ease-out;
+}
+
+.staging-redesign.staging-page-perfil #perfilMessage.success {
+    border: 1px solid rgba(139, 195, 74, 0.65);
+    background: #23452e;
+}
+
+.staging-redesign.staging-page-perfil #perfilMessage.error {
+    border: 1px solid rgba(239, 83, 80, 0.62);
+    background: #54282b;
+}
+
+.staging-redesign.staging-page-perfil .perfil-message-icon {
+    flex: 0 0 auto;
+    color: #a9df68;
+    font-size: 21px;
+}
+
+.staging-redesign.staging-page-perfil #perfilMessage.error .perfil-message-icon {
+    color: #ff9996;
+}
+
+@keyframes staging-profile-toast-in {
+    from { opacity: 0; transform: translateY(-8px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 .staging-redesign.staging-page-perfil .perfil-actions,
 .staging-redesign.staging-page-perfil .garmin-actions {
     display: flex;
@@ -3018,18 +3063,14 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
     }
 
     .staging-redesign.staging-page-perfil #perfilMessage.show {
-        position: absolute;
-        top: 8px;
-        right: 10px;
-        left: 10px;
-        z-index: 5;
-        min-height: 38px;
-        margin: 0;
-        padding: 8px 11px;
-        display: flex;
-        align-items: center;
-        border-radius: 11px;
-        box-shadow: 0 10px 26px rgba(0, 0, 0, 0.28);
+        top: auto;
+        right: 12px;
+        bottom: calc(82px + env(safe-area-inset-bottom));
+        left: 12px;
+        width: auto;
+        min-height: 48px;
+        padding: 10px 12px;
+        animation-name: staging-profile-toast-mobile-in;
     }
 
     .staging-redesign.staging-page-perfil .perfil-form {
@@ -3040,6 +3081,11 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
     .staging-redesign.staging-page-perfil .perfil-photo-field,
     .staging-redesign.staging-page-perfil #btnSalvarPerfil {
         grid-column: 1 / -1;
+    }
+
+    @keyframes staging-profile-toast-mobile-in {
+        from { opacity: 0; transform: translateY(12px) scale(0.98); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
     }
 
     .staging-redesign.staging-page-perfil .perfil-photo-field {
