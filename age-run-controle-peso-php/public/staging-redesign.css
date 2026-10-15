@@ -1585,9 +1585,9 @@ body.dark-mode.staging-redesign table tbody tr:hover {
 
 body.dark-mode.staging-redesign.staging-auth-page {
     background:
-        radial-gradient(circle at 15% 15%, rgba(139, 195, 74, 0.08), transparent 34%),
-        radial-gradient(circle at 85% 85%, rgba(156, 39, 176, 0.11), transparent 34%),
-        #121212;
+        radial-gradient(circle at 16% 12%, rgba(139, 195, 74, 0.13), transparent 30%),
+        radial-gradient(circle at 88% 88%, rgba(123, 31, 162, 0.28), transparent 42%),
+        linear-gradient(160deg, #160f19 0%, #100d12 55%, #1b1022 100%);
 }
 
 body.dark-mode.staging-redesign.staging-auth-page .auth-container {
@@ -1595,9 +1595,9 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-container {
 }
 
 body.dark-mode.staging-redesign.staging-auth-page .auth-box {
-    border-color: #403544;
-    background: linear-gradient(160deg, #211d22 0%, #19171a 100%);
-    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.42);
+    border-color: rgba(156, 39, 176, 0.48);
+    background: linear-gradient(155deg, #281c2c 0%, #1d171f 62%, #201522 100%);
+    box-shadow: 0 24px 70px rgba(17, 7, 20, 0.52), 0 0 34px rgba(123, 31, 162, 0.08);
 }
 
 body.dark-mode.staging-redesign.staging-auth-page .auth-header h1 {
@@ -1607,7 +1607,54 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-header h1 {
 body.dark-mode.staging-redesign.staging-auth-page .staging-auth-subtitle,
 body.dark-mode.staging-redesign.staging-auth-page .auth-form label,
 body.dark-mode.staging-redesign.staging-auth-page .auth-footer {
-    color: #bbb3be;
+    color: #cdbfd1;
+}
+
+body.dark-mode.staging-redesign.staging-auth-page .auth-form input,
+body.dark-mode.staging-redesign.staging-auth-page .auth-form select {
+    border-color: #5b3d62;
+    background: #2b202e;
+    color: #f8f2f9;
+}
+
+body.dark-mode.staging-redesign.staging-auth-page .auth-form input:hover,
+body.dark-mode.staging-redesign.staging-auth-page .auth-form select:hover {
+    border-color: #80518c;
+    background: #312436;
+}
+
+body.dark-mode.staging-redesign.staging-auth-page .auth-form input:focus,
+body.dark-mode.staging-redesign.staging-auth-page .auth-form select:focus {
+    border-color: #b05ac5;
+    background: #312436;
+    box-shadow: 0 0 0 4px rgba(156, 39, 176, 0.2);
+}
+
+body.dark-mode.staging-redesign.staging-auth-page .auth-form input:-webkit-autofill,
+body.dark-mode.staging-redesign.staging-auth-page .auth-form input:-webkit-autofill:hover,
+body.dark-mode.staging-redesign.staging-auth-page .auth-form input:-webkit-autofill:focus {
+    -webkit-text-fill-color: #f8f2f9;
+    caret-color: #f8f2f9;
+    -webkit-box-shadow: 0 0 0 1000px #2b202e inset;
+    box-shadow: 0 0 0 1000px #2b202e inset;
+    border-color: #5b3d62;
+    transition: background-color 9999s ease-out 0s;
+}
+
+body.dark-mode.staging-redesign.staging-auth-page .auth-form .btn-primary {
+    background: linear-gradient(135deg, #8bc34a 0%, #75ad35 100%);
+    color: #fff;
+    box-shadow: 0 10px 24px rgba(139, 195, 74, 0.22);
+}
+
+body.dark-mode.staging-redesign.staging-auth-page .forgot-password a,
+body.dark-mode.staging-redesign.staging-auth-page .auth-footer a,
+body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
+    color: #dda0eb;
+}
+
+body.dark-mode.staging-redesign.staging-auth-page .auth-footer {
+    border-top-color: #49344f;
 }
 
 body.dark-mode.staging-redesign.staging-auth-page .forgot-password a,
