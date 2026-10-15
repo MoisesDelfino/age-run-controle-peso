@@ -2083,6 +2083,131 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
     }
 }
 
+/* Home mobile: painel essencial com prioridade para o nível do atleta. */
+@media (max-width: 720px) {
+    .staging-redesign.staging-page-home main.home-content {
+        height: 100%;
+        min-height: 0;
+        padding: 10px 12px 12px;
+        overflow: hidden;
+    }
+
+    .staging-redesign.staging-page-home .home-stats-section,
+    .staging-redesign.staging-page-home .home-stats-section > .card {
+        height: 100%;
+        min-height: 0;
+        margin: 0;
+    }
+
+    .staging-redesign.staging-page-home .home-stats-section > .card {
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .staging-redesign.staging-page-home .home-stats-section > .card > h2,
+    .staging-redesign.staging-page-home .home-stats-intro,
+    .staging-redesign.staging-page-home .home-resumo-aviso,
+    .staging-redesign.staging-page-home .home-rps-card,
+    .staging-redesign.staging-page-home .home-ultimo-teste-card,
+    .staging-redesign.staging-page-home .home-levels-note {
+        display: none !important;
+    }
+
+    .staging-redesign.staging-page-home .home-summary-layout {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        gap: 10px;
+        overflow: hidden;
+    }
+
+    .staging-redesign.staging-page-home .home-stats-grid,
+    .staging-redesign.staging-page-home .home-stats-grid.home-stats-grid-no-ranking {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-rows: auto;
+        gap: 8px;
+    }
+
+    .staging-redesign.staging-page-home .home-stats-grid.home-stats-grid-no-ranking .home-stat-card:first-child {
+        grid-column: 1 / -1;
+    }
+
+    .staging-redesign.staging-page-home .home-stat-card {
+        min-height: 76px;
+        padding: 10px 12px;
+    }
+
+    .staging-redesign.staging-page-home .home-stat-label {
+        margin-bottom: 4px;
+        font-size: 0.68rem;
+        line-height: 1.25;
+    }
+
+    .staging-redesign.staging-page-home .home-stat-value {
+        font-size: 1.22rem;
+    }
+
+    .staging-redesign.staging-page-home .home-levels-section {
+        min-height: 0;
+        max-height: none;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        border-color: rgba(139, 191, 80, 0.55);
+    }
+
+    .staging-redesign.staging-page-home .home-levels-section h3 {
+        flex: 0 0 auto;
+        margin: 0 0 8px;
+        font-size: 1rem;
+    }
+
+    .staging-redesign.staging-page-home .home-levels-list {
+        flex: 1 1 auto;
+        min-height: 0;
+        grid-template-rows: repeat(6, minmax(0, 1fr));
+        gap: 5px;
+        overflow: hidden;
+    }
+
+    .staging-redesign.staging-page-home .home-level-item {
+        min-height: 0;
+        padding: 6px 9px;
+        font-size: 0.8rem;
+    }
+
+    .staging-redesign.staging-page-home .home-level-item-current {
+        border-width: 2px;
+        box-shadow: 0 0 0 3px rgba(139, 191, 80, 0.12);
+    }
+
+    .staging-redesign.staging-page-home .home-level-pace {
+        font-size: 0.66rem;
+    }
+
+    .staging-redesign.staging-page-home .home-level-tag {
+        font-size: 0.54rem;
+    }
+
+    .staging-redesign.staging-page-grupos-treino .rp-grid label {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        column-gap: 6px;
+        row-gap: 2px;
+    }
+
+    .staging-redesign.staging-page-grupos-treino .rp-status-badge,
+    .staging-redesign.staging-page-grupos-treino .rp-pace-inline {
+        margin-left: 0;
+        white-space: nowrap;
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     .staging-redesign *,
     .staging-redesign *::before,
