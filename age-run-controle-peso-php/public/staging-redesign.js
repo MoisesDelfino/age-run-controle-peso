@@ -253,6 +253,10 @@
             const usersContent = toolbar?.nextElementSibling;
 
             if (card && heading && kpis && pending && toolbar && usersContent) {
+                const searchLabel = toolbar.querySelector('label[for="coachSearchInput"]');
+                const searchInput = toolbar.querySelector('#coachSearchInput');
+                if (searchLabel) searchLabel.textContent = 'Buscar atleta';
+                if (searchInput) searchInput.placeholder = 'Nome ou e-mail';
                 const summary = document.createElement('section');
                 summary.className = 'staging-coach-summary';
                 card.prepend(summary);
@@ -289,7 +293,7 @@
                         <article class="coach-rp-test-history-item staging-demo-review" data-staging-demo="true">
                             <div class="coach-rp-test-history-main">
                                 <div class="staging-demo-review-heading">
-                                    <strong>${test.name}</strong>
+                                    <div class="coach-review-athlete"><span class="coach-review-avatar">${test.name.charAt(0)}</span><strong>${test.name}</strong></div>
                                     <span class="staging-demo-badge">Simulado</span>
                                 </div>
                                 <div class="coach-rp-test-chip-row">
@@ -302,8 +306,8 @@
                                 </div>
                             </div>
                             <div class="coach-rp-test-history-actions">
-                                <button type="button" class="btn btn-secondary staging-demo-action" data-action="correct" data-index="${index}">Corrigir</button>
-                                <button type="button" class="btn staging-demo-action" data-action="approve" data-index="${index}">Validar</button>
+                                <button type="button" class="btn pending-test-edit staging-demo-action" data-action="correct" data-index="${index}">Corrigir</button>
+                                <button type="button" class="btn pending-test-validate staging-demo-action" data-action="approve" data-index="${index}">Validar</button>
                             </div>
                         </article>`).join('');
                     if (pendingCount) {

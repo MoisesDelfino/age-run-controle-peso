@@ -2183,6 +2183,46 @@ body.dark-mode.staging-redesign .nav-link.active .staging-nav-icon {
     box-shadow: 0 0 0 3px rgba(123, 31, 162, 0.1);
 }
 
+.staging-redesign.staging-page-treinador .coach-summary-identity,
+.staging-redesign.staging-page-treinador .coach-review-athlete {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.staging-redesign.staging-page-treinador .coach-summary-avatar,
+.staging-redesign.staging-page-treinador .coach-review-avatar {
+    width: 36px;
+    height: 36px;
+    display: inline-grid;
+    place-items: center;
+    flex: 0 0 auto;
+    border: 1px solid rgba(139, 195, 74, 0.42);
+    border-radius: 11px;
+    background: rgba(139, 195, 74, 0.12);
+    color: #72a936;
+    font-size: 0.76rem;
+    font-weight: 700;
+}
+
+body.dark-mode.staging-redesign.staging-page-treinador .coach-summary-avatar,
+body.dark-mode.staging-redesign.staging-page-treinador .coach-review-avatar {
+    color: #cbed9f;
+}
+
+.staging-redesign.staging-page-treinador .pending-test-edit {
+    border: 1px solid rgba(142, 32, 181, 0.42);
+    background: rgba(142, 32, 181, 0.12);
+    color: #b24ecb;
+}
+
+.staging-redesign.staging-page-treinador .pending-test-validate {
+    border: 1px solid var(--primary-color);
+    background: var(--primary-color);
+    color: #fff;
+}
+
 /* Ferramentas administrativas */
 .staging-redesign.staging-page-monitoramento .query-layout,
 .staging-redesign.staging-page-monitoramento-acessos .access-layout {
@@ -3983,25 +4023,55 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
     }
 
     .staging-redesign.staging-page-treinador .coach-rp-test-panel.is-mobile-active {
-        padding: 12px;
+        padding: 10px;
         display: flex !important;
         flex-direction: column;
+        border-color: rgba(139, 195, 74, 0.3);
+        background: linear-gradient(160deg, rgba(139, 195, 74, 0.07), rgba(31, 29, 32, 0.96) 34%);
     }
 
     .staging-redesign.staging-page-treinador .coach-rp-test-panel-header {
         flex: 0 0 auto;
+        padding: 2px 2px 10px;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .staging-redesign.staging-page-treinador .coach-rp-test-panel-header .coach-rp-test-title {
+        display: block;
+        color: #d8f4b5;
+        font-size: 0.9rem;
+        line-height: 1.35;
+    }
+
+    .staging-redesign.staging-page-treinador .coach-rp-test-panel-header .group-meta {
+        margin-top: 3px;
+        font-size: 0.65rem;
+        line-height: 1.4;
+    }
+
+    .staging-redesign.staging-page-treinador #pendingTestsCount {
+        margin: 0;
+        flex: 0 0 auto;
+        border-color: rgba(255, 193, 7, 0.48);
+        background: rgba(255, 193, 7, 0.12);
+        color: #ffd766;
     }
 
     .staging-redesign.staging-page-treinador .coach-rp-test-history-list {
         flex: 1 1 auto;
         min-height: 0;
         overflow-y: auto;
+        display: grid;
+        gap: 8px;
     }
 
     .staging-redesign.staging-page-treinador .staging-demo-review {
-        gap: 10px;
-        padding: 12px;
+        gap: 8px;
+        padding: 10px;
         border-color: rgba(142, 202, 68, 0.25);
+        border-radius: 14px;
+        background: rgba(21, 20, 22, 0.72);
     }
 
     .staging-redesign.staging-page-treinador .staging-demo-review-heading {
@@ -4009,6 +4079,44 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
         align-items: center;
         justify-content: space-between;
         gap: 8px;
+    }
+
+    .staging-redesign.staging-page-treinador .coach-review-athlete {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .staging-redesign.staging-page-treinador .coach-review-avatar,
+    .staging-redesign.staging-page-treinador .coach-summary-avatar {
+        width: 32px;
+        height: 32px;
+        display: inline-grid;
+        place-items: center;
+        flex: 0 0 auto;
+        border: 1px solid rgba(139, 195, 74, 0.45);
+        border-radius: 10px;
+        background: rgba(139, 195, 74, 0.14);
+        color: #cbed9f;
+        font-size: 0.72rem;
+        font-weight: 700;
+    }
+
+    .staging-redesign.staging-page-treinador .coach-rp-test-chip-row {
+        margin-top: 8px;
+        gap: 6px;
+    }
+
+    .staging-redesign.staging-page-treinador .coach-rp-test-chip {
+        padding: 4px 8px;
+        font-size: 0.68rem;
+    }
+
+    .staging-redesign.staging-page-treinador .coach-rp-test-meta-row {
+        margin-top: 6px;
+        gap: 3px 10px;
+        font-size: 0.62rem;
     }
 
     .staging-redesign.staging-page-treinador .staging-demo-badge {
@@ -4041,6 +4149,18 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
         padding: 7px 10px;
     }
 
+    .staging-redesign.staging-page-treinador .pending-test-edit {
+        border: 1px solid rgba(180, 91, 205, 0.45);
+        background: rgba(142, 32, 181, 0.16);
+        color: #dfa2ed;
+    }
+
+    .staging-redesign.staging-page-treinador .pending-test-validate {
+        border: 1px solid var(--primary-color);
+        background: var(--primary-color);
+        color: #fff;
+    }
+
     .staging-redesign.staging-page-treinador .staging-coach-users.is-mobile-active {
         display: flex !important;
         flex-direction: column;
@@ -4055,6 +4175,36 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
         margin-bottom: 8px;
     }
 
+    .staging-redesign.staging-page-treinador .coach-search-group {
+        position: relative;
+    }
+
+    .staging-redesign.staging-page-treinador .coach-search-group::after {
+        content: 'search';
+        position: absolute;
+        right: 12px;
+        bottom: 10px;
+        color: #9c8fa0;
+        font: 19px/1 'Material Icons';
+        pointer-events: none;
+    }
+
+    .staging-redesign.staging-page-treinador #coachSearchInput {
+        min-height: 42px;
+        padding-right: 42px;
+        border-color: #49404c;
+        background: #242126;
+    }
+
+    .staging-redesign.staging-page-treinador #coachPanelMessage {
+        margin: 6px 0 8px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: #aaa0ad;
+        font-size: 0.68rem;
+    }
+
     .staging-redesign.staging-page-treinador .coach-toolbar .form-group {
         margin: 0;
     }
@@ -4062,6 +4212,75 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
     .staging-redesign.staging-page-treinador .coach-users-list {
         max-height: none;
         overflow: visible;
+        margin-top: 0;
+        gap: 8px;
+    }
+
+    .staging-redesign.staging-page-treinador .coach-user-accordion {
+        border-color: #413a43;
+        border-radius: 14px;
+        background: #201e21;
+    }
+
+    .staging-redesign.staging-page-treinador .coach-user-accordion.expanded {
+        border-color: rgba(139, 195, 74, 0.42);
+        box-shadow: 0 8px 22px rgba(0, 0, 0, 0.16);
+    }
+
+    .staging-redesign.staging-page-treinador .coach-user-summary {
+        padding: 10px;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 8px;
+    }
+
+    .staging-redesign.staging-page-treinador .coach-summary-identity {
+        min-width: 0;
+        display: flex;
+        align-items: flex-start;
+        gap: 9px;
+    }
+
+    .staging-redesign.staging-page-treinador .coach-summary-main {
+        min-width: 0;
+    }
+
+    .staging-redesign.staging-page-treinador .coach-summary-main strong {
+        color: #d6f3b2;
+        font-size: 0.84rem;
+    }
+
+    .staging-redesign.staging-page-treinador .coach-summary-email {
+        overflow: hidden;
+        color: #b6abb9;
+        font-size: 0.65rem;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .staging-redesign.staging-page-treinador .coach-summary-metrics {
+        grid-column: 1 / -1;
+        padding-left: 41px;
+        gap: 5px;
+    }
+
+    .staging-redesign.staging-page-treinador .coach-summary-metrics span {
+        padding: 3px 7px;
+        background: #2c3338;
+        color: #d0d7dc;
+        font-size: 0.62rem;
+    }
+
+    .staging-redesign.staging-page-treinador .coach-summary-chevron {
+        grid-column: 2;
+        grid-row: 1;
+        width: 28px;
+        height: 28px;
+        display: inline-grid;
+        place-items: center;
+        border-radius: 9px;
+        background: rgba(156, 39, 176, 0.12);
+        color: #d292e2;
+        font-size: 0.65rem;
     }
 
     .staging-redesign.staging-page-monitoramento .staging-mobile-tabs {
