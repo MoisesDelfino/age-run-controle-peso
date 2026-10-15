@@ -293,6 +293,7 @@
                                 <span class="material-icons" aria-hidden="true">photo_library</span>
                                 Galeria
                             </label>
+                            <button type="button" id="perfilPhotoAdjust" class="perfil-photo-remove" hidden>Ajustar</button>
                             <button type="button" id="perfilPhotoRemove" class="perfil-photo-remove" hidden>Remover</button>
                         </div>
                         <input type="file" id="perfilCameraInput" accept="image/*" capture="user" hidden>
@@ -327,6 +328,30 @@
                 <button type="submit" class="btn btn-primary" id="btnSalvarPerfil">Salvar alterações</button>
             </form>
         </section>
+
+        <div id="perfilPhotoEditor" class="perfil-photo-editor" hidden>
+            <div class="perfil-photo-editor-backdrop" data-photo-editor-close></div>
+            <section class="perfil-photo-editor-panel" role="dialog" aria-modal="true" aria-labelledby="perfilPhotoEditorTitle">
+                <div class="perfil-photo-editor-header">
+                    <div><strong id="perfilPhotoEditorTitle">Ajustar foto</strong><span>Arraste para reposicionar</span></div>
+                    <button type="button" class="perfil-photo-editor-close" data-photo-editor-close aria-label="Fechar">
+                        <span class="material-icons" aria-hidden="true">close</span>
+                    </button>
+                </div>
+                <div class="perfil-photo-crop-stage">
+                    <canvas id="perfilPhotoCanvas" width="512" height="512"></canvas>
+                </div>
+                <label class="perfil-photo-zoom" for="perfilPhotoZoom">
+                    <span class="material-icons" aria-hidden="true">zoom_out</span>
+                    <input type="range" id="perfilPhotoZoom" min="1" max="3" value="1" step="0.01">
+                    <span class="material-icons" aria-hidden="true">zoom_in</span>
+                </label>
+                <div class="perfil-photo-editor-actions">
+                    <button type="button" id="perfilPhotoReset" class="btn perfil-photo-editor-secondary">Redefinir</button>
+                    <button type="button" id="perfilPhotoApply" class="btn btn-primary">Usar foto</button>
+                </div>
+            </section>
+        </div>
 
         <section id="garminCard" class="card garmin-card" hidden>
             <div class="garmin-heading">
@@ -371,8 +396,8 @@
         </div>
     </footer>
 
-    <script src="theme.js?v=2026101534"></script>
+    <script src="theme.js?v=2026101535"></script>
     <script src="menu.js?v=2026101501"></script>
-    <script src="perfil.js?v=2026101502"></script>
+    <script src="perfil.js?v=2026101503"></script>
 </body>
 </html>

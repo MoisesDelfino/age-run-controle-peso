@@ -27,7 +27,18 @@ const perfilCameraInput = document.getElementById('perfilCameraInput');
 const perfilPhotoImage = document.getElementById('perfilPhotoImage');
 const perfilPhotoInitial = document.getElementById('perfilPhotoInitial');
 const perfilPhotoRemove = document.getElementById('perfilPhotoRemove');
+const perfilPhotoAdjust = document.getElementById('perfilPhotoAdjust');
+const perfilPhotoEditor = document.getElementById('perfilPhotoEditor');
+const perfilPhotoCanvas = document.getElementById('perfilPhotoCanvas');
+const perfilPhotoZoom = document.getElementById('perfilPhotoZoom');
+const perfilPhotoReset = document.getElementById('perfilPhotoReset');
+const perfilPhotoApply = document.getElementById('perfilPhotoApply');
 let perfilPhotoData = null;
+let photoEditorImage = null;
+let photoEditorOffsetX = 0;
+let photoEditorOffsetY = 0;
+let photoEditorZoom = 1;
+let photoEditorDrag = null;
 
 function renderProfilePhoto(photo, name) {
     perfilPhotoData = photo || null;
@@ -40,9 +51,10 @@ function renderProfilePhoto(photo, name) {
         perfilPhotoImage.hidden = !perfilPhotoData;
     }
     if (perfilPhotoRemove) perfilPhotoRemove.hidden = !perfilPhotoData;
+    if (perfilPhotoAdjust) perfilPhotoAdjust.hidden = !perfilPhotoData;
 }
 
-function prepareProfilePhoto(file) {
+function loadProfilePhotoSource(file) {
     return new Promise((resolve, reject) => {
         if (!file || !['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
             reject(new Error('Escolha uma imagem JPG, PNG ou WebP.'));
@@ -52,25 +64,50 @@ function prepareProfilePhoto(file) {
             reject(new Error('A imagem deve ter no máximo 8 MB.'));
             return;
         }
-        const objectUrl = URL.createObjectURL(file);
-        const image = new Image();
-        image.onload = () => {
-            const size = Math.min(image.naturalWidth, image.naturalHeight);
-            const sourceX = Math.max(0, (image.naturalWidth - size) / 2);
-            const sourceY = Math.max(0, (image.naturalHeight - size) / 2);
-            const canvas = document.createElement('canvas');
-            canvas.width = 512;
-            canvas.height = 512;
-            canvas.getContext('2d').drawImage(image, sourceX, sourceY, size, size, 0, 0, 512, 512);
-            URL.revokeObjectURL(objectUrl);
-            resolve(canvas.toDataURL('image/jpeg', 0.82));
-        };
-        image.onerror = () => {
-            URL.revokeObjectURL(objectUrl);
-            reject(new Error('Não foi possível processar esta imagem.'));
-        };
-        image.src = objectUrl;
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error('Não foi possível processar esta imagem.'));
+        reader.readAsDataURL(file);
     });
+}
+
+function drawProfilePhotoEditor() {
+    if (!photoEditorImage || !perfilPhotoCanvas) return;
+    const context = perfilPhotoCanvas.getContext('2d');
+    const canvasSize = perfilPhotoCanvas.width;
+    const coverScale = Math.max(canvasSize / photoEditorImage.naturalWidth, canvasSize / photoEditorImage.naturalHeight);
+    const scale = coverScale * photoEditorZoom;
+    const width = photoEditorImage.naturalWidth * scale;
+    const height = photoEditorImage.naturalHeight * scale;
+    const maxX = Math.max(0, (width - canvasSize) / 2);
+    const maxY = Math.max(0, (height - canvasSize) / 2);
+    photoEditorOffsetX = Math.max(-maxX, Math.min(maxX, photoEditorOffsetX));
+    photoEditorOffsetY = Math.max(-maxY, Math.min(maxY, photoEditorOffsetY));
+    context.clearRect(0, 0, canvasSize, canvasSize);
+    context.drawImage(photoEditorImage, (canvasSize - width) / 2 + photoEditorOffsetX, (canvasSize - height) / 2 + photoEditorOffsetY, width, height);
+}
+
+function openProfilePhotoEditor(source) {
+    if (!source || !perfilPhotoEditor) return;
+    const image = new Image();
+    image.onload = () => {
+        photoEditorImage = image;
+        photoEditorOffsetX = 0;
+        photoEditorOffsetY = 0;
+        photoEditorZoom = 1;
+        if (perfilPhotoZoom) perfilPhotoZoom.value = '1';
+        perfilPhotoEditor.hidden = false;
+        document.body.classList.add('perfil-photo-editor-open');
+        drawProfilePhotoEditor();
+    };
+    image.onerror = () => showMessage('Não foi possível abrir esta imagem.', 'error');
+    image.src = source;
+}
+
+function closeProfilePhotoEditor() {
+    if (perfilPhotoEditor) perfilPhotoEditor.hidden = true;
+    document.body.classList.remove('perfil-photo-editor-open');
+    photoEditorDrag = null;
 }
 
 const GARMIN_CHECK_LABELS = {
@@ -143,8 +180,7 @@ async function handleProfilePhotoSelection(input) {
     const file = input?.files?.[0];
     if (!file) return;
     try {
-        renderProfilePhoto(await prepareProfilePhoto(file), perfilNome?.value);
-        showMessage('Foto pronta. Salve as alterações para confirmar.', 'success');
+        openProfilePhotoEditor(await loadProfilePhotoSource(file));
     } catch (error) {
         input.value = '';
         showMessage(error.message, 'error');
@@ -153,6 +189,44 @@ async function handleProfilePhotoSelection(input) {
 
 perfilPhotoInput?.addEventListener('change', () => handleProfilePhotoSelection(perfilPhotoInput));
 perfilCameraInput?.addEventListener('change', () => handleProfilePhotoSelection(perfilCameraInput));
+perfilPhotoAdjust?.addEventListener('click', () => openProfilePhotoEditor(perfilPhotoData));
+
+perfilPhotoZoom?.addEventListener('input', () => {
+    photoEditorZoom = Number(perfilPhotoZoom.value) || 1;
+    drawProfilePhotoEditor();
+});
+
+perfilPhotoReset?.addEventListener('click', () => {
+    photoEditorOffsetX = 0;
+    photoEditorOffsetY = 0;
+    photoEditorZoom = 1;
+    if (perfilPhotoZoom) perfilPhotoZoom.value = '1';
+    drawProfilePhotoEditor();
+});
+
+perfilPhotoApply?.addEventListener('click', () => {
+    if (!perfilPhotoCanvas) return;
+    renderProfilePhoto(perfilPhotoCanvas.toDataURL('image/jpeg', 0.82), perfilNome?.value);
+    closeProfilePhotoEditor();
+    showMessage('Enquadramento pronto. Salve as alterações para confirmar.', 'success');
+});
+
+perfilPhotoEditor?.querySelectorAll('[data-photo-editor-close]').forEach((button) => button.addEventListener('click', closeProfilePhotoEditor));
+
+perfilPhotoCanvas?.addEventListener('pointerdown', (event) => {
+    photoEditorDrag = { x: event.clientX, y: event.clientY, offsetX: photoEditorOffsetX, offsetY: photoEditorOffsetY };
+    perfilPhotoCanvas.setPointerCapture(event.pointerId);
+});
+
+perfilPhotoCanvas?.addEventListener('pointermove', (event) => {
+    if (!photoEditorDrag) return;
+    const ratio = perfilPhotoCanvas.width / perfilPhotoCanvas.getBoundingClientRect().width;
+    photoEditorOffsetX = photoEditorDrag.offsetX + (event.clientX - photoEditorDrag.x) * ratio;
+    photoEditorOffsetY = photoEditorDrag.offsetY + (event.clientY - photoEditorDrag.y) * ratio;
+    drawProfilePhotoEditor();
+});
+
+['pointerup', 'pointercancel'].forEach((eventName) => perfilPhotoCanvas?.addEventListener(eventName, () => { photoEditorDrag = null; }));
 
 perfilPhotoRemove?.addEventListener('click', () => {
     if (perfilPhotoInput) perfilPhotoInput.value = '';

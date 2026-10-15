@@ -1785,6 +1785,124 @@ body.dark-mode.staging-redesign .staging-height-toggle .material-icons {
     cursor: pointer;
 }
 
+.staging-redesign.staging-page-perfil.perfil-photo-editor-open {
+    overflow: hidden;
+}
+
+.staging-redesign.staging-page-perfil .perfil-photo-editor[hidden] {
+    display: none !important;
+}
+
+.staging-redesign.staging-page-perfil .perfil-photo-editor {
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    display: grid;
+    place-items: center;
+    padding: 18px;
+}
+
+.staging-redesign.staging-page-perfil .perfil-photo-editor-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(7, 5, 8, 0.78);
+    backdrop-filter: blur(6px);
+}
+
+.staging-redesign.staging-page-perfil .perfil-photo-editor-panel {
+    position: relative;
+    width: min(100%, 390px);
+    padding: 18px;
+    display: grid;
+    gap: 16px;
+    border: 1px solid rgba(156, 39, 176, 0.46);
+    border-radius: 22px;
+    background: #211c23;
+    color: #f7f2f8;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.5);
+}
+
+.staging-redesign.staging-page-perfil .perfil-photo-editor-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.staging-redesign.staging-page-perfil .perfil-photo-editor-header > div {
+    display: grid;
+    gap: 2px;
+}
+
+.staging-redesign.staging-page-perfil .perfil-photo-editor-header span:not(.material-icons) {
+    color: #b9acbd;
+    font-size: 0.7rem;
+}
+
+.staging-redesign.staging-page-perfil .perfil-photo-editor-close {
+    width: 38px;
+    height: 38px;
+    display: inline-grid;
+    place-items: center;
+    border: 1px solid #4e4052;
+    border-radius: 12px;
+    background: #2d2430;
+    color: #dca2e9;
+    cursor: pointer;
+}
+
+.staging-redesign.staging-page-perfil .perfil-photo-crop-stage {
+    width: min(100%, 320px);
+    aspect-ratio: 1;
+    margin: auto;
+    overflow: hidden;
+    border: 3px solid var(--primary-color);
+    border-radius: 50%;
+    background: #100d11;
+    box-shadow: 0 0 0 7px rgba(139, 195, 74, 0.09);
+}
+
+.staging-redesign.staging-page-perfil .perfil-photo-crop-stage canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    cursor: grab;
+    touch-action: none;
+}
+
+.staging-redesign.staging-page-perfil .perfil-photo-crop-stage canvas:active {
+    cursor: grabbing;
+}
+
+.staging-redesign.staging-page-perfil .perfil-photo-zoom {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 9px;
+    color: #b9acbd;
+}
+
+.staging-redesign.staging-page-perfil .perfil-photo-zoom input {
+    min-height: 0;
+    accent-color: var(--primary-color);
+}
+
+.staging-redesign.staging-page-perfil .perfil-photo-editor-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
+}
+
+.staging-redesign.staging-page-perfil .perfil-photo-editor-actions .btn {
+    min-height: 44px;
+}
+
+.staging-redesign.staging-page-perfil .perfil-photo-editor-secondary {
+    border: 1px solid #554758;
+    background: transparent;
+    color: #d7ccd9;
+}
+
 .staging-redesign.staging-page-perfil #btnSalvarPerfil {
     min-height: 48px;
     background: var(--primary-color);
