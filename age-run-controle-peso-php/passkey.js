@@ -40,6 +40,7 @@
         if (!list || !supported) return;
         const data = await request('/auth/passkey/credentials');
         const credentials = data.credentials || [];
+        if (credentials[0]?.credential_id) localStorage.setItem('agerun-passkey-id', credentials[0].credential_id);
         list.innerHTML = credentials.length
             ? credentials.map((item) => `<li><span class="material-icons" aria-hidden="true">passkey</span><div><strong>${item.nome || 'Este aparelho'}</strong><small>Cadastrada em ${String(item.criado_em || '').slice(0, 10).split('-').reverse().join('/')}</small></div><button type="button" data-passkey-remove="${item.id}" aria-label="Remover passkey"><span class="material-icons">delete_outline</span></button></li>`).join('')
             : '<li class="passkey-empty">Nenhum aparelho cadastrado.</li>';
@@ -74,6 +75,7 @@
                 }),
             });
             showStatus('Biometria ativada com sucesso neste aparelho.', 'success');
+            localStorage.setItem('agerun-passkey-id', credential.id);
             await loadCredentials();
         } catch (error) {
             showStatus(friendlyError(error), 'error');
@@ -88,6 +90,7 @@
         button.disabled = true;
         try {
             await request(`/auth/passkey/credentials/${button.dataset.passkeyRemove}`, { method: 'DELETE' });
+            localStorage.removeItem('agerun-passkey-id');
             showStatus('Passkey removida.', 'success');
             await loadCredentials();
         } catch (error) {
@@ -97,10 +100,19 @@
     });
 
     loginButton?.addEventListener('click', async () => {
+        const credentialId = localStorage.getItem('agerun-passkey-id') || '';
+        if (!credentialId) {
+            if (typeof mostrarMensagem === 'function') mostrarMensagem('Entre com a senha uma vez e cadastre a biometria no perfil deste aparelho.', 'error');
+            return;
+        }
         loginButton.disabled = true;
         if (typeof mostrarMensagem === 'function') mostrarMensagem('Aguardando confirmação no aparelho…', 'success', { persist: true, loading: true });
         try {
-            const options = await request('/auth/passkey/login-options', { method: 'POST' });
+            const options = await request('/auth/passkey/login-options', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ credential_id: credentialId }),
+            });
             options.challenge = decode(options.challenge);
             options.allowCredentials = (options.allowCredentials || []).map((item) => ({ ...item, id: decode(item.id) }));
             const credential = await navigator.credentials.get({ publicKey: options });

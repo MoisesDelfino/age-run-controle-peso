@@ -2354,7 +2354,7 @@ if ($method === 'POST' && $path === '/api/auth/passkey/register-verify') {
 if ($method === 'GET' && $path === '/api/auth/passkey/credentials') {
     $userId = requireAuth();
     webauthnEnsureTable();
-    $rows = dbFetchAll('SELECT id, nome, criado_em, ultimo_uso_em FROM webauthn_credentials WHERE usuario_id = :id ORDER BY criado_em DESC', [':id' => $userId]);
+    $rows = dbFetchAll('SELECT id, credential_id, nome, criado_em, ultimo_uso_em FROM webauthn_credentials WHERE usuario_id = :id ORDER BY ultimo_uso_em DESC, criado_em DESC', [':id' => $userId]);
     jsonResponse(['supported' => true, 'credentials' => $rows]);
 }
 
@@ -2367,12 +2367,23 @@ if ($method === 'DELETE' && preg_match('#^/api/auth/passkey/credentials/(\d+)$#'
 
 if ($method === 'POST' && $path === '/api/auth/passkey/login-options') {
     webauthnEnsureTable();
+    $input = jsonInput();
+    $credentialId = trim((string) ($input['credential_id'] ?? ''));
+    if ($credentialId === '') jsonResponse(['error' => 'Este aparelho ainda não tem biometria cadastrada. Entre com a senha e ative no perfil.'], 404);
+    $credential = dbFetchOne('SELECT credential_id, transports FROM webauthn_credentials WHERE credential_id = :credential_id LIMIT 1', [':credential_id' => $credentialId]);
+    if (!$credential) jsonResponse(['error' => 'A biometria salva neste aparelho não está mais ativa. Entre com a senha e cadastre novamente.'], 404);
+    $transports = json_decode((string) ($credential['transports'] ?? '[]'), true);
+    if (!is_array($transports)) $transports = [];
     jsonResponse([
         'challenge' => webauthnNewChallenge('webauthn_login'),
         'rpId' => webauthnRpId(),
         'timeout' => 60000,
         'userVerification' => 'required',
-        'allowCredentials' => [],
+        'allowCredentials' => [[
+            'type' => 'public-key',
+            'id' => (string) $credential['credential_id'],
+            'transports' => array_values($transports),
+        ]],
     ]);
 }
 

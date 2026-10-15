@@ -2490,23 +2490,26 @@ body.coach-photo-viewer-open {
 
 .staging-redesign .passkey-card {
     display: grid;
-    gap: 16px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px 14px;
+    padding: 14px 16px;
     border-color: rgba(142, 32, 181, 0.34);
 }
 
 .staging-redesign .passkey-heading {
     display: flex;
     align-items: flex-start;
-    gap: 12px;
+    gap: 10px;
 }
 
 .staging-redesign .passkey-heading > .material-icons {
-    width: 44px;
-    height: 44px;
+    width: 38px;
+    height: 38px;
     display: grid;
     place-items: center;
     flex: 0 0 auto;
-    border-radius: 13px;
+    border-radius: 11px;
     background: rgba(142, 32, 181, 0.14);
     color: #bf62d3;
 }
@@ -2518,7 +2521,12 @@ body.coach-photo-viewer-open {
 
 .staging-redesign .passkey-heading h2 {
     color: var(--staging-ink);
-    font-size: 1.08rem;
+    font-size: 1rem;
+}
+
+.staging-redesign .passkey-heading p {
+    font-size: 0.78rem;
+    line-height: 1.35;
 }
 
 .staging-redesign .passkey-heading p,
@@ -2532,9 +2540,13 @@ body.coach-photo-viewer-open {
     align-items: center;
     justify-content: center;
     gap: 7px;
+    min-height: 42px;
+    padding: 9px 14px;
+    font-size: 0.82rem;
 }
 
 .staging-redesign .passkey-status {
+    grid-column: 1 / -1;
     padding: 11px 13px;
     border-radius: 11px;
     font-size: 0.85rem;
@@ -2553,8 +2565,9 @@ body.coach-photo-viewer-open {
 }
 
 .staging-redesign .passkey-credential-list {
+    grid-column: 1 / -1;
     display: grid;
-    gap: 8px;
+    gap: 6px;
     margin: 0;
     padding: 0;
     list-style: none;
@@ -2562,10 +2575,10 @@ body.coach-photo-viewer-open {
 
 .staging-redesign .passkey-credential-list li:not(.passkey-empty) {
     display: grid;
-    grid-template-columns: 34px minmax(0, 1fr) 40px;
+    grid-template-columns: 28px minmax(0, 1fr) 34px;
     align-items: center;
     gap: 10px;
-    padding: 10px;
+    padding: 7px 9px;
     border: 1px solid var(--staging-line);
     border-radius: 12px;
     background: var(--staging-surface);
@@ -2573,6 +2586,15 @@ body.coach-photo-viewer-open {
 
 .staging-redesign .passkey-credential-list div {
     display: grid;
+    line-height: 1.25;
+}
+
+.staging-redesign .passkey-credential-list strong {
+    font-size: 0.82rem;
+}
+
+.staging-redesign .passkey-credential-list small {
+    font-size: 0.7rem;
 }
 
 .staging-redesign .passkey-credential-list small,
@@ -2581,8 +2603,8 @@ body.coach-photo-viewer-open {
 }
 
 .staging-redesign .passkey-credential-list button {
-    width: 38px;
-    height: 38px;
+    width: 32px;
+    height: 32px;
     display: grid;
     place-items: center;
     border: 1px solid rgba(239, 68, 68, 0.28);
@@ -2591,9 +2613,32 @@ body.coach-photo-viewer-open {
     color: #ef8c8c;
 }
 
+.staging-redesign .passkey-privacy {
+    grid-column: 1 / -1;
+    font-size: 0.7rem;
+    line-height: 1.25;
+}
+
 @media (max-width: 680px) {
     .staging-redesign .passkey-register-button {
-        width: 100%;
+        width: auto;
+    }
+
+    .staging-redesign .passkey-card {
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 9px 10px;
+        padding: 12px;
+    }
+
+    .staging-redesign .passkey-register-button {
+        width: 42px;
+        min-width: 42px;
+        padding: 0;
+        font-size: 0;
+    }
+
+    .staging-redesign .passkey-register-button .material-icons {
+        font-size: 22px;
     }
 }
 
