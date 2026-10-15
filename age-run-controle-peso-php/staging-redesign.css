@@ -1510,6 +1510,161 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
 }
 
 
+/* App shell mobile: uma tela, sem rolagem do documento. */
+@media (max-width: 768px) {
+    html.staging-redesign,
+    body.staging-redesign {
+        width: 100%;
+        height: 100%;
+        min-height: 100%;
+        overflow: hidden;
+    }
+
+    body.staging-redesign {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .staging-redesign .staging-environment-banner,
+    .staging-redesign .header {
+        flex: 0 0 auto;
+    }
+
+    .staging-redesign .header {
+        margin: 0;
+    }
+
+    .staging-redesign main,
+    .staging-redesign .main-content,
+    .staging-redesign .auth-container {
+        flex: 1 1 auto;
+        min-height: 0;
+        max-height: none;
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior-y: contain;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(156, 39, 176, 0.45) transparent;
+    }
+
+    .staging-redesign main::-webkit-scrollbar,
+    .staging-redesign .main-content::-webkit-scrollbar,
+    .staging-redesign .auth-container::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .staging-redesign main::-webkit-scrollbar-thumb,
+    .staging-redesign .main-content::-webkit-scrollbar-thumb,
+    .staging-redesign .auth-container::-webkit-scrollbar-thumb {
+        border-radius: 999px;
+        background: rgba(156, 39, 176, 0.45);
+    }
+
+    .staging-redesign .home-content,
+    .staging-redesign .main-content {
+        margin-bottom: 0;
+    }
+
+    .staging-redesign .welcome-section,
+    .staging-redesign .home-stats-section,
+    .staging-redesign .ranking-section,
+    .staging-redesign .rp-section,
+    .staging-redesign .grupos-section,
+    .staging-redesign .coach-panel-section {
+        margin-bottom: 12px;
+    }
+
+    .staging-redesign .card {
+        margin-bottom: 12px;
+    }
+
+    .staging-redesign .card:last-child,
+    .staging-redesign section:last-child {
+        margin-bottom: 0;
+    }
+
+    .staging-redesign .card h2,
+    .staging-redesign .card h3 {
+        margin-bottom: 12px;
+    }
+
+    .staging-redesign .welcome-text,
+    .staging-redesign .group-meta,
+    .staging-redesign .card > .subtitle {
+        margin-bottom: 10px;
+        font-size: 0.8rem;
+        line-height: 1.45;
+    }
+
+    .staging-redesign .ranking-container,
+    .staging-redesign .access-table-wrap,
+    .staging-redesign .db-result-wrap,
+    .staging-redesign .rp-confirm-table-wrap {
+        max-height: calc(100dvh - 245px);
+        overflow: auto;
+    }
+
+    .staging-redesign .coach-users-list,
+    .staging-redesign .grupos-grid,
+    .staging-redesign .bio-historico-list,
+    .staging-redesign .historico-list {
+        max-height: calc(100dvh - 300px);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+    }
+
+    .staging-redesign.staging-page-home .home-stats-section > .card {
+        padding: 16px;
+    }
+
+    .staging-redesign.staging-page-home .home-stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .staging-redesign.staging-page-home .home-stat-card {
+        min-height: 96px;
+        padding: 12px;
+    }
+
+    .staging-redesign.staging-page-home .home-levels-section {
+        max-height: 220px;
+        overflow-y: auto;
+    }
+
+    .staging-redesign.staging-page-ranking .ranking-section,
+    .staging-redesign.staging-page-monitoramento .query-layout,
+    .staging-redesign.staging-page-monitoramento-acessos .access-layout,
+    .staging-redesign.staging-page-treinador .coach-panel-section {
+        min-height: 0;
+    }
+
+    .staging-redesign.staging-page-ranking .ranking-section > .card,
+    .staging-redesign.staging-page-monitoramento .query-layout,
+    .staging-redesign.staging-page-monitoramento-acessos .access-layout,
+    .staging-redesign.staging-page-treinador .coach-panel-section > .card {
+        min-height: 0;
+        max-height: 100%;
+        overflow: hidden;
+    }
+
+    .staging-redesign.staging-page-bioimpedancia .main-content,
+    .staging-redesign.staging-page-grupos-treino .home-content,
+    .staging-redesign.staging-page-perfil .home-content,
+    .staging-redesign.staging-page-treinador .home-content {
+        gap: 10px;
+    }
+
+    .staging-redesign.staging-auth-page .auth-container {
+        min-height: 0;
+        align-items: flex-start;
+    }
+
+    .staging-redesign.staging-auth-page .auth-box {
+        margin: auto;
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     .staging-redesign *,
     .staging-redesign *::before,
