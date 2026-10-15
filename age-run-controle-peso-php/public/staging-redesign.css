@@ -68,6 +68,32 @@ body.staging-redesign {
     max-height: 40px;
 }
 
+.staging-redesign .staging-logo-home {
+    min-width: 76px;
+    min-height: 44px;
+    padding: 4px 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    text-decoration: none;
+    transition: background 0.18s ease, transform 0.18s ease;
+}
+
+.staging-redesign .staging-logo-home:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-1px);
+}
+
+.staging-redesign .staging-logo-home:focus-visible {
+    outline: 3px solid rgba(139, 195, 74, 0.65);
+    outline-offset: 2px;
+}
+
+.staging-redesign .staging-logo-home .logo {
+    display: block;
+}
+
 .staging-redesign .btn-dark-mode,
 .staging-redesign .btn-user-menu {
     width: 42px;

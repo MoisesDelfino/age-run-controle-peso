@@ -192,6 +192,16 @@
         const main = document.querySelector('main');
         if (!main) return;
 
+        const headerLogo = document.querySelector('.header .logo');
+        if (headerLogo && !headerLogo.closest('.staging-logo-home')) {
+            const homeLink = document.createElement('a');
+            homeLink.className = 'staging-logo-home';
+            homeLink.href = '/dev/home';
+            homeLink.setAttribute('aria-label', 'Ir para a página inicial');
+            headerLogo.before(homeLink);
+            homeLink.appendChild(headerLogo);
+        }
+
         const setupMobilePanels = (items, insertBefore) => {
             const validItems = items.filter((item) => item.section);
             if (validItems.length < 2 || !insertBefore) return;
