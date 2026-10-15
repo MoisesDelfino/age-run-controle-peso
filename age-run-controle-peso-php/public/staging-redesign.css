@@ -3316,6 +3316,10 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
     .staging-redesign.staging-page-treinador .staging-coach-users.is-mobile-active {
         display: flex !important;
         flex-direction: column;
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        scrollbar-gutter: stable;
     }
 
     .staging-redesign.staging-page-treinador .coach-toolbar {
@@ -3329,9 +3333,7 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
 
     .staging-redesign.staging-page-treinador .coach-users-list {
         max-height: none;
-        flex: 1 1 auto;
-        min-height: 0;
-        overflow-y: auto;
+        overflow: visible;
     }
 
     .staging-redesign.staging-page-monitoramento .staging-mobile-tabs {
