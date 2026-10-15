@@ -219,6 +219,113 @@
         @media (max-width: 900px) {
             .perfil-grid { grid-template-columns: minmax(0, 480px); }
         }
+
+        @media (max-width: 720px) {
+            body.staging-redesign.staging-page-perfil .perfil-grid {
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: stretch !important;
+                gap: 12px !important;
+            }
+
+            body.staging-redesign.staging-page-perfil .perfil-grid > .card {
+                position: relative !important;
+                height: auto !important;
+                flex: 0 0 auto !important;
+                margin: 0 !important;
+                transform: none !important;
+            }
+
+            body.staging-redesign.staging-page-perfil .perfil-grid > .card:first-of-type {
+                padding-bottom: 14px !important;
+            }
+
+            body.staging-redesign.staging-page-perfil .passkey-card {
+                margin-top: 0 !important;
+            }
+
+            body.staging-redesign.staging-page-perfil .home-content {
+                padding-top: 4px !important;
+            }
+
+            body.staging-redesign.staging-page-perfil .perfil-grid {
+                gap: 8px !important;
+            }
+
+            body.staging-redesign.staging-page-perfil .perfil-grid > .card {
+                padding: 8px 12px !important;
+            }
+
+            body.staging-redesign.staging-page-perfil .perfil-grid > .card:first-of-type {
+                padding-bottom: 10px !important;
+            }
+
+            body.staging-redesign.staging-page-perfil .perfil-heading {
+                margin-bottom: 6px !important;
+            }
+
+            body.staging-redesign.staging-page-perfil .perfil-heading > .material-icons {
+                width: 34px !important;
+                height: 34px !important;
+            }
+
+            body.staging-redesign.staging-page-perfil .perfil-photo-field {
+                min-height: 82px !important;
+                padding: 6px 8px !important;
+                grid-template-columns: 56px minmax(0, 1fr) !important;
+                gap: 10px !important;
+            }
+
+            body.staging-redesign.staging-page-perfil .perfil-photo-preview {
+                width: 56px !important;
+                height: 56px !important;
+            }
+
+            body.staging-redesign.staging-page-perfil .perfil-photo-content {
+                gap: 5px !important;
+            }
+
+            body.staging-redesign.staging-page-perfil .perfil-photo-actions {
+                gap: 4px 6px !important;
+            }
+
+            body.staging-redesign.staging-page-perfil .perfil-photo-select,
+            body.staging-redesign.staging-page-perfil .perfil-photo-remove {
+                min-height: 28px !important;
+                padding: 4px 7px !important;
+            }
+
+            body.staging-redesign.staging-page-perfil .perfil-form {
+                gap: 5px 8px !important;
+            }
+
+            body.staging-redesign.staging-page-perfil .perfil-form input,
+            body.staging-redesign.staging-page-perfil .perfil-form select {
+                min-height: 34px !important;
+                padding: 5px 9px !important;
+            }
+
+            body.staging-redesign.staging-page-perfil #btnSalvarPerfil {
+                min-height: 34px !important;
+                padding: 5px 10px !important;
+            }
+
+            body.staging-redesign.staging-page-perfil .passkey-card {
+                padding: 6px 10px !important;
+                gap: 5px 8px !important;
+            }
+
+            body.staging-redesign.staging-page-perfil .passkey-heading > .material-icons {
+                width: 32px !important;
+                height: 32px !important;
+            }
+
+            body.staging-redesign.staging-page-perfil .passkey-registered-tag,
+            body.staging-redesign.staging-page-perfil .passkey-delete-button {
+                min-height: 30px !important;
+                padding: 5px 9px !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -329,6 +436,18 @@
             </form>
         </section>
 
+        <section class="card passkey-card">
+            <div class="passkey-heading">
+                <span class="material-icons" aria-hidden="true">fingerprint</span>
+                <div><h2>Biometria</h2></div>
+            </div>
+            <button type="button" id="passkeyRegisterButton" class="btn btn-primary passkey-register-button" aria-label="Cadastrar biometria neste aparelho">
+                <span class="material-icons" aria-hidden="true">fingerprint</span> Cadastrar biometria
+            </button>
+            <div id="passkeyStatus" class="passkey-status" role="status" hidden></div>
+            <ul id="passkeyCredentialList" class="passkey-credential-list" aria-label="Aparelhos cadastrados"></ul>
+        </section>
+
         <div id="perfilPhotoEditor" class="perfil-photo-editor" hidden>
             <div class="perfil-photo-editor-backdrop" data-photo-editor-close></div>
             <section class="perfil-photo-editor-panel" role="dialog" aria-modal="true" aria-labelledby="perfilPhotoEditorTitle">
@@ -412,8 +531,9 @@
         </div>
     </footer>
 
-    <script src="theme.js?v=2026101552"></script>
+    <script src="theme.js?v=2026101563"></script>
     <script src="menu.js?v=2026101503"></script>
     <script src="perfil.js?v=2026101509"></script>
+    <script src="passkey.js?v=2026101507"></script>
 </body>
 </html>
