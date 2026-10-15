@@ -219,6 +219,31 @@
         @media (max-width: 900px) {
             .perfil-grid { grid-template-columns: minmax(0, 480px); }
         }
+
+        @media (max-width: 720px) {
+            body.staging-redesign.staging-page-perfil .perfil-grid {
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: stretch !important;
+                gap: 12px !important;
+            }
+
+            body.staging-redesign.staging-page-perfil .perfil-grid > .card {
+                position: relative !important;
+                height: auto !important;
+                flex: 0 0 auto !important;
+                margin: 0 !important;
+                transform: none !important;
+            }
+
+            body.staging-redesign.staging-page-perfil .perfil-grid > .card:first-of-type {
+                padding-bottom: 14px !important;
+            }
+
+            body.staging-redesign.staging-page-perfil .passkey-card {
+                margin-top: 0 !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -424,7 +449,7 @@
         </div>
     </footer>
 
-    <script src="theme.js?v=2026101561"></script>
+    <script src="theme.js?v=2026101562"></script>
     <script src="menu.js?v=2026101503"></script>
     <script src="perfil.js?v=2026101509"></script>
     <script src="passkey.js?v=2026101507"></script>
