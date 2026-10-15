@@ -57,17 +57,33 @@ function renderProfilePhoto(photo, name) {
 
 function loadProfilePhotoSource(file) {
     return new Promise((resolve, reject) => {
-        if (!file || !['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-            reject(new Error('Escolha uma imagem JPG, PNG ou WebP.'));
+        if (!file) {
+            reject(new Error('Nenhuma imagem foi selecionada.'));
+            return;
+        }
+        const extension = String(file.name || '').split('.').pop().toLowerCase();
+        const supportedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
+        const supportedExtensions = ['jpg', 'jpeg', 'png', 'webp', 'heic', 'heif'];
+        if ((file.type && !supportedTypes.includes(file.type)) || (!file.type && !supportedExtensions.includes(extension))) {
+            const detected = file.type || (extension ? `.${extension}` : 'desconhecido');
+            reject(new Error(`Formato ${detected} não suportado. Use JPG, PNG, WebP ou HEIC.`));
             return;
         }
         if (file.size > 20 * 1024 * 1024) {
-            reject(new Error('A imagem deve ter no máximo 20 MB.'));
+            const sizeMb = (file.size / (1024 * 1024)).toFixed(1).replace('.', ',');
+            reject(new Error(`A imagem possui ${sizeMb} MB. O limite é 20 MB.`));
             return;
         }
         const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = () => reject(new Error('Não foi possível processar esta imagem.'));
+        reader.onload = () => {
+            if (typeof reader.result !== 'string' || !reader.result.startsWith('data:image/')) {
+                reject(new Error('O arquivo selecionado não contém uma imagem válida.'));
+                return;
+            }
+            resolve(reader.result);
+        };
+        reader.onerror = () => reject(new Error('Não foi possível ler a imagem. Verifique o acesso aos arquivos e tente novamente.'));
+        reader.onabort = () => reject(new Error('A leitura da imagem foi cancelada.'));
         reader.readAsDataURL(file);
     });
 }
@@ -75,6 +91,10 @@ function loadProfilePhotoSource(file) {
 function drawProfilePhotoEditor() {
     if (!photoEditorImage || !perfilPhotoCanvas) return;
     const context = perfilPhotoCanvas.getContext('2d');
+    if (!context) {
+        showMessage('O navegador não conseguiu iniciar o editor de imagem.', 'error');
+        return;
+    }
     const canvasSize = perfilPhotoCanvas.width;
     const coverScale = Math.max(canvasSize / photoEditorImage.naturalWidth, canvasSize / photoEditorImage.naturalHeight);
     const scale = coverScale * photoEditorZoom;
@@ -84,14 +104,22 @@ function drawProfilePhotoEditor() {
     const maxY = Math.max(0, (height - canvasSize) / 2);
     photoEditorOffsetX = Math.max(-maxX, Math.min(maxX, photoEditorOffsetX));
     photoEditorOffsetY = Math.max(-maxY, Math.min(maxY, photoEditorOffsetY));
-    context.clearRect(0, 0, canvasSize, canvasSize);
-    context.drawImage(photoEditorImage, (canvasSize - width) / 2 + photoEditorOffsetX, (canvasSize - height) / 2 + photoEditorOffsetY, width, height);
+    try {
+        context.clearRect(0, 0, canvasSize, canvasSize);
+        context.drawImage(photoEditorImage, (canvasSize - width) / 2 + photoEditorOffsetX, (canvasSize - height) / 2 + photoEditorOffsetY, width, height);
+    } catch (error) {
+        showMessage('O celular não conseguiu renderizar a foto. Feche outros aplicativos para liberar memória e tente novamente.', 'error');
+    }
 }
 
-function openProfilePhotoEditor(source) {
+function openProfilePhotoEditor(source, fileInfo = {}) {
     if (!source || !perfilPhotoEditor) return;
     const image = new Image();
     image.onload = () => {
+        if (!image.naturalWidth || !image.naturalHeight) {
+            showMessage('A imagem não possui dimensões válidas.', 'error');
+            return;
+        }
         photoEditorImage = image;
         photoEditorOffsetX = 0;
         photoEditorOffsetY = 0;
@@ -101,7 +129,12 @@ function openProfilePhotoEditor(source) {
         document.body.classList.add('perfil-photo-editor-open');
         drawProfilePhotoEditor();
     };
-    image.onerror = () => showMessage('Não foi possível abrir esta imagem.', 'error');
+    image.onerror = () => {
+        const isHeic = /hei[cf]/i.test(fileInfo.type || '') || /\.hei[cf]$/i.test(fileInfo.name || '');
+        showMessage(isHeic
+            ? 'Este celular não conseguiu converter a foto HEIC. Altere a câmera para “Mais compatível” ou envie em JPG.'
+            : 'Não foi possível decodificar a imagem. O arquivo pode estar corrompido ou o celular pode estar sem memória disponível.', 'error');
+    };
     image.src = source;
 }
 
@@ -196,7 +229,8 @@ async function handleProfilePhotoSelection(input) {
     const file = input?.files?.[0];
     if (!file) return;
     try {
-        openProfilePhotoEditor(await loadProfilePhotoSource(file));
+        const source = await loadProfilePhotoSource(file);
+        openProfilePhotoEditor(source, { name: file.name, type: file.type, size: file.size });
     } catch (error) {
         input.value = '';
         showMessage(error.message, 'error');
@@ -222,9 +256,16 @@ perfilPhotoReset?.addEventListener('click', () => {
 
 perfilPhotoApply?.addEventListener('click', () => {
     if (!perfilPhotoCanvas) return;
-    renderProfilePhoto(perfilPhotoCanvas.toDataURL('image/jpeg', 0.9), perfilNome?.value);
-    closeProfilePhotoEditor();
-    showMessage('Enquadramento pronto. Salve as alterações para confirmar.', 'success');
+    try {
+        const result = perfilPhotoCanvas.toDataURL('image/jpeg', 0.9);
+        if (!result || result === 'data:,') throw new Error('Falha ao gerar a imagem final.');
+        if (result.length > 2500000) throw new Error('A foto final ficou maior que o limite permitido.');
+        renderProfilePhoto(result, perfilNome?.value);
+        closeProfilePhotoEditor();
+        showMessage('Enquadramento pronto. Salve as alterações para confirmar.', 'success');
+    } catch (error) {
+        showMessage(`${error.message || 'Não foi possível finalizar a foto'} Libere memória no celular e tente novamente.`, 'error');
+    }
 });
 
 perfilPhotoEditor?.querySelectorAll('[data-photo-editor-close]').forEach((button) => button.addEventListener('click', closeProfilePhotoEditor));
