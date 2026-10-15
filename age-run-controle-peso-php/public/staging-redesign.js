@@ -270,6 +270,61 @@
                     { key: 'reviews', label: 'Revisões', icon: 'fact_check', section: pending },
                     { key: 'athletes', label: 'Atletas', icon: 'groups', section: users }
                 ], summary);
+
+                const pendingList = pending.querySelector('#pendingTestsList');
+                const pendingCount = pending.querySelector('#pendingTestsCount');
+                const demoTests = [
+                    { name: 'Julia Progresso', time: '26:04', distance: '5 km', pace: '05:13 /km', testDate: '14/10/2026', sentAt: 'Hoje, 08:42' },
+                    { name: 'Marina Forca', time: '51:00', distance: '10 km', pace: '05:06 /km', testDate: '13/10/2026', sentAt: 'Ontem, 19:18' },
+                    { name: 'Carlos Sprint', time: '27:30', distance: '5 km', pace: '05:30 /km', testDate: '12/10/2026', sentAt: '12/10, 17:05' },
+                    { name: 'Lara Ficticia', time: '01:53:24', distance: '21 km', pace: '05:24 /km', testDate: '11/10/2026', sentAt: '11/10, 09:31' }
+                ];
+
+                const renderDemoReviews = () => {
+                    if (!pendingList || pendingList.querySelector('.coach-rp-test-history-item:not([data-staging-demo])')) return;
+                    const emptyState = pendingList.querySelector('.coach-rp-test-empty');
+                    if (!emptyState && pendingList.children.length) return;
+
+                    pendingList.innerHTML = demoTests.map((test, index) => `
+                        <article class="coach-rp-test-history-item staging-demo-review" data-staging-demo="true">
+                            <div class="coach-rp-test-history-main">
+                                <div class="staging-demo-review-heading">
+                                    <strong>${test.name}</strong>
+                                    <span class="staging-demo-badge">Simulado</span>
+                                </div>
+                                <div class="coach-rp-test-chip-row">
+                                    <span class="coach-rp-test-chip">${test.time}</span>
+                                    <span class="coach-rp-test-chip">${test.distance}</span>
+                                    <span class="coach-rp-test-chip coach-rp-test-chip-accent">${test.pace}</span>
+                                </div>
+                                <div class="coach-rp-test-meta-row">
+                                    <span>Teste: ${test.testDate}</span><span>Enviado: ${test.sentAt}</span>
+                                </div>
+                            </div>
+                            <div class="coach-rp-test-history-actions">
+                                <button type="button" class="btn btn-secondary staging-demo-action" data-action="correct" data-index="${index}">Corrigir</button>
+                                <button type="button" class="btn staging-demo-action" data-action="approve" data-index="${index}">Validar</button>
+                            </div>
+                        </article>`).join('');
+                    if (pendingCount) {
+                        pendingCount.textContent = `${demoTests.length} pendentes`;
+                        pendingCount.classList.remove('coach-pending-ok');
+                    }
+                };
+
+                pendingList?.addEventListener('click', (event) => {
+                    const action = event.target.closest('.staging-demo-action');
+                    if (!action) return;
+                    const card = action.closest('.staging-demo-review');
+                    const approved = action.dataset.action === 'approve';
+                    card?.classList.add(approved ? 'is-approved' : 'needs-correction');
+                    card?.querySelectorAll('.staging-demo-action').forEach((button) => { button.disabled = true; });
+                    const badge = card?.querySelector('.staging-demo-badge');
+                    if (badge) badge.textContent = approved ? 'Validado' : 'Em correção';
+                });
+
+                renderDemoReviews();
+                if (pendingList) new MutationObserver(renderDemoReviews).observe(pendingList, { childList: true });
             }
         }
 

@@ -3270,6 +3270,49 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
         overflow-y: auto;
     }
 
+    .staging-redesign.staging-page-treinador .staging-demo-review {
+        gap: 10px;
+        padding: 12px;
+        border-color: rgba(142, 202, 68, 0.25);
+    }
+
+    .staging-redesign.staging-page-treinador .staging-demo-review-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+    }
+
+    .staging-redesign.staging-page-treinador .staging-demo-badge {
+        padding: 3px 7px;
+        border-radius: 999px;
+        background: rgba(142, 202, 68, 0.14);
+        color: #b8e77e;
+        font-size: 0.6rem;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .staging-redesign.staging-page-treinador .staging-demo-review.is-approved {
+        border-color: #8eca44;
+        background: rgba(142, 202, 68, 0.08);
+    }
+
+    .staging-redesign.staging-page-treinador .staging-demo-review.needs-correction {
+        border-color: #a855f7;
+        background: rgba(142, 32, 181, 0.09);
+    }
+
+    .staging-redesign.staging-page-treinador .staging-demo-review .coach-rp-test-history-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .staging-redesign.staging-page-treinador .staging-demo-review .btn {
+        min-height: 36px;
+        padding: 7px 10px;
+    }
+
     .staging-redesign.staging-page-treinador .staging-coach-users.is-mobile-active {
         display: flex !important;
         flex-direction: column;
