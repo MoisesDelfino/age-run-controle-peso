@@ -152,6 +152,7 @@ function injectUserDropdown(nome, fotoPerfil) {
     headerActions.appendChild(dropdown);
 
     if (fotoPerfil) {
+        dropdown.querySelector('.btn-user-menu')?.classList.add('has-photo');
         dropdown.querySelectorAll('.user-menu-inicial, .user-menu-summary-avatar').forEach((avatar) => {
             avatar.textContent = '';
             const image = document.createElement('img');

@@ -406,6 +406,7 @@ if (perfilForm) {
                     headerAvatar.textContent = nome.charAt(0).toUpperCase() || 'U';
                 }
             });
+            document.querySelector('.btn-user-menu')?.classList.toggle('has-photo', Boolean(perfilPhotoData));
         } catch (err) {
             showMessage(err.message || 'Erro ao salvar.', 'error');
         } finally {

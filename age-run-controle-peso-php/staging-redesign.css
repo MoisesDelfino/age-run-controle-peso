@@ -83,6 +83,18 @@ body.staging-redesign {
     border-color: rgba(139, 195, 74, 0.7);
 }
 
+.staging-redesign .btn-user-menu.has-photo {
+    padding: 0;
+    overflow: hidden;
+    border-color: transparent;
+    background: transparent;
+    box-shadow: none;
+}
+
+.staging-redesign .btn-user-menu.has-photo:hover {
+    background: transparent;
+}
+
 .staging-redesign .btn-user-menu:hover,
 .staging-redesign .btn-dark-mode:hover {
     background: rgba(255, 255, 255, 0.2);
