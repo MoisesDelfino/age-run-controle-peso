@@ -225,6 +225,13 @@ if (btnLogout) {
 
 if (btnAtualizar) {
     btnAtualizar.addEventListener('click', async () => {
-        await carregarVisaoRanking();
+        btnAtualizar.disabled = true;
+        btnAtualizar.classList.add('is-loading');
+        try {
+            await carregarVisaoRanking();
+        } finally {
+            btnAtualizar.disabled = false;
+            btnAtualizar.classList.remove('is-loading');
+        }
     });
 }
