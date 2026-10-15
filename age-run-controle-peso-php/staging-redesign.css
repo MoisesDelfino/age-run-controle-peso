@@ -1903,6 +1903,8 @@ body.dark-mode.staging-redesign .nav-link.active .staging-nav-icon {
 
 .staging-redesign.staging-page-perfil .perfil-grid {
     width: 100%;
+    display: grid;
+    gap: 18px;
     grid-template-columns: minmax(0, 680px);
     justify-content: center;
 }
