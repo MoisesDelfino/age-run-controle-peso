@@ -194,6 +194,29 @@ function ensurePerfilLink() {
     // Mantida por compatibilidade — o perfil agora fica no dropdown de usuário
 }
 
+function ocultarRankingParaMulher() {
+    const hideRanking = () => {
+        document.querySelectorAll('a[href$="/ranking"], a[href="./ranking"]').forEach((link) => {
+            const item = link.closest('li') || link;
+            item.style.display = 'none';
+            item.setAttribute('aria-hidden', 'true');
+        });
+
+        document.querySelectorAll('.staging-bottom-nav').forEach((nav) => {
+            const visibleItems = Array.from(nav.children).filter((item) => item.style.display !== 'none').length;
+            if (visibleItems > 0) {
+                nav.style.gridTemplateColumns = `repeat(${visibleItems}, minmax(0, 1fr))`;
+            }
+        });
+    };
+
+    document.body.classList.add('is-female');
+    hideRanking();
+
+    const observer = new MutationObserver(hideRanking);
+    observer.observe(document.body, { childList: true, subtree: true });
+}
+
 function ativarFallbackRotasNovas(closeMenu) {
     const fallbackRoute = withBasePath('/bioimpedancia');
     const candidatos = document.querySelectorAll('.nav-link[href$="/grupos-treino"], .nav-link[href$="/treinador"]');
@@ -255,16 +278,7 @@ async function aplicarPermissoesMenu() {
         injectUserDropdown(data.nome, data.foto_perfil);
 
         if (!isMulher) return;
-
-        const rankingLinks = document.querySelectorAll('.nav-link[href="/ranking"], .nav-link[href="/controle/ranking"], .nav-link[href$="/ranking"]');
-        rankingLinks.forEach((link) => {
-            const parent = link.closest('li');
-            if (parent) {
-                parent.style.display = 'none';
-                return;
-            }
-            link.style.display = 'none';
-        });
+        ocultarRankingParaMulher();
     } catch (error) {
         console.error('Erro ao aplicar permissões do menu:', error);
     }
