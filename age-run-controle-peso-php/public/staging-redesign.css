@@ -2339,6 +2339,93 @@ body.dark-mode.staging-redesign .nav-link.active .staging-nav-icon {
     color: #72a936;
     font-size: 0.76rem;
     font-weight: 700;
+    overflow: hidden;
+}
+
+.staging-redesign.staging-page-treinador .coach-photo-trigger:has(img) {
+    cursor: zoom-in;
+}
+
+.staging-redesign.staging-page-treinador .coach-photo-trigger:focus-visible {
+    outline: 3px solid rgba(142, 32, 181, 0.4);
+    outline-offset: 2px;
+}
+
+.staging-redesign.staging-page-treinador .coach-photo-trigger img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+}
+
+.coach-photo-viewer {
+    position: fixed;
+    inset: 0;
+    z-index: 12000;
+    display: none;
+    place-items: center;
+    padding: 24px;
+}
+
+.coach-photo-viewer.is-open {
+    display: grid;
+}
+
+.coach-photo-viewer-backdrop {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    border: 0;
+    background: rgba(8, 7, 10, 0.88);
+    backdrop-filter: blur(8px);
+}
+
+.coach-photo-viewer-content {
+    position: relative;
+    z-index: 1;
+    width: min(88vw, 520px);
+    display: grid;
+    gap: 14px;
+    padding: 12px;
+    border: 1px solid rgba(142, 32, 181, 0.5);
+    border-radius: 24px;
+    background: #211d23;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.48);
+}
+
+.coach-photo-viewer-content img {
+    width: 100%;
+    max-height: min(70vh, 620px);
+    display: block;
+    border-radius: 16px;
+    object-fit: contain;
+    background: #121013;
+}
+
+.coach-photo-viewer-content strong {
+    padding: 0 8px 6px;
+    color: #fff;
+    text-align: center;
+}
+
+.coach-photo-viewer-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 2;
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 50%;
+    background: rgba(18, 16, 19, 0.82);
+    color: #fff;
+    cursor: pointer;
+}
+
+body.coach-photo-viewer-open {
+    overflow: hidden;
 }
 
 body.dark-mode.staging-redesign.staging-page-treinador .coach-summary-avatar,

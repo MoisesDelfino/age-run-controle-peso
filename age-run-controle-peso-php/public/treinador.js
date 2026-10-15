@@ -241,6 +241,72 @@ function getPendingAthleteTests(usuarios) {
         .sort((a, b) => String(b.teste.cadastrado_em || '').localeCompare(String(a.teste.cadastrado_em || '')));
 }
 
+function renderCoachAvatar(usuario, className) {
+    const initial = String(usuario.nome || 'U').trim().charAt(0).toUpperCase();
+    const photo = typeof usuario.foto_perfil === 'string' && usuario.foto_perfil.startsWith('data:image/')
+        ? usuario.foto_perfil
+        : '';
+    if (!photo) return `<span class="${className}" aria-hidden="true">${initial}</span>`;
+
+    return `<span class="${className} coach-photo-trigger" role="button" tabindex="0" data-profile-user-id="${usuario.usuario_id}" aria-label="Visualizar foto de ${usuario.nome || 'atleta'}"><img src="${photo}" alt=""></span>`;
+}
+
+function openCoachPhoto(usuario) {
+    if (!usuario?.foto_perfil) return;
+    let viewer = document.getElementById('coachPhotoViewer');
+    if (!viewer) {
+        viewer = document.createElement('div');
+        viewer.id = 'coachPhotoViewer';
+        viewer.className = 'coach-photo-viewer';
+        viewer.setAttribute('role', 'dialog');
+        viewer.setAttribute('aria-modal', 'true');
+        viewer.innerHTML = `
+            <button type="button" class="coach-photo-viewer-backdrop" aria-label="Fechar foto"></button>
+            <div class="coach-photo-viewer-content">
+                <button type="button" class="coach-photo-viewer-close" aria-label="Fechar foto"><span class="material-icons" aria-hidden="true">close</span></button>
+                <img alt="">
+                <strong></strong>
+            </div>`;
+        document.body.appendChild(viewer);
+        viewer.addEventListener('click', (event) => {
+            if (event.target.closest('.coach-photo-viewer-backdrop, .coach-photo-viewer-close')) closeCoachPhoto();
+        });
+    }
+
+    const image = viewer.querySelector('img');
+    image.src = usuario.foto_perfil;
+    image.alt = `Foto ampliada de ${usuario.nome || 'atleta'}`;
+    viewer.querySelector('strong').textContent = usuario.nome || 'Atleta';
+    viewer.classList.add('is-open');
+    document.body.classList.add('coach-photo-viewer-open');
+    viewer.querySelector('.coach-photo-viewer-close')?.focus();
+}
+
+function closeCoachPhoto() {
+    document.getElementById('coachPhotoViewer')?.classList.remove('is-open');
+    document.body.classList.remove('coach-photo-viewer-open');
+}
+
+document.addEventListener('click', (event) => {
+    const trigger = event.target.closest('.coach-photo-trigger');
+    if (!trigger) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const usuario = usuariosCache.find((item) => Number(item.usuario_id) === Number(trigger.dataset.profileUserId));
+    if (usuario?.foto_perfil) openCoachPhoto(usuario);
+}, true);
+
+document.addEventListener('keydown', (event) => {
+    const trigger = event.target.closest('.coach-photo-trigger');
+    if (trigger && (event.key === 'Enter' || event.key === ' ')) {
+        event.preventDefault();
+        const usuario = usuariosCache.find((item) => Number(item.usuario_id) === Number(trigger.dataset.profileUserId));
+        if (usuario?.foto_perfil) openCoachPhoto(usuario);
+        return;
+    }
+    if (event.key === 'Escape') closeCoachPhoto();
+});
+
 function renderPendingAthleteTests(usuarios) {
     if (!pendingTestsList) return;
     const pendentes = getPendingAthleteTests(usuarios);
@@ -258,7 +324,7 @@ function renderPendingAthleteTests(usuarios) {
         <article class="coach-rp-test-history-item">
             <div class="coach-rp-test-history-main">
                 <div class="coach-review-athlete">
-                    <span class="coach-review-avatar">${String(usuario.nome || 'U').trim().charAt(0).toUpperCase()}</span>
+                    ${renderCoachAvatar(usuario, 'coach-review-avatar')}
                     <strong>${usuario.nome}</strong>
                 </div>
                 <div class="coach-rp-test-chip-row">
@@ -1077,7 +1143,7 @@ function renderCoachSummary(usuario, expanded) {
     return `
         <button class="coach-user-summary" data-user-id="${usuario.usuario_id}" aria-expanded="${expanded ? 'true' : 'false'}">
             <div class="coach-summary-identity">
-                <span class="coach-summary-avatar">${String(usuario.nome || 'U').trim().charAt(0).toUpperCase()}</span>
+                ${renderCoachAvatar(usuario, 'coach-summary-avatar')}
                 <div class="coach-summary-main">
                     <strong>${usuario.nome}</strong>
                     <span class="coach-summary-email">${usuario.email || '-'}</span>

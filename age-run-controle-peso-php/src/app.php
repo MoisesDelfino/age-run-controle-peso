@@ -3868,6 +3868,7 @@ if ($method === 'GET' && $path === '/api/treinador/usuarios-ativos') {
 
     $usuarioColumns = [
         'altura',
+        'foto_perfil',
         'rp_5k', 'rp_10k', 'rp_21k', 'rp_42k',
         'rp_5k_status', 'rp_10k_status', 'rp_21k_status', 'rp_42k_status',
     ];
@@ -3954,6 +3955,7 @@ if ($method === 'GET' && $path === '/api/treinador/usuarios-ativos') {
             'usuario_id' => $usuarioId,
             'nome' => (string) ($row['nome'] ?? ''),
             'email' => (string) ($row['email'] ?? ''),
+            'foto_perfil' => isset($row['foto_perfil']) && is_string($row['foto_perfil']) ? $row['foto_perfil'] : null,
             'altura' => $altura,
             'peso_atual' => $pesoAtual,
             'imc' => $imc,
