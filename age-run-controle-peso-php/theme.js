@@ -1,4 +1,22 @@
 (function() {
+    const isStagingPath = window.location.pathname === '/dev' || window.location.pathname.startsWith('/dev/');
+    if (isStagingPath) {
+        if (!document.querySelector('link[data-staging-redesign]')) {
+            const stagingStyles = document.createElement('link');
+            stagingStyles.rel = 'stylesheet';
+            stagingStyles.href = '/dev/staging-redesign.css?v=2026101507';
+            stagingStyles.dataset.stagingRedesign = 'true';
+            document.head.appendChild(stagingStyles);
+        }
+
+        if (!document.querySelector('script[data-staging-redesign]')) {
+            const stagingScript = document.createElement('script');
+            stagingScript.src = '/dev/staging-redesign.js?v=2026101504';
+            stagingScript.dataset.stagingRedesign = 'true';
+            document.head.appendChild(stagingScript);
+        }
+    }
+
     const THEME_STORAGE_KEY = 'agerun-theme';
     const DARK_CLASS = 'dark-mode';
     const PWA_DISMISSED_KEY = 'agerun-pwa-install-dismissed';

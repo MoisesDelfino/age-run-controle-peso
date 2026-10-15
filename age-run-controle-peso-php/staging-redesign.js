@@ -2,6 +2,8 @@
     const isStaging = window.location.pathname === '/dev' || window.location.pathname.startsWith('/dev/');
 
     if (!isStaging) return;
+    if (window.__AGE_RUN_STAGING_REDESIGN__) return;
+    window.__AGE_RUN_STAGING_REDESIGN__ = true;
 
     document.documentElement.classList.add('staging-redesign');
 
@@ -10,8 +12,15 @@
     robotsMeta.content = 'noindex, nofollow, noarchive';
     document.head.appendChild(robotsMeta);
 
-    document.addEventListener('DOMContentLoaded', () => {
+    const initPage = () => {
         document.body.classList.add('staging-redesign');
+
+        const pageSlug = window.location.pathname
+            .replace(/^\/dev\/?/, '')
+            .replace(/\/$/, '')
+            .replace(/[^a-z0-9-]/gi, '-') || 'index';
+        document.body.classList.add(`staging-page-${pageSlug}`);
+        document.body.classList.toggle('staging-auth-page', Boolean(document.querySelector('.auth-container')));
 
         const banner = document.createElement('div');
         banner.className = 'staging-environment-banner';
@@ -145,5 +154,11 @@
                 });
             }
         }
-    });
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initPage, { once: true });
+    } else {
+        initPage();
+    }
 })();

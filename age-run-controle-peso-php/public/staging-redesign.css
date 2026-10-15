@@ -911,6 +911,578 @@ body.dark-mode.staging-redesign .staging-height-toggle .material-icons {
 }
 
 
++/* Sistema visual global de staging. */
+.staging-redesign {
+    --ui-space-1: 4px;
+    --ui-space-2: 8px;
+    --ui-space-3: 12px;
+    --ui-space-4: 16px;
+    --ui-space-5: 20px;
+    --ui-space-6: 24px;
+    --ui-radius-sm: 10px;
+    --ui-radius-md: 14px;
+    --ui-radius-lg: 20px;
+    --ui-control-height: 48px;
+    --ui-shadow-card: 0 10px 30px rgba(70, 36, 78, 0.08);
+}
+
+.staging-redesign main:not(.main-content),
+.staging-redesign .main-content > .container {
+    max-width: 1200px;
+}
+
+.staging-redesign main,
+.staging-redesign .main-content {
+    animation: staging-page-enter 0.2s ease-out;
+}
+
+.staging-redesign .card,
+.staging-redesign .auth-box,
+.staging-redesign .modal-content,
+.staging-redesign .modal-box {
+    border: 1px solid var(--staging-line);
+    border-radius: var(--ui-radius-lg);
+    box-shadow: var(--ui-shadow-card);
+}
+
+.staging-redesign .card {
+    padding: clamp(20px, 2.5vw, 30px);
+}
+
+.staging-redesign .card h1,
+.staging-redesign .card h2,
+.staging-redesign .card h3,
+.staging-redesign .card h4 {
+    color: var(--staging-ink);
+    letter-spacing: -0.02em;
+}
+
+.staging-redesign .card h2 {
+    font-size: clamp(1.05rem, 2vw, 1.3rem);
+}
+
+.staging-redesign .card h3 {
+    font-size: 1rem;
+}
+
+.staging-redesign .form-group {
+    margin-bottom: var(--ui-space-4);
+}
+
+.staging-redesign .form-group label,
+.staging-redesign .rp-field label,
+.staging-redesign .perfil-field label,
+.staging-redesign .bio-field label {
+    margin-bottom: 7px;
+    color: #555;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.staging-redesign input:not([type="checkbox"]):not([type="radio"]),
+.staging-redesign select,
+.staging-redesign textarea {
+    width: 100%;
+    min-height: var(--ui-control-height);
+    padding: 11px 14px;
+    border: 1px solid #d8d5da;
+    border-radius: var(--ui-radius-sm);
+    background: var(--white);
+    color: var(--dark-color);
+    font: inherit;
+    font-size: 0.9rem;
+    transition: border-color 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+}
+
+.staging-redesign textarea {
+    min-height: 104px;
+    resize: vertical;
+}
+
+.staging-redesign input:not([type="checkbox"]):not([type="radio"]):focus,
+.staging-redesign select:focus,
+.staging-redesign textarea:focus {
+    outline: none;
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 4px rgba(123, 31, 162, 0.1);
+}
+
+.staging-redesign input:disabled,
+.staging-redesign select:disabled,
+.staging-redesign textarea:disabled {
+    cursor: not-allowed;
+    opacity: 0.68;
+}
+
+.staging-redesign .btn,
+.staging-redesign button:not(.menu-toggle):not(.btn-dark-mode):not(.btn-logout):not(.btn-user-menu):not(.user-menu-item):not(.staging-mobile-tab):not(.staging-height-toggle):not(.btn-edit):not(.btn-delete) {
+    min-height: 44px;
+    border-radius: var(--ui-radius-sm);
+    font-family: inherit;
+    font-weight: 600;
+    text-transform: none;
+}
+
+.staging-redesign .btn-primary {
+    border: 0;
+    background: var(--primary-color);
+    color: var(--white);
+    box-shadow: none;
+}
+
+.staging-redesign .btn-primary:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+}
+
+.staging-redesign .btn-secondary {
+    border: 0;
+    background: var(--secondary-color);
+    color: var(--white);
+    box-shadow: none;
+}
+
+.staging-redesign .btn-secondary:hover {
+    background: var(--accent-purple);
+    transform: translateY(-1px);
+}
+
+.staging-redesign .btn-danger {
+    border: 0;
+    background: var(--danger-color);
+    color: var(--white);
+}
+
+.staging-redesign .message,
+.staging-redesign .info-message,
+.staging-redesign .error-message,
+.staging-redesign .group-meta {
+    border-radius: var(--ui-radius-sm);
+}
+
+.staging-redesign .loading,
+.staging-redesign .empty-message,
+.staging-redesign .error-message {
+    min-height: 120px;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+}
+
+.staging-redesign table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.staging-redesign table thead {
+    background: rgba(123, 31, 162, 0.08);
+    color: var(--staging-ink);
+}
+
+.staging-redesign table th {
+    padding: 12px 14px;
+    color: #5f5362;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-align: left;
+    text-transform: uppercase;
+}
+
+.staging-redesign table td {
+    padding: 13px 14px;
+    border-bottom: 1px solid var(--staging-line);
+    font-size: 0.84rem;
+}
+
+.staging-redesign table tbody tr {
+    background: transparent;
+}
+
+.staging-redesign table tbody tr:hover {
+    background: rgba(123, 31, 162, 0.035);
+}
+
+.staging-redesign .ranking-container,
+.staging-redesign .access-table-wrap,
+.staging-redesign .db-result-wrap,
+.staging-redesign .rp-confirm-table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--staging-line);
+    border-radius: var(--ui-radius-md);
+    -webkit-overflow-scrolling: touch;
+}
+
+.staging-redesign .modal {
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+    background: rgba(20, 16, 21, 0.66);
+    backdrop-filter: blur(5px);
+}
+
+.staging-redesign .modal-content,
+.staging-redesign .modal-box {
+    width: min(100%, 520px);
+    margin: 0 auto;
+    padding: 24px;
+    background: var(--staging-surface);
+}
+
+.staging-redesign .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.staging-redesign .modal-actions .btn {
+    width: auto;
+    min-width: 110px;
+}
+
+.staging-redesign .nav-menu {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.staging-redesign .nav-list {
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.staging-redesign .nav-list::-webkit-scrollbar {
+    display: none;
+}
+
+.staging-redesign .nav-link {
+    white-space: nowrap;
+}
+
+.staging-redesign .user-menu-panel {
+    border-radius: var(--ui-radius-md);
+}
+
+/* Autenticação e primeiro acesso */
+.staging-redesign.staging-auth-page {
+    background:
+        radial-gradient(circle at 15% 15%, rgba(139, 195, 74, 0.12), transparent 34%),
+        radial-gradient(circle at 85% 85%, rgba(123, 31, 162, 0.12), transparent 34%),
+        var(--light-color);
+}
+
+.staging-redesign.staging-auth-page .auth-container {
+    min-height: calc(100vh - 34px);
+    padding: 24px;
+    background: transparent;
+}
+
+.staging-redesign.staging-auth-page .auth-box {
+    max-width: 440px;
+    padding: clamp(24px, 5vw, 38px);
+    background: var(--staging-surface);
+    color: var(--staging-ink);
+}
+
+.staging-redesign.staging-auth-page .auth-logo {
+    height: 64px;
+    margin-bottom: 16px;
+    filter: none;
+}
+
+.staging-redesign.staging-auth-page .auth-header h1 {
+    color: var(--staging-ink);
+    font-size: 1.55rem;
+    font-weight: 700;
+}
+
+.staging-redesign.staging-auth-page .auth-header p,
+.staging-redesign.staging-auth-page .auth-form label,
+.staging-redesign.staging-auth-page .auth-footer {
+    color: var(--staging-muted);
+}
+
+.staging-redesign.staging-auth-page .auth-form input,
+.staging-redesign.staging-auth-page .auth-form select {
+    border-color: #d8d5da;
+    background: var(--white);
+    color: var(--dark-color);
+}
+
+.staging-redesign.staging-auth-page .auth-form input::placeholder {
+    color: #8a858c;
+}
+
+.staging-redesign.staging-auth-page .forgot-password a,
+.staging-redesign.staging-auth-page .auth-footer a,
+.staging-redesign.staging-auth-page .auth-inline-action {
+    color: var(--secondary-color);
+}
+
+.staging-redesign.staging-auth-page .auth-form .btn-primary {
+    min-height: 50px;
+}
+
+/* Home */
+.staging-redesign.staging-page-home .home-summary-layout {
+    gap: 18px;
+}
+
+.staging-redesign.staging-page-home .home-stats-grid {
+    gap: 12px;
+}
+
+.staging-redesign.staging-page-home .home-rp-item,
+.staging-redesign.staging-page-home .home-level-item {
+    border-radius: var(--ui-radius-sm);
+}
+
+/* Ranking */
+.staging-redesign.staging-page-ranking .ranking-section .card {
+    overflow: hidden;
+}
+
+.staging-redesign.staging-page-ranking .ranking-controls {
+    display: flex;
+    align-items: end;
+    gap: 12px;
+}
+
+.staging-redesign.staging-page-ranking .ranking-controls .form-group {
+    flex: 1;
+    margin: 0;
+}
+
+/* Perfil */
+.staging-redesign.staging-page-perfil .home-content {
+    display: grid;
+    gap: 18px;
+}
+
+.staging-redesign.staging-page-perfil .perfil-form,
+.staging-redesign.staging-page-perfil .garmin-login-form {
+    display: grid;
+    gap: 14px;
+}
+
+.staging-redesign.staging-page-perfil .perfil-actions,
+.staging-redesign.staging-page-perfil .garmin-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+/* Bioimpedância */
+.staging-redesign.staging-page-bioimpedancia .main-content {
+    padding-bottom: 56px;
+}
+
+.staging-redesign.staging-page-bioimpedancia .bioimpedancia-grid {
+    gap: 18px;
+}
+
+.staging-redesign.staging-page-bioimpedancia .form-bioimpedancia {
+    display: grid;
+    gap: 14px;
+}
+
+.staging-redesign.staging-page-bioimpedancia .form-bioimpedancia .form-row {
+    gap: 12px;
+}
+
+/* Grupos e treinador */
+.staging-redesign.staging-page-grupos-treino .home-content,
+.staging-redesign.staging-page-treinador .home-content {
+    display: grid;
+    gap: 18px;
+}
+
+.staging-redesign.staging-page-grupos-treino .welcome-section,
+.staging-redesign.staging-page-grupos-treino .rp-section,
+.staging-redesign.staging-page-grupos-treino .grupos-section,
+.staging-redesign.staging-page-treinador .coach-panel-section {
+    margin: 0;
+}
+
+.staging-redesign .coach-kpi-card,
+.staging-redesign .coach-user-accordion,
+.staging-redesign .coach-group-card,
+.staging-redesign .group-card,
+.staging-redesign .rp-card {
+    border: 1px solid var(--staging-line);
+    border-radius: var(--ui-radius-md);
+    box-shadow: none;
+}
+
+.staging-redesign .coach-kpi-card.active {
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 3px rgba(123, 31, 162, 0.1);
+}
+
+/* Ferramentas administrativas */
+.staging-redesign.staging-page-monitoramento .query-layout,
+.staging-redesign.staging-page-monitoramento-acessos .access-layout {
+    padding: clamp(20px, 3vw, 30px);
+}
+
+.staging-redesign .access-toolbar,
+.staging-redesign .query-toolbar {
+    gap: 12px;
+}
+
+.staging-redesign .access-badge {
+    border-radius: 999px;
+}
+
+body.dark-mode.staging-redesign input:not([type="checkbox"]):not([type="radio"]),
+body.dark-mode.staging-redesign select,
+body.dark-mode.staging-redesign textarea,
+body.dark-mode.staging-redesign.staging-auth-page .auth-form input,
+body.dark-mode.staging-redesign.staging-auth-page .auth-form select {
+    border-color: #403943;
+    background: #211f22;
+    color: #f3eef4;
+}
+
+body.dark-mode.staging-redesign table thead {
+    background: rgba(206, 147, 216, 0.09);
+}
+
+body.dark-mode.staging-redesign table th {
+    color: #d2c7d4;
+}
+
+body.dark-mode.staging-redesign table td {
+    border-bottom-color: #383239;
+}
+
+body.dark-mode.staging-redesign table tbody tr:hover {
+    background: rgba(206, 147, 216, 0.055);
+}
+
+body.dark-mode.staging-redesign.staging-auth-page {
+    background:
+        radial-gradient(circle at 15% 15%, rgba(139, 195, 74, 0.08), transparent 34%),
+        radial-gradient(circle at 85% 85%, rgba(156, 39, 176, 0.11), transparent 34%),
+        #121212;
+}
+
+body.dark-mode.staging-redesign.staging-auth-page .auth-container {
+    background: transparent;
+}
+
+body.dark-mode.staging-redesign.staging-auth-page .auth-box {
+    background: #1b1b1b;
+}
+
+body.dark-mode.staging-redesign.staging-auth-page .forgot-password a,
+body.dark-mode.staging-redesign.staging-auth-page .auth-footer a,
+body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
+    color: #ce93d8;
+}
+
+@media (max-width: 768px) {
+    .staging-redesign {
+        --ui-radius-lg: 16px;
+        --ui-shadow-card: 0 6px 20px rgba(70, 36, 78, 0.07);
+    }
+
+    .staging-redesign .container,
+    .staging-redesign .main-content > .container {
+        padding-inline: 14px;
+    }
+
+    .staging-redesign main:not(.staging-weighing),
+    .staging-redesign .main-content {
+        padding-top: 16px;
+        padding-bottom: 28px;
+    }
+
+    .staging-redesign .card {
+        padding: 18px;
+    }
+
+    .staging-redesign .modal-actions {
+        flex-direction: column-reverse;
+    }
+
+    .staging-redesign .modal-actions .btn {
+        width: 100%;
+    }
+
+    .staging-redesign.staging-auth-page .auth-container {
+        min-height: calc(100vh - 24px);
+        padding: 14px;
+        align-items: flex-start;
+    }
+
+    .staging-redesign.staging-auth-page .auth-box {
+        max-width: none;
+        padding: 22px 18px;
+        border-radius: 16px;
+    }
+
+    .staging-redesign.staging-auth-page .auth-header {
+        margin-bottom: 18px;
+    }
+
+    .staging-redesign.staging-auth-page .auth-logo {
+        height: 50px;
+        margin-bottom: 10px;
+    }
+
+    .staging-redesign.staging-page-home .home-summary-layout,
+    .staging-redesign.staging-page-perfil .home-content,
+    .staging-redesign.staging-page-bioimpedancia .bioimpedancia-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .staging-redesign.staging-page-ranking .ranking-section .card {
+        padding: 14px;
+    }
+
+    .staging-redesign.staging-page-ranking .ranking-controls {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .staging-redesign .coach-kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .staging-redesign .coach-main-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .staging-redesign .coach-side-column {
+        position: static;
+    }
+
+    .staging-redesign .access-toolbar,
+    .staging-redesign .query-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .staging-redesign table th,
+    .staging-redesign table td {
+        padding: 10px 11px;
+    }
+}
+
+@keyframes staging-page-enter {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
 @media (prefers-reduced-motion: reduce) {
     .staging-redesign *,
     .staging-redesign *::before,
