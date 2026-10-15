@@ -1509,6 +1509,91 @@ body.dark-mode.staging-redesign .staging-height-toggle .material-icons {
     border-top-color: #4d3852;
 }
 
+.staging-redesign.staging-auth-page .auth-form > .message {
+    position: relative;
+    min-height: 58px;
+    margin-top: 14px;
+    padding: 11px 13px;
+    align-items: center;
+    gap: 11px;
+    overflow: hidden;
+    border-radius: 13px;
+    text-align: left;
+    box-shadow: none;
+    animation: staging-auth-message-in 0.22s ease-out;
+}
+
+.staging-redesign.staging-auth-page .auth-form > .message.show {
+    display: flex;
+}
+
+.staging-redesign.staging-auth-page .auth-form > .message.success {
+    border: 1px solid rgba(139, 195, 74, 0.46);
+    background: rgba(139, 195, 74, 0.11);
+    color: #d9f5b7;
+}
+
+.staging-redesign.staging-auth-page .auth-form > .message.error {
+    border: 1px solid rgba(239, 83, 80, 0.42);
+    background: rgba(239, 83, 80, 0.1);
+    color: #ffc5c3;
+}
+
+.staging-redesign.staging-auth-page .auth-message-icon {
+    width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    border-radius: 10px;
+    background: rgba(139, 195, 74, 0.16);
+    color: #9bd650;
+    font-size: 20px;
+}
+
+.staging-redesign.staging-auth-page .message.error .auth-message-icon {
+    background: rgba(239, 83, 80, 0.14);
+    color: #ff8a87;
+}
+
+.staging-redesign.staging-auth-page .auth-message-content {
+    min-width: 0;
+    display: grid;
+    gap: 2px;
+}
+
+.staging-redesign.staging-auth-page .auth-message-content strong {
+    font-size: 0.8rem;
+    line-height: 1.3;
+}
+
+.staging-redesign.staging-auth-page .auth-message-content small {
+    color: #b9acbd;
+    font-size: 0.68rem;
+}
+
+.staging-redesign.staging-auth-page .auth-message-progress {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background: var(--primary-color);
+    transform-origin: left;
+    animation: staging-auth-progress 1s linear forwards;
+}
+
+@keyframes staging-auth-message-in {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes staging-auth-progress {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+}
+
 /* Home */
 .staging-redesign.staging-page-home .home-summary-layout {
     gap: 18px;

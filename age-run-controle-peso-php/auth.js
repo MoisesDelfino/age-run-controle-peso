@@ -44,7 +44,29 @@ function mostrarMensagem(texto, tipo, options = {}) {
     if (!messageDiv) return;
 
     const persist = Boolean(options.persist);
-    messageDiv.textContent = texto;
+    const icon = document.createElement('span');
+    icon.className = 'material-icons auth-message-icon';
+    icon.setAttribute('aria-hidden', 'true');
+    icon.textContent = tipo === 'success' ? 'check_circle' : 'error_outline';
+
+    const content = document.createElement('span');
+    content.className = 'auth-message-content';
+    const title = document.createElement('strong');
+    title.textContent = texto;
+    content.appendChild(title);
+    if (options.detail) {
+        const detail = document.createElement('small');
+        detail.textContent = options.detail;
+        content.appendChild(detail);
+    }
+
+    messageDiv.replaceChildren(icon, content);
+    if (options.loading) {
+        const progress = document.createElement('span');
+        progress.className = 'auth-message-progress';
+        progress.setAttribute('aria-hidden', 'true');
+        messageDiv.appendChild(progress);
+    }
     messageDiv.className = `message ${tipo} show`;
     
     if (!persist) {
@@ -179,7 +201,10 @@ if (document.getElementById('loginForm')) {
                 throw new Error(data.error || `Erro ao fazer login (HTTP ${response.status})`);
             }
             
-            mostrarMensagem('✅ Login realizado! Redirecionando...', 'success');
+            mostrarMensagem('Acesso confirmado', 'success', {
+                detail: 'Preparando seu painel...',
+                loading: true
+            });
             
             setTimeout(() => {
                 if (data?.require_password_change) {
@@ -192,7 +217,7 @@ if (document.getElementById('loginForm')) {
             
         } catch (error) {
             console.error('Erro:', error);
-            mostrarMensagem(`❌ ${error.message}`, 'error');
+            mostrarMensagem(error.message, 'error');
         }
     });
 }
@@ -248,14 +273,14 @@ if (document.getElementById('cadastroForm')) {
 
             if (data?.verification_required) {
                 const loginUrl = getAppPath('/login') + '?email_confirmacao=pendente&email=' + encodeURIComponent(email);
-                mostrarMensagem('✅ Conta criada! Verifique seu e-mail para ativar a conta.', 'success', { persist: true });
+                mostrarMensagem('Conta criada', 'success', { persist: true, detail: 'Verifique seu e-mail para ativar a conta.' });
                 setTimeout(() => {
                     window.location.href = loginUrl;
                 }, 2000);
                 return;
             }
 
-            mostrarMensagem('✅ Conta criada! Entrando na sua conta...', 'success');
+            mostrarMensagem('Conta criada', 'success', { detail: 'Entrando na sua conta...', loading: true });
 
             setTimeout(() => {
                 if (data?.require_password_change) {
@@ -268,7 +293,7 @@ if (document.getElementById('cadastroForm')) {
             
         } catch (error) {
             console.error('Erro:', error);
-            mostrarMensagem(`❌ ${error.message}`, 'error');
+            mostrarMensagem(error.message, 'error');
         }
     });
 }
@@ -285,11 +310,11 @@ if (resendVerificationBtn) {
         resendVerificationBtn.disabled = true;
         try {
             const data = await reenviarEmailConfirmacao(email);
-            mostrarMensagem(`✅ ${data.message || 'E-mail de confirmação reenviado.'}`, 'success', { persist: true });
+            mostrarMensagem(data.message || 'E-mail de confirmação reenviado.', 'success', { persist: true });
             showResendVerificationButton(email);
         } catch (error) {
             console.error('Erro:', error);
-            mostrarMensagem(`❌ ${error.message}`, 'error', { persist: true });
+            mostrarMensagem(error.message, 'error', { persist: true });
         } finally {
             resendVerificationBtn.disabled = false;
         }
