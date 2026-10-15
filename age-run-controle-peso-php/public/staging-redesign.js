@@ -71,6 +71,85 @@
 
             enhanceLinks();
             new MutationObserver(enhanceLinks).observe(navList, { childList: true, subtree: true });
+
+            const bottomNav = document.createElement('nav');
+            bottomNav.className = 'staging-bottom-nav';
+            bottomNav.setAttribute('aria-label', 'Navegação principal');
+
+            const moreOverlay = document.createElement('button');
+            moreOverlay.type = 'button';
+            moreOverlay.className = 'staging-more-overlay';
+            moreOverlay.setAttribute('aria-label', 'Fechar mais opções');
+
+            const moreSheet = document.createElement('section');
+            moreSheet.className = 'staging-more-sheet';
+            moreSheet.setAttribute('aria-hidden', 'true');
+            moreSheet.innerHTML = `
+                <div class="staging-more-handle" aria-hidden="true"></div>
+                <div class="staging-more-heading">
+                    <div><strong>Mais opções</strong><span>Acesse recursos complementares</span></div>
+                    <button type="button" class="staging-more-close" aria-label="Fechar"><span class="material-icons">close</span></button>
+                </div>
+                <div class="staging-more-links"></div>`;
+
+            document.body.append(moreOverlay, moreSheet, bottomNav);
+
+            const coreRoutes = ['/home', '/pesagem', '/ranking', '/grupos-treino'];
+            const closeMore = () => {
+                moreSheet.classList.remove('is-open');
+                moreOverlay.classList.remove('is-open');
+                moreSheet.setAttribute('aria-hidden', 'true');
+                bottomNav.querySelector('.staging-bottom-more')?.setAttribute('aria-expanded', 'false');
+            };
+            const openMore = () => {
+                moreSheet.classList.add('is-open');
+                moreOverlay.classList.add('is-open');
+                moreSheet.setAttribute('aria-hidden', 'false');
+                bottomNav.querySelector('.staging-bottom-more')?.setAttribute('aria-expanded', 'true');
+            };
+
+            const renderBottomNavigation = () => {
+                const links = Array.from(navList.querySelectorAll('.nav-link[data-staging-nav-ready]'));
+                const byRoute = new Map(links.map((link) => {
+                    const route = new URL(link.href, window.location.origin).pathname.replace(/^\/dev|^\/controle/, '');
+                    return [route, link];
+                }));
+
+                bottomNav.innerHTML = coreRoutes.map((route) => {
+                    const source = byRoute.get(route);
+                    if (!source) return '';
+                    const icon = source.querySelector('.staging-nav-icon')?.textContent || 'circle';
+                    const label = source.querySelector('.staging-nav-label')?.textContent || '';
+                    const active = source.classList.contains('active');
+                    return `<a class="staging-bottom-item${active ? ' is-active' : ''}" href="${source.href}"${active ? ' aria-current="page"' : ''}><span class="material-icons">${icon}</span><span>${label}</span></a>`;
+                }).join('') + `
+                    <button type="button" class="staging-bottom-item staging-bottom-more" aria-expanded="false">
+                        <span class="material-icons">apps</span><span>Mais</span>
+                    </button>`;
+
+                const secondary = links.filter((link) => {
+                    const route = new URL(link.href, window.location.origin).pathname.replace(/^\/dev|^\/controle/, '');
+                    return !coreRoutes.includes(route);
+                });
+                const target = moreSheet.querySelector('.staging-more-links');
+                target.innerHTML = secondary.map((source) => {
+                    const icon = source.querySelector('.staging-nav-icon')?.textContent || 'circle';
+                    const label = source.querySelector('.staging-nav-label')?.textContent || '';
+                    const active = source.classList.contains('active');
+                    return `<a class="staging-more-link${active ? ' is-active' : ''}" href="${source.href}"><span class="material-icons">${icon}</span><span>${label}</span><span class="material-icons">chevron_right</span></a>`;
+                }).join('');
+
+                bottomNav.querySelector('.staging-bottom-more')?.addEventListener('click', openMore);
+                target.querySelectorAll('a').forEach((link) => link.addEventListener('click', closeMore));
+            };
+
+            renderBottomNavigation();
+            new MutationObserver(renderBottomNavigation).observe(navList, { childList: true, subtree: true });
+            moreOverlay.addEventListener('click', closeMore);
+            moreSheet.querySelector('.staging-more-close')?.addEventListener('click', closeMore);
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape') closeMore();
+            });
         }
 
         const path = window.location.pathname.replace(/\/$/, '');

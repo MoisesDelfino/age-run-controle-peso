@@ -650,6 +650,12 @@ body.dark-mode.staging-redesign .staging-weighing .historico-item:hover {
     display: none;
 }
 
+.staging-redesign .staging-bottom-nav,
+.staging-redesign .staging-more-overlay,
+.staging-redesign .staging-more-sheet {
+    display: none;
+}
+
 .staging-redesign.staging-page-grupos-treino .staging-relocated-training {
     display: none !important;
 }
@@ -1457,21 +1463,7 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
     }
 
     .staging-redesign .nav-menu {
-        position: fixed;
-        top: 0;
-        left: 0;
-        z-index: 1100;
-        width: min(86vw, 330px);
-        height: 100dvh;
-        margin: 0;
-        overflow: hidden;
-        overscroll-behavior: contain;
-        border: 0;
-        border-radius: 0 24px 24px 0;
-        background: var(--staging-surface);
-        box-shadow: 18px 0 50px rgba(29, 18, 32, 0.24);
-        transform: translateX(-105%);
-        transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+        display: none !important;
     }
 
     .staging-redesign .nav-menu.active {
@@ -1486,8 +1478,7 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
     }
 
     .staging-redesign .menu-toggle {
-        position: relative;
-        z-index: 1095;
+        display: none !important;
     }
 
     .staging-redesign .menu-toggle.active {
@@ -1644,6 +1635,199 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
     body.dark-mode.staging-redesign .nav-link.active {
         background: rgba(139, 195, 74, 0.16);
         color: #b6df82;
+    }
+
+    .staging-redesign .staging-bottom-nav {
+        position: fixed;
+        right: 10px;
+        bottom: max(8px, env(safe-area-inset-bottom));
+        left: 10px;
+        z-index: 1060;
+        min-height: 66px;
+        padding: 5px;
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 3px;
+        border: 1px solid rgba(123, 31, 162, 0.16);
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.94);
+        box-shadow: 0 12px 36px rgba(41, 24, 45, 0.2);
+        backdrop-filter: blur(18px);
+    }
+
+    .staging-redesign .staging-bottom-item {
+        min-width: 0;
+        min-height: 54px;
+        padding: 5px 2px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 2px;
+        border: 0;
+        border-radius: 15px;
+        background: transparent;
+        color: #777178;
+        text-decoration: none;
+        font: inherit;
+        font-size: 0.58rem;
+        font-weight: 600;
+    }
+
+    .staging-redesign .staging-bottom-item .material-icons {
+        font-size: 21px;
+    }
+
+    .staging-redesign .staging-bottom-item.is-active {
+        background: rgba(139, 195, 74, 0.17);
+        color: #527f25;
+    }
+
+    .staging-redesign .staging-more-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 1070;
+        display: block;
+        border: 0;
+        background: rgba(18, 13, 20, 0.48);
+        opacity: 0;
+        pointer-events: none;
+        backdrop-filter: blur(3px);
+        transition: opacity 0.22s ease;
+    }
+
+    .staging-redesign .staging-more-overlay.is-open {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .staging-redesign .staging-more-sheet {
+        position: fixed;
+        right: 8px;
+        bottom: 8px;
+        left: 8px;
+        z-index: 1080;
+        display: block;
+        max-height: min(72dvh, 560px);
+        padding: 8px 14px calc(14px + env(safe-area-inset-bottom));
+        border: 1px solid var(--staging-line);
+        border-radius: 24px;
+        background: var(--staging-surface);
+        box-shadow: 0 20px 60px rgba(28, 17, 31, 0.3);
+        transform: translateY(calc(100% + 20px));
+        visibility: hidden;
+        transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), visibility 0.28s;
+    }
+
+    .staging-redesign .staging-more-sheet.is-open {
+        transform: translateY(0);
+        visibility: visible;
+    }
+
+    .staging-redesign .staging-more-handle {
+        width: 38px;
+        height: 4px;
+        margin: 0 auto 10px;
+        border-radius: 999px;
+        background: #c9c4ca;
+    }
+
+    .staging-redesign .staging-more-heading {
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .staging-redesign .staging-more-heading div {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .staging-redesign .staging-more-heading strong {
+        font-size: 1rem;
+    }
+
+    .staging-redesign .staging-more-heading div span {
+        color: var(--staging-muted);
+        font-size: 0.7rem;
+    }
+
+    .staging-redesign .staging-more-close {
+        width: 40px;
+        height: 40px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 0;
+        border-radius: 12px;
+        background: rgba(123, 31, 162, 0.09);
+        color: var(--secondary-color);
+    }
+
+    .staging-redesign .staging-more-links {
+        display: grid;
+        gap: 6px;
+        overflow-y: auto;
+    }
+
+    .staging-redesign .staging-more-link {
+        min-height: 54px;
+        padding: 9px 11px;
+        display: grid;
+        grid-template-columns: 38px minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 10px;
+        border-radius: 14px;
+        color: var(--staging-text);
+        text-decoration: none;
+        font-size: 0.84rem;
+        font-weight: 600;
+    }
+
+    .staging-redesign .staging-more-link > .material-icons:first-child {
+        width: 36px;
+        height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 11px;
+        background: rgba(123, 31, 162, 0.09);
+        color: var(--secondary-color);
+        font-size: 19px;
+    }
+
+    .staging-redesign .staging-more-link.is-active {
+        background: rgba(139, 195, 74, 0.14);
+    }
+
+    body.dark-mode.staging-redesign .staging-bottom-nav {
+        border-color: #403743;
+        background: rgba(28, 25, 29, 0.95);
+    }
+
+    body.dark-mode.staging-redesign .staging-bottom-item {
+        color: #aaa4ad;
+    }
+
+    body.dark-mode.staging-redesign .staging-bottom-item.is-active {
+        background: rgba(139, 195, 74, 0.17);
+        color: #b6df82;
+    }
+
+    body.dark-mode.staging-redesign .staging-more-sheet {
+        background: #1c191d;
+    }
+
+    body.dark-mode.staging-redesign .staging-more-link {
+        color: #f2eef3;
+    }
+
+    .staging-redesign main,
+    .staging-redesign .main-content {
+        padding-bottom: 84px !important;
     }
 
     .staging-redesign main:not(.staging-weighing),
