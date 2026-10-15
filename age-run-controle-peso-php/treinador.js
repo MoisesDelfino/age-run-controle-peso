@@ -43,6 +43,11 @@ const RACE_DISTANCES = {
 
 const GROUP_COMPAT_THRESHOLD = 6;
 const SHOOTING_GROUP_COMPAT_THRESHOLD = 5;
+const ADMIN_EMAIL = 'moisescamposdelfino@gmail.com';
+
+function isAdminUser() {
+    return String(usuarioLogado?.email || '').trim().toLowerCase() === ADMIN_EMAIL;
+}
 
 function getStatusText(status) {
     if (status === 'pendente') return 'Aguardando aprovação';
@@ -1233,10 +1238,19 @@ async function carregarPainelTreinador() {
             throw new Error(data.error || 'Erro ao carregar painel do treinador');
         }
 
+        const prioritizePhotos = isAdminUser();
         usuariosCache = (data.usuarios || []).sort((a, b) => {
             const pa = getPendenciasUsuario(a);
             const pb = getPendenciasUsuario(b);
-            if (pb !== pa) return pb - pa;
+            const aHasPending = pa > 0;
+            const bHasPending = pb > 0;
+            if (aHasPending !== bHasPending) return bHasPending - aHasPending;
+            if (aHasPending && pb !== pa) return pb - pa;
+            if (prioritizePhotos && !aHasPending) {
+                const aHasPhoto = Boolean(a.foto_perfil);
+                const bHasPhoto = Boolean(b.foto_perfil);
+                if (aHasPhoto !== bHasPhoto) return Number(bHasPhoto) - Number(aHasPhoto);
+            }
             return String(a.nome || '').localeCompare(String(b.nome || ''), 'pt-BR');
         });
 
