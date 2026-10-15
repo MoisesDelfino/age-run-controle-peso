@@ -291,7 +291,6 @@ body.dark-mode.staging-redesign textarea {
     color: var(--staging-ink);
 }
 
-+
 /* Pesagem: fluxo de tarefa moderno, exclusivo do staging. */
 .staging-redesign .staging-weighing {
     max-width: 1180px;
@@ -646,7 +645,6 @@ body.dark-mode.staging-redesign .staging-weighing .historico-item:hover {
     }
 }
 
-+
 .staging-redesign .staging-mobile-tabs,
 .staging-redesign .staging-height-toggle {
     display: none;
@@ -874,7 +872,6 @@ body.dark-mode.staging-redesign .staging-weighing .historico-item:hover {
 }
 
 
-+
 /* Contraste da paleta institucional sobre superfícies escuras. */
 body.dark-mode.staging-redesign .staging-section-icon {
     background: rgba(156, 39, 176, 0.24);
