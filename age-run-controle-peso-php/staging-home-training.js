@@ -30,18 +30,32 @@
         element.style.display = 'block';
     };
 
-    const renderLastTest = (test) => {
+    const formatDate = (value) => {
+        const raw = String(value || '').slice(0, 10);
+        const parts = raw.split('-');
+        return parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : raw || '-';
+    };
+
+    const renderTestHistory = (tests, fallbackTest) => {
         const target = document.getElementById('homeAthleteLastTest');
         if (!target) return;
-        target.innerHTML = test ? `
-            <article class="coach-rp-test-history-item">
-                <div class="coach-rp-test-chip-row">
-                    <strong class="coach-rp-test-chip">${test.tempo_formatado || '-'}</strong>
-                    <span class="coach-rp-test-chip">${Number(test.distancia_km || 0).toLocaleString('pt-BR')} km</span>
-                    <span class="coach-rp-test-chip coach-rp-test-chip-accent">${test.pace_formatado || '-'}</span>
-                </div>
-                <div class="coach-rp-test-meta-row"><span>${test.criado_em_formatado || '-'}</span></div>
-            </article>` : '';
+        const history = Array.isArray(tests) && tests.length ? tests : (fallbackTest ? [fallbackTest] : []);
+        if (!history.length) {
+            target.innerHTML = '<p class="group-meta coach-rp-test-empty">Nenhum teste registrado ainda.</p>';
+            return;
+        }
+
+        target.innerHTML = `
+            <div class="staging-test-history-title">Histórico de testes</div>
+            ${history.map((test) => `
+                <article class="coach-rp-test-history-item">
+                    <div class="coach-rp-test-chip-row">
+                        <strong class="coach-rp-test-chip">${test.tempo_formatado || '-'}</strong>
+                        <span class="coach-rp-test-chip">${Number(test.distancia_km || 0).toLocaleString('pt-BR')} km</span>
+                        <span class="coach-rp-test-chip coach-rp-test-chip-accent">${test.pace_formatado || '-'}</span>
+                    </div>
+                    <div class="coach-rp-test-meta-row"><span>${test.criado_em_formatado || formatDate(test.criado_em)}</span></div>
+                </article>`).join('')}`;
     };
 
     const loadRecords = async () => {
@@ -66,7 +80,7 @@
 
             const summary = document.getElementById('homeRpPaceSummary');
             if (summary) summary.textContent = data.ritmo_medio_formatado ? `Ritmo médio: ${data.ritmo_medio_formatado}` : '';
-            renderLastTest(data.ultimo_teste);
+            renderTestHistory(data.historico_testes, data.ultimo_teste);
         } catch (error) {
             showMessage(document.getElementById('homeRpMessage'), error.message, 'error');
         }

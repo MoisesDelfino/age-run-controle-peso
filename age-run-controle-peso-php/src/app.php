@@ -3361,6 +3361,7 @@ if ($method === 'GET' && $path === '/api/performance/rps') {
         'ritmo_medio_seg_km' => $score,
         'ritmo_medio_formatado' => formatPace($score),
         'ultimo_teste' => $ultimoTestePayload,
+        'historico_testes' => array_values($historicoDoUsuario),
     ]);
 }
 
