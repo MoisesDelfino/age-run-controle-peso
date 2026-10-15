@@ -291,6 +291,318 @@ body.dark-mode.staging-redesign textarea {
     color: var(--staging-ink);
 }
 
++
+/* Pesagem: fluxo de tarefa moderno, exclusivo do staging. */
+.staging-redesign .staging-weighing {
+    max-width: 1180px;
+}
+
+.staging-redesign .staging-weighing .staging-page-intro {
+    margin-bottom: 30px;
+}
+
+.staging-redesign .staging-weighing .pesagem-layout {
+    display: grid;
+    grid-template-columns: minmax(310px, 360px) minmax(0, 1fr);
+    grid-template-areas:
+        "form stats"
+        "form history";
+    gap: 20px;
+    align-items: start;
+}
+
+.staging-redesign .staging-weighing .form-section {
+    grid-area: form;
+    display: flex !important;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.staging-redesign .staging-weighing .stats-section {
+    grid-area: stats;
+}
+
+.staging-redesign .staging-weighing .lista-section {
+    grid-area: history;
+}
+
+.staging-redesign .staging-weighing .stats-section,
+.staging-redesign .staging-weighing .lista-section {
+    display: block !important;
+    min-width: 0;
+    margin: 0;
+}
+
+.staging-redesign .staging-weighing .card {
+    padding: 24px;
+    margin: 0 !important;
+}
+
+.staging-redesign .staging-weighing .form-section .card:first-child {
+    border-top: 0;
+    box-shadow: 0 14px 40px rgba(123, 31, 162, 0.1);
+}
+
+.staging-redesign .staging-weighing .form-section .card:nth-child(2) {
+    padding: 18px 20px;
+    box-shadow: none;
+}
+
+.staging-redesign .staging-weighing .card > h2,
+.staging-redesign .staging-weighing .card > h3 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    color: var(--staging-ink);
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.staging-redesign .staging-section-icon {
+    width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 34px;
+    border-radius: 10px;
+    background: rgba(123, 31, 162, 0.09);
+    color: var(--secondary-color);
+    font-size: 19px;
+}
+
+.staging-redesign .staging-weighing .user-greeting {
+    margin: -4px 0 20px;
+    padding: 11px 13px;
+    border-radius: 10px;
+    background: rgba(139, 195, 74, 0.1);
+    font-size: 0.9rem;
+}
+
+.staging-redesign .staging-weighing .form-group label {
+    margin-bottom: 7px;
+    color: #4f4f4f;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.staging-redesign .staging-weighing input {
+    min-height: 50px;
+    padding: 12px 14px;
+    border: 1px solid #d8d8d8;
+    border-radius: 11px;
+    font-size: 0.95rem;
+}
+
+.staging-redesign .staging-weighing input:focus {
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 4px rgba(123, 31, 162, 0.1);
+}
+
+.staging-redesign .staging-weighing .btn-primary {
+    min-height: 50px;
+    margin-top: 4px;
+    border-radius: 11px;
+    font-size: 0.9rem;
+}
+
+.staging-redesign .staging-weighing .stats-section .card,
+.staging-redesign .staging-weighing .lista-section .card {
+    height: auto !important;
+    min-height: 0;
+    box-shadow: none;
+}
+
+.staging-redesign .staging-weighing .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.staging-redesign .staging-weighing .stat-card {
+    min-width: 0;
+    padding: 17px 16px;
+    display: flex;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+    border: 1px solid #e7e2ea;
+    border-radius: 14px;
+    background: #fbf9fc;
+    color: var(--dark-color);
+    text-align: left;
+    box-shadow: none;
+    transform: none;
+}
+
+.staging-redesign .staging-weighing .stat-card:hover {
+    border-color: rgba(123, 31, 162, 0.3);
+    box-shadow: 0 8px 20px rgba(123, 31, 162, 0.07);
+    transform: none;
+}
+
+.staging-redesign .staging-weighing .stat-card.stat-positive {
+    border-color: rgba(139, 195, 74, 0.38);
+    background: rgba(139, 195, 74, 0.1);
+}
+
+.staging-redesign .staging-weighing .stat-card.stat-negative {
+    border-color: rgba(244, 67, 54, 0.24);
+    background: rgba(244, 67, 54, 0.06);
+}
+
+.staging-redesign .staging-weighing .stat-label {
+    min-height: 2.2em;
+    margin: 0;
+    color: #737373;
+    font-size: 0.67rem;
+    font-weight: 700;
+    letter-spacing: 0.055em;
+    line-height: 1.35;
+}
+
+.staging-redesign .staging-weighing .stat-value {
+    color: #262026;
+    font-size: clamp(1.2rem, 2.1vw, 1.65rem);
+    font-weight: 700;
+    letter-spacing: -0.035em;
+}
+
+.staging-redesign .staging-weighing .historico-list {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.staging-redesign .staging-weighing .historico-item {
+    min-width: 0;
+    padding: 16px;
+    border: 1px solid #e7e2ea;
+    border-radius: 14px;
+    background: #fbf9fc;
+    transform: none;
+}
+
+.staging-redesign .staging-weighing .historico-item:hover {
+    border-color: rgba(123, 31, 162, 0.3);
+    background: #ffffff;
+    box-shadow: 0 8px 20px rgba(123, 31, 162, 0.07);
+    transform: none;
+}
+
+.staging-redesign .staging-weighing .historico-peso {
+    color: var(--secondary-color);
+    font-size: 1.18rem;
+    letter-spacing: -0.02em;
+}
+
+.staging-redesign .staging-weighing .historico-data {
+    color: #777;
+    font-size: 0.8rem;
+}
+
+.staging-redesign .staging-weighing .historico-actions {
+    gap: 2px;
+}
+
+.staging-redesign .staging-weighing .btn-edit,
+.staging-redesign .staging-weighing .btn-delete {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9px;
+    color: #777;
+}
+
+.staging-redesign .staging-weighing .btn-edit .material-icons,
+.staging-redesign .staging-weighing .btn-delete .material-icons {
+    font-size: 18px;
+}
+
+.staging-redesign .staging-weighing .btn-edit:hover {
+    background: rgba(123, 31, 162, 0.1);
+    color: var(--secondary-color);
+    transform: none;
+}
+
+.staging-redesign .staging-weighing .btn-delete:hover {
+    background: rgba(244, 67, 54, 0.09);
+    color: var(--danger-color);
+    transform: none;
+}
+
+body.dark-mode.staging-redesign .staging-weighing .form-group label {
+    color: #d1d1d1;
+}
+
+body.dark-mode.staging-redesign .staging-weighing .stat-card,
+body.dark-mode.staging-redesign .staging-weighing .historico-item {
+    border-color: #3a3340;
+    background: #221f24;
+}
+
+body.dark-mode.staging-redesign .staging-weighing .stat-card.stat-positive {
+    border-color: rgba(139, 195, 74, 0.38);
+    background: rgba(139, 195, 74, 0.1);
+}
+
+body.dark-mode.staging-redesign .staging-weighing .stat-card.stat-negative {
+    border-color: rgba(244, 67, 54, 0.3);
+    background: rgba(244, 67, 54, 0.08);
+}
+
+body.dark-mode.staging-redesign .staging-weighing .stat-label,
+body.dark-mode.staging-redesign .staging-weighing .historico-data {
+    color: #b8b2bb;
+}
+
+body.dark-mode.staging-redesign .staging-weighing .stat-value {
+    color: #f4eff5;
+}
+
+body.dark-mode.staging-redesign .staging-weighing .historico-peso {
+    color: #b47bd0;
+}
+
+body.dark-mode.staging-redesign .staging-weighing .historico-item:hover {
+    background: #29242c;
+}
+
+@media (max-width: 1040px) {
+    .staging-redesign .staging-weighing .pesagem-layout {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "form"
+            "stats"
+            "history";
+    }
+
+    .staging-redesign .staging-weighing .form-section {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1.5fr) minmax(240px, 0.8fr);
+        align-items: start;
+    }
+}
+
+@media (max-width: 720px) {
+    .staging-redesign .staging-weighing .form-section {
+        display: flex !important;
+    }
+
+    .staging-redesign .staging-weighing .stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .staging-redesign .staging-weighing .historico-list {
+        grid-template-columns: 1fr;
+    }
+}
+
+
 @media (max-width: 768px) {
     .staging-redesign .staging-environment-banner {
         padding-inline: 12px;

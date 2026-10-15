@@ -65,7 +65,16 @@
 
             const formCard = document.querySelector('.form-section .card');
             const formTitle = formCard?.querySelector('h2');
-            if (formTitle) formTitle.textContent = 'Nova medição';
+            if (formTitle) formTitle.innerHTML = '<span class="staging-section-icon material-icons" aria-hidden="true">monitor_weight</span><span>Nova medição</span>';
+
+            const statsTitle = document.querySelector('.stats-section .card > h2');
+            if (statsTitle) statsTitle.innerHTML = '<span class="staging-section-icon material-icons" aria-hidden="true">insights</span><span>Resumo</span>';
+
+            const historyTitle = document.querySelector('.lista-section .card > h2');
+            if (historyTitle) historyTitle.innerHTML = '<span class="staging-section-icon material-icons" aria-hidden="true">history</span><span>Pesagens recentes</span>';
+
+            const heightTitle = document.querySelector('.form-section .card:nth-child(2) > h3');
+            if (heightTitle) heightTitle.innerHTML = '<span class="staging-section-icon material-icons" aria-hidden="true">height</span><span>Altura</span>';
 
             const submitLabel = document.querySelector('#pesagemForm .btn-primary span');
             if (submitLabel) submitLabel.textContent = 'Salvar pesagem';
