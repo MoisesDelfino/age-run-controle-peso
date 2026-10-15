@@ -4026,8 +4026,8 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
         padding: 10px;
         display: flex !important;
         flex-direction: column;
-        border-color: rgba(139, 195, 74, 0.3);
-        background: linear-gradient(160deg, rgba(139, 195, 74, 0.07), rgba(31, 29, 32, 0.96) 34%);
+        border-color: rgba(105, 159, 56, 0.32);
+        background: linear-gradient(160deg, rgba(139, 195, 74, 0.1), #fbfcf9 34%);
     }
 
     .staging-redesign.staging-page-treinador .staging-mobile-tabs {
@@ -4043,7 +4043,7 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
 
     .staging-redesign.staging-page-treinador .coach-rp-test-panel-header .coach-rp-test-title {
         display: block;
-        color: #d8f4b5;
+        color: #365d18;
         font-size: 0.9rem;
         line-height: 1.35;
     }
@@ -4075,7 +4075,7 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
         padding: 10px;
         border-color: rgba(142, 202, 68, 0.25);
         border-radius: 14px;
-        background: rgba(21, 20, 22, 0.72);
+        background: rgba(255, 255, 255, 0.92);
     }
 
     .staging-redesign.staging-page-treinador .staging-demo-review-heading {
@@ -4102,7 +4102,7 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
         border: 1px solid rgba(139, 195, 74, 0.45);
         border-radius: 10px;
         background: rgba(139, 195, 74, 0.14);
-        color: #cbed9f;
+        color: #4e7926;
         font-size: 0.72rem;
         font-weight: 700;
     }
@@ -4156,7 +4156,7 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
     .staging-redesign.staging-page-treinador .pending-test-edit {
         border: 1px solid rgba(180, 91, 205, 0.45);
         background: rgba(142, 32, 181, 0.16);
-        color: #dfa2ed;
+        color: #81239a;
     }
 
     .staging-redesign.staging-page-treinador .pending-test-validate {
@@ -4196,8 +4196,9 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
     .staging-redesign.staging-page-treinador #coachSearchInput {
         min-height: 42px;
         padding-right: 42px;
-        border-color: #49404c;
-        background: #242126;
+        border-color: #d9d1dc;
+        background: #fff;
+        color: #302b31;
     }
 
     .staging-redesign.staging-page-treinador #coachPanelMessage {
@@ -4221,9 +4222,9 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
     }
 
     .staging-redesign.staging-page-treinador .coach-user-accordion {
-        border-color: #413a43;
+        border-color: #ded8e0;
         border-radius: 14px;
-        background: #201e21;
+        background: #fff;
     }
 
     .staging-redesign.staging-page-treinador .coach-user-accordion.expanded {
@@ -4249,13 +4250,13 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
     }
 
     .staging-redesign.staging-page-treinador .coach-summary-main strong {
-        color: #d6f3b2;
+        color: #426b20;
         font-size: 0.84rem;
     }
 
     .staging-redesign.staging-page-treinador .coach-summary-email {
         overflow: hidden;
-        color: #b6abb9;
+        color: #6f6872;
         font-size: 0.65rem;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -4269,8 +4270,8 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
 
     .staging-redesign.staging-page-treinador .coach-summary-metrics span {
         padding: 3px 7px;
-        background: #2c3338;
-        color: #d0d7dc;
+        background: #edf1f3;
+        color: #4d5860;
         font-size: 0.62rem;
     }
 
@@ -4285,6 +4286,52 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
         background: rgba(156, 39, 176, 0.12);
         color: #d292e2;
         font-size: 0.65rem;
+    }
+
+    body.dark-mode.staging-redesign.staging-page-treinador .coach-rp-test-panel.is-mobile-active {
+        border-color: rgba(139, 195, 74, 0.3);
+        background: linear-gradient(160deg, rgba(139, 195, 74, 0.07), rgba(31, 29, 32, 0.96) 34%);
+    }
+
+    body.dark-mode.staging-redesign.staging-page-treinador .coach-rp-test-panel-header .coach-rp-test-title {
+        color: #d8f4b5;
+    }
+
+    body.dark-mode.staging-redesign.staging-page-treinador .staging-demo-review {
+        background: rgba(21, 20, 22, 0.72);
+    }
+
+    body.dark-mode.staging-redesign.staging-page-treinador .coach-review-avatar,
+    body.dark-mode.staging-redesign.staging-page-treinador .coach-summary-avatar {
+        color: #cbed9f;
+    }
+
+    body.dark-mode.staging-redesign.staging-page-treinador .pending-test-edit {
+        color: #dfa2ed;
+    }
+
+    body.dark-mode.staging-redesign.staging-page-treinador #coachSearchInput {
+        border-color: #49404c;
+        background: #242126;
+        color: #f1edf2;
+    }
+
+    body.dark-mode.staging-redesign.staging-page-treinador .coach-user-accordion {
+        border-color: #413a43;
+        background: #201e21;
+    }
+
+    body.dark-mode.staging-redesign.staging-page-treinador .coach-summary-main strong {
+        color: #d6f3b2;
+    }
+
+    body.dark-mode.staging-redesign.staging-page-treinador .coach-summary-email {
+        color: #b6abb9;
+    }
+
+    body.dark-mode.staging-redesign.staging-page-treinador .coach-summary-metrics span {
+        background: #2c3338;
+        color: #d0d7dc;
     }
 
     .staging-redesign.staging-page-monitoramento .staging-mobile-tabs {
