@@ -22,6 +22,55 @@ const garminMfaCode = document.getElementById('garminMfaCode');
 const garminLoginMessage = document.getElementById('garminLoginMessage');
 const btnGarminLogin = document.getElementById('btnGarminLogin');
 const btnGarminCancel = document.getElementById('btnGarminCancel');
+const perfilPhotoInput = document.getElementById('perfilPhotoInput');
+const perfilPhotoImage = document.getElementById('perfilPhotoImage');
+const perfilPhotoInitial = document.getElementById('perfilPhotoInitial');
+const perfilPhotoRemove = document.getElementById('perfilPhotoRemove');
+let perfilPhotoData = null;
+
+function renderProfilePhoto(photo, name) {
+    perfilPhotoData = photo || null;
+    if (perfilPhotoInitial) {
+        perfilPhotoInitial.textContent = String(name || 'U').trim().charAt(0).toUpperCase() || 'U';
+        perfilPhotoInitial.hidden = Boolean(perfilPhotoData);
+    }
+    if (perfilPhotoImage) {
+        perfilPhotoImage.src = perfilPhotoData || '';
+        perfilPhotoImage.hidden = !perfilPhotoData;
+    }
+    if (perfilPhotoRemove) perfilPhotoRemove.hidden = !perfilPhotoData;
+}
+
+function prepareProfilePhoto(file) {
+    return new Promise((resolve, reject) => {
+        if (!file || !['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+            reject(new Error('Escolha uma imagem JPG, PNG ou WebP.'));
+            return;
+        }
+        if (file.size > 8 * 1024 * 1024) {
+            reject(new Error('A imagem deve ter no máximo 8 MB.'));
+            return;
+        }
+        const objectUrl = URL.createObjectURL(file);
+        const image = new Image();
+        image.onload = () => {
+            const size = Math.min(image.naturalWidth, image.naturalHeight);
+            const sourceX = Math.max(0, (image.naturalWidth - size) / 2);
+            const sourceY = Math.max(0, (image.naturalHeight - size) / 2);
+            const canvas = document.createElement('canvas');
+            canvas.width = 512;
+            canvas.height = 512;
+            canvas.getContext('2d').drawImage(image, sourceX, sourceY, size, size, 0, 0, 512, 512);
+            URL.revokeObjectURL(objectUrl);
+            resolve(canvas.toDataURL('image/jpeg', 0.82));
+        };
+        image.onerror = () => {
+            URL.revokeObjectURL(objectUrl);
+            reject(new Error('Não foi possível processar esta imagem.'));
+        };
+        image.src = objectUrl;
+    });
+}
 
 const GARMIN_CHECK_LABELS = {
     php: 'PHP compatível',
@@ -85,8 +134,31 @@ async function carregarPerfil() {
     if (perfilEmail) perfilEmail.value = data.email || '';
     if (perfilSexo) perfilSexo.value = (data.sexo || 'masculino').toLowerCase();
     if (perfilAltura) perfilAltura.value = data.altura != null ? String(data.altura) : '';
+    renderProfilePhoto(data.foto_perfil, data.nome);
     if (garminCard) garminCard.hidden = data.garmin_pilot_enabled !== true;
 }
+
+perfilPhotoInput?.addEventListener('change', async () => {
+    const file = perfilPhotoInput.files?.[0];
+    if (!file) return;
+    try {
+        renderProfilePhoto(await prepareProfilePhoto(file), perfilNome?.value);
+        showMessage('Foto pronta. Salve as alterações para confirmar.', 'success');
+    } catch (error) {
+        perfilPhotoInput.value = '';
+        showMessage(error.message, 'error');
+    }
+});
+
+perfilPhotoRemove?.addEventListener('click', () => {
+    if (perfilPhotoInput) perfilPhotoInput.value = '';
+    renderProfilePhoto(null, perfilNome?.value);
+    showMessage('Foto removida. Salve as alterações para confirmar.', 'success');
+});
+
+perfilNome?.addEventListener('input', () => {
+    if (!perfilPhotoData && perfilPhotoInitial) perfilPhotoInitial.textContent = perfilNome.value.trim().charAt(0).toUpperCase() || 'U';
+});
 
 if (btnConectarGarmin) {
     btnConectarGarmin.addEventListener('click', async () => {
@@ -212,7 +284,7 @@ if (perfilForm) {
         }
 
         try {
-            const body = { nome, sexo };
+            const body = { nome, sexo, foto_perfil: perfilPhotoData };
             if (altura !== null && !Number.isNaN(altura)) body.altura = altura;
 
             const response = await fetch(`${API_BASE}/usuario/perfil`, {
@@ -228,6 +300,18 @@ if (perfilForm) {
             }
 
             showMessage('Perfil atualizado com sucesso!', 'success');
+            const headerAvatar = document.querySelector('.user-menu-inicial');
+            if (headerAvatar) {
+                headerAvatar.textContent = '';
+                if (perfilPhotoData) {
+                    const avatarImage = document.createElement('img');
+                    avatarImage.src = perfilPhotoData;
+                    avatarImage.alt = '';
+                    headerAvatar.appendChild(avatarImage);
+                } else {
+                    headerAvatar.textContent = nome.charAt(0).toUpperCase() || 'U';
+                }
+            }
         } catch (err) {
             showMessage(err.message || 'Erro ao salvar.', 'error');
         } finally {

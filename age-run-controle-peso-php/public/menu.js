@@ -111,7 +111,7 @@ function ensureOwnerMonitorLinks(isOwner) {
     });
 }
 
-function injectUserDropdown(nome) {
+function injectUserDropdown(nome, fotoPerfil) {
     const headerActions = document.querySelector('.header-actions');
     if (!headerActions || document.getElementById('userMenuDropdown')) return;
 
@@ -144,6 +144,17 @@ function injectUserDropdown(nome) {
     `;
 
     headerActions.appendChild(dropdown);
+
+    if (fotoPerfil) {
+        const avatar = dropdown.querySelector('.user-menu-inicial');
+        if (avatar) {
+            avatar.textContent = '';
+            const image = document.createElement('img');
+            image.src = fotoPerfil;
+            image.alt = '';
+            avatar.appendChild(image);
+        }
+    }
 
     const toggle = document.getElementById('userMenuToggle');
     const panel = document.getElementById('userMenuPanel');
@@ -235,7 +246,7 @@ async function aplicarPermissoesMenu() {
         });
 
         ensureOwnerMonitorLinks(isOwner);
-        injectUserDropdown(data.nome);
+        injectUserDropdown(data.nome, data.foto_perfil);
 
         if (!isMulher) return;
 

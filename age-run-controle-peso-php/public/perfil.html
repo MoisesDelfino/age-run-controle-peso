@@ -9,7 +9,7 @@
     <meta name="theme-color" content="#0f172a">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <link rel="stylesheet" href="styles.css?v=202605302205">
+    <link rel="stylesheet" href="styles.css?v=2026101501">
     <link rel="stylesheet" href="effects.css?v=2026052045">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -269,11 +269,33 @@
     <main class="container home-content">
         <div class="perfil-grid">
         <section class="card">
-            <h2 style="margin-bottom:1.2rem">👤 Meu Perfil</h2>
+            <div class="perfil-heading">
+                <span class="material-icons" aria-hidden="true">person</span>
+                <div><h2>Meu perfil</h2><p>Gerencie sua identidade e seus dados pessoais.</p></div>
+            </div>
 
             <div id="perfilMessage" class="perfil-message"></div>
 
             <form id="perfilForm" class="perfil-form" novalidate>
+                <div class="perfil-photo-field">
+                    <div id="perfilPhotoPreview" class="perfil-photo-preview" aria-label="Foto de perfil">
+                        <span id="perfilPhotoInitial">U</span>
+                        <img id="perfilPhotoImage" alt="Prévia da foto de perfil" hidden>
+                    </div>
+                    <div class="perfil-photo-content">
+                        <strong>Foto de perfil</strong>
+                        <span>JPG, PNG ou WebP. A imagem será ajustada automaticamente.</span>
+                        <div class="perfil-photo-actions">
+                            <label for="perfilPhotoInput" class="btn perfil-photo-select">
+                                <span class="material-icons" aria-hidden="true">photo_camera</span>
+                                Escolher foto
+                            </label>
+                            <button type="button" id="perfilPhotoRemove" class="perfil-photo-remove" hidden>Remover</button>
+                        </div>
+                        <input type="file" id="perfilPhotoInput" accept="image/jpeg,image/png,image/webp" hidden>
+                    </div>
+                </div>
+
                 <div class="form-group">
                     <label for="perfilNome">Nome completo</label>
                     <input type="text" id="perfilNome" name="nome" placeholder="Seu nome" required>
@@ -345,8 +367,8 @@
         </div>
     </footer>
 
-    <script src="theme.js?v=2026101530"></script>
-    <script src="menu.js?v=202605302205"></script>
-    <script src="perfil.js?v=2026082403"></script>
+    <script src="theme.js?v=2026101531"></script>
+    <script src="menu.js?v=2026101501"></script>
+    <script src="perfil.js?v=2026101501"></script>
 </body>
 </html>

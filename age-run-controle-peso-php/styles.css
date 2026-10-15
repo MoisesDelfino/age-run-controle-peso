@@ -171,9 +171,22 @@ main {
 }
 
 .user-menu-inicial {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-size: 1rem;
     font-weight: 700;
     pointer-events: none;
+}
+
+.user-menu-inicial img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    border-radius: 50%;
+    object-fit: cover;
 }
 
 .user-menu-panel {

@@ -1094,6 +1094,7 @@ function ensureUsuariosCompatibilityColumns(): void
         $missing = [];
         $targetColumns = [
             'perfil' => "VARCHAR(20) DEFAULT 'aluno'",
+            'foto_perfil' => $isPgsql ? 'TEXT DEFAULT NULL' : ($driver === 'sqlite' ? 'TEXT DEFAULT NULL' : 'MEDIUMTEXT NULL'),
             'senha_temporaria' => 'INTEGER DEFAULT 0',
             'email_verificado' => 'INTEGER DEFAULT 1',
             'email_verificacao_token' => 'VARCHAR(120) DEFAULT NULL',
@@ -2398,7 +2399,7 @@ if ($method === 'GET' && $path === '/api/auth/session') {
     try {
         try {
             $usuario = dbFetchOne(
-                'SELECT id, nome, email, altura, sexo, perfil, senha_temporaria FROM usuarios WHERE id = :id LIMIT 1',
+                'SELECT id, nome, email, altura, sexo, perfil, senha_temporaria, foto_perfil FROM usuarios WHERE id = :id LIMIT 1',
                 [':id' => $userId]
             );
         } catch (PDOException) {
@@ -2408,6 +2409,7 @@ if ($method === 'GET' && $path === '/api/auth/session') {
                 $usuario['sexo'] = 'masculino';
                 $usuario['perfil'] = 'aluno';
                 $usuario['senha_temporaria'] = 0;
+                $usuario['foto_perfil'] = null;
             }
         }
     } catch (Throwable $e) {
@@ -2602,12 +2604,12 @@ if ($method === 'GET' && $path === '/api/usuario/perfil') {
 
     try {
         $usuario = dbFetchOne(
-            'SELECT id, nome, email, sexo, altura FROM usuarios WHERE id = :id LIMIT 1',
+            'SELECT id, nome, email, sexo, altura, foto_perfil FROM usuarios WHERE id = :id LIMIT 1',
             [':id' => $userId]
         );
     } catch (Throwable) {
         $usuario = dbFetchOne('SELECT id, nome, email FROM usuarios WHERE id = :id LIMIT 1', [':id' => $userId]);
-        if ($usuario) { $usuario['sexo'] = null; $usuario['altura'] = null; }
+        if ($usuario) { $usuario['sexo'] = null; $usuario['altura'] = null; $usuario['foto_perfil'] = null; }
     }
 
     if (!$usuario) {
@@ -2625,12 +2627,19 @@ if ($method === 'PUT' && $path === '/api/usuario/perfil') {
     $nome = trim((string) ($input['nome'] ?? ''));
     $sexo = strtolower(trim((string) ($input['sexo'] ?? '')));
     $altura = isset($input['altura']) && $input['altura'] !== '' ? (float) $input['altura'] : null;
+    $fotoPerfilInformada = array_key_exists('foto_perfil', $input);
+    $fotoPerfil = $fotoPerfilInformada && $input['foto_perfil'] !== null ? trim((string) $input['foto_perfil']) : null;
 
     if ($nome === '') {
         jsonResponse(['error' => 'Nome é obrigatório'], 400);
     }
     if ($sexo !== '' && !in_array($sexo, ['masculino', 'feminino'], true)) {
         jsonResponse(['error' => 'Sexo inválido'], 400);
+    }
+    if ($fotoPerfil !== null) {
+        if (strlen($fotoPerfil) > 450000 || preg_match('#^data:image/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$#', $fotoPerfil) !== 1) {
+            jsonResponse(['error' => 'Foto de perfil inválida ou muito grande'], 400);
+        }
     }
 
     $setClauses = ['nome = :nome'];
@@ -2646,6 +2655,11 @@ if ($method === 'PUT' && $path === '/api/usuario/perfil') {
             $setClauses[] = 'altura = :altura';
             $params[':altura'] = $altura;
         }
+    }
+
+    if ($fotoPerfilInformada && safeDbColumnExists('usuarios', 'foto_perfil')) {
+        $setClauses[] = 'foto_perfil = :foto_perfil';
+        $params[':foto_perfil'] = $fotoPerfil;
     }
 
     try {
