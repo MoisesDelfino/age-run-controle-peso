@@ -45,6 +45,12 @@
                 <button type="submit" class="btn btn-primary">
                     <span>Entrar</span>
                 </button>
+
+                <div class="passkey-divider"><span>ou</span></div>
+                <button type="button" id="passkeyLoginButton" class="btn passkey-login-button">
+                    <span class="material-icons" aria-hidden="true">fingerprint</span>
+                    <span>Entrar com biometria</span>
+                </button>
                 
                 <div id="message" class="message"></div>
                 <button type="button" id="resendVerificationBtn" class="auth-inline-action" hidden>Reenviar e-mail de confirmação</button>
@@ -56,7 +62,8 @@
         </div>
     </div>
 
-    <script src="theme.js?v=2026101552"></script>
+    <script src="theme.js?v=2026101553"></script>
     <script src="auth.js?v=2026101501"></script>
+    <script src="passkey.js?v=2026101502"></script>
 </body>
 </html>

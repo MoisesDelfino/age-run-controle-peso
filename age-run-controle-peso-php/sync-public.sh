@@ -38,6 +38,7 @@ pesagem.html
 pesagem.js
 perfil.html
 perfil.js
+passkey.js
 ranking.html
 ranking.js
 recuperar-senha.html
