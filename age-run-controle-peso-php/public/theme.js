@@ -6,7 +6,7 @@
         if (!document.querySelector('link[data-staging-redesign]')) {
             const stagingStyles = document.createElement('link');
             stagingStyles.rel = 'stylesheet';
-            stagingStyles.href = `${redesignBasePath}/staging-redesign.css?v=2026101559`;
+            stagingStyles.href = `${redesignBasePath}/staging-redesign.css?v=2026101560`;
             stagingStyles.dataset.stagingRedesign = 'true';
             document.head.appendChild(stagingStyles);
         }
