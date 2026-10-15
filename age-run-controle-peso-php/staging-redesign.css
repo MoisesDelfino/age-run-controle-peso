@@ -1,17 +1,17 @@
 html.staging-redesign {
-    background: #f4f7f3;
+    background: #f5f5f5;
 }
 
 body.staging-redesign {
-    --staging-ink: #18211b;
-    --staging-muted: #657168;
-    --staging-brand: #27663c;
-    --staging-brand-strong: #194d2c;
-    --staging-highlight: #d9f04f;
-    --staging-surface: #ffffff;
-    --staging-line: #dfe7df;
+    --staging-ink: var(--dark-color);
+    --staging-muted: #666666;
+    --staging-brand: var(--secondary-color);
+    --staging-brand-strong: var(--accent-purple);
+    --staging-highlight: var(--primary-color);
+    --staging-surface: var(--white);
+    --staging-line: #e0e0e0;
     --staging-radius: 20px;
-    background: #f4f7f3;
+    background: var(--light-color);
     color: var(--staging-ink);
 }
 
@@ -22,14 +22,14 @@ body.staging-redesign {
     align-items: center;
     justify-content: center;
     gap: 8px;
-    background: #17231b;
-    color: #edf5ef;
+    background: var(--accent-purple);
+    color: var(--white);
     font-size: 0.76rem;
     letter-spacing: 0.02em;
 }
 
 .staging-redesign .staging-environment-banner strong {
-    color: var(--staging-highlight);
+    color: var(--primary-color);
     text-transform: uppercase;
     letter-spacing: 0.08em;
 }
@@ -38,15 +38,15 @@ body.staging-redesign {
     width: 7px;
     height: 7px;
     border-radius: 50%;
-    background: var(--staging-highlight);
-    box-shadow: 0 0 0 4px rgba(217, 240, 79, 0.12);
+    background: var(--primary-color);
+    box-shadow: 0 0 0 4px rgba(139, 195, 74, 0.18);
 }
 
 .staging-redesign .header {
     margin-bottom: 0;
     padding: 16px 0;
-    background: var(--staging-brand-strong);
-    box-shadow: none;
+    background: linear-gradient(135deg, var(--secondary-color) 0%, var(--accent-purple) 100%);
+    box-shadow: 0 2px 8px rgba(123, 31, 162, 0.3);
 }
 
 .staging-redesign .header-text h1 {
@@ -82,7 +82,7 @@ body.staging-redesign {
 .staging-redesign .nav-link.active {
     color: var(--staging-brand);
     border-bottom-color: var(--staging-brand);
-    background: #f1f7f2;
+    background: rgba(139, 195, 74, 0.08);
 }
 
 .staging-redesign main.container {
@@ -132,16 +132,17 @@ body.staging-redesign {
     flex: 0 0 auto;
     border-radius: 999px;
     background: var(--staging-highlight);
-    color: #1d2a20;
+    color: var(--white);
     font-weight: 700;
     text-decoration: none;
-    box-shadow: 0 10px 24px rgba(25, 77, 44, 0.13);
+    box-shadow: 0 10px 24px rgba(104, 159, 56, 0.2);
     transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
 .staging-redesign .staging-primary-action:hover {
     transform: translateY(-2px);
-    box-shadow: 0 14px 30px rgba(25, 77, 44, 0.18);
+    background: var(--primary-dark);
+    box-shadow: 0 14px 30px rgba(104, 159, 56, 0.28);
 }
 
 .staging-redesign .staging-primary-action .material-icons {
@@ -167,7 +168,7 @@ body.staging-redesign {
     border: 1px solid var(--staging-line);
     border-radius: var(--staging-radius);
     background: var(--staging-surface);
-    box-shadow: 0 12px 35px rgba(32, 55, 39, 0.07);
+    box-shadow: 0 12px 35px rgba(123, 31, 162, 0.08);
 }
 
 .staging-redesign .home-stats-section > .card {
@@ -183,7 +184,7 @@ body.staging-redesign {
 .staging-redesign .home-stat-card {
     border: 1px solid var(--staging-line);
     border-radius: 16px;
-    background: #f9fbf8;
+    background: #fafafa;
     box-shadow: none;
 }
 
@@ -198,12 +199,12 @@ body.staging-redesign {
 .staging-redesign .home-levels-section {
     border-radius: 16px;
     border-color: var(--staging-line);
-    background: #f7faf7;
+    background: #fafafa;
 }
 
 .staging-redesign .home-level-item-current {
     border-color: var(--staging-brand);
-    background: #e8f3e9;
+    background: rgba(139, 195, 74, 0.12);
 }
 
 .staging-redesign .pesagem-layout {
@@ -224,7 +225,7 @@ body.staging-redesign {
 .staging-redesign .user-greeting {
     border: 0;
     border-radius: 12px;
-    background: #eff6ef;
+    background: rgba(139, 195, 74, 0.08);
 }
 
 .staging-redesign input,
@@ -233,7 +234,7 @@ body.staging-redesign {
     min-height: 48px;
     border-radius: 12px;
     border-color: #cfd9d0;
-    background: #fbfcfb;
+    background: var(--white);
 }
 
 .staging-redesign input:focus,
@@ -246,41 +247,45 @@ body.staging-redesign {
 .staging-redesign .btn-primary {
     min-height: 50px;
     border-radius: 12px;
-    background: var(--staging-brand);
+    background: var(--primary-color);
     box-shadow: none;
     text-transform: none;
     font-weight: 700;
 }
 
 .staging-redesign .btn-primary:hover {
-    background: var(--staging-brand-strong);
+    background: var(--primary-dark);
 }
 
 .staging-redesign .stat-card,
 .staging-redesign .historico-item {
     border-color: var(--staging-line);
     border-radius: 14px;
-    background: #f8faf8;
+    background: var(--light-color);
 }
 
 .staging-redesign .footer {
     padding: 22px 0;
-    background: #17231b;
+    background: linear-gradient(135deg, var(--accent-purple) 0%, var(--secondary-color) 100%);
     box-shadow: none;
 }
 
 body.dark-mode.staging-redesign {
     --staging-ink: #edf4ee;
-    --staging-muted: #abb8ae;
-    --staging-surface: #172019;
-    --staging-line: #314036;
-    background: #101712;
+    --staging-muted: #cfcfcf;
+    --staging-surface: #1b1b1b;
+    --staging-line: #383838;
+    background: #121212;
 }
 
 body.dark-mode.staging-redesign .card,
 body.dark-mode.staging-redesign .home-stat-card,
 body.dark-mode.staging-redesign .home-levels-section,
-body.dark-mode.staging-redesign input {
+body.dark-mode.staging-redesign .stat-card,
+body.dark-mode.staging-redesign .historico-item,
+body.dark-mode.staging-redesign input,
+body.dark-mode.staging-redesign select,
+body.dark-mode.staging-redesign textarea {
     background: var(--staging-surface);
     border-color: var(--staging-line);
     color: var(--staging-ink);
@@ -321,7 +326,7 @@ body.dark-mode.staging-redesign input {
 
     .staging-redesign .nav-menu::before {
         height: 96px;
-        background: var(--staging-brand-strong);
+        background: linear-gradient(135deg, var(--secondary-color) 0%, var(--accent-purple) 100%);
     }
 
     .staging-redesign .nav-link.active {
