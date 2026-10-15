@@ -1,22 +1,26 @@
 (function initStagingRedesign() {
     const isStaging = window.location.pathname === '/dev' || window.location.pathname.startsWith('/dev/');
+    const isProduction = window.location.pathname === '/controle' || window.location.pathname.startsWith('/controle/');
+    const appBase = isStaging ? '/dev' : '/controle';
 
-    if (!isStaging) return;
+    if (!isStaging && !isProduction) return;
     if (window.__AGE_RUN_STAGING_REDESIGN__) return;
     window.__AGE_RUN_STAGING_REDESIGN__ = true;
 
     document.documentElement.classList.add('staging-redesign');
 
-    const robotsMeta = document.createElement('meta');
-    robotsMeta.name = 'robots';
-    robotsMeta.content = 'noindex, nofollow, noarchive';
-    document.head.appendChild(robotsMeta);
+    if (isStaging) {
+        const robotsMeta = document.createElement('meta');
+        robotsMeta.name = 'robots';
+        robotsMeta.content = 'noindex, nofollow, noarchive';
+        document.head.appendChild(robotsMeta);
+    }
 
     const initPage = () => {
         document.body.classList.add('staging-redesign');
 
         const pageSlug = window.location.pathname
-            .replace(/^\/dev\/?/, '')
+            .replace(/^\/(?:dev|controle)\/?/, '')
             .replace(/\/$/, '')
             .replace(/[^a-z0-9-]/gi, '-') || 'index';
         document.body.classList.add(`staging-page-${pageSlug}`);
@@ -24,11 +28,13 @@
 
         document.querySelectorAll('footer, .footer').forEach((footer) => footer.remove());
 
-        const banner = document.createElement('div');
-        banner.className = 'staging-environment-banner';
-        banner.setAttribute('role', 'status');
-        banner.innerHTML = '<span class="staging-environment-dot" aria-hidden="true"></span><strong>Ambiente de testes</strong><span>Nova experiência Age Run</span>';
-        document.body.prepend(banner);
+        if (isStaging) {
+            const banner = document.createElement('div');
+            banner.className = 'staging-environment-banner';
+            banner.setAttribute('role', 'status');
+            banner.innerHTML = '<span class="staging-environment-dot" aria-hidden="true"></span><strong>Ambiente de testes</strong><span>Nova experiência Age Run</span>';
+            document.body.prepend(banner);
+        }
 
         const navMenu = document.querySelector('.nav-menu');
         const navList = navMenu?.querySelector('.nav-list');
@@ -196,7 +202,7 @@
         if (headerLogo && !headerLogo.closest('.staging-logo-home')) {
             const homeLink = document.createElement('a');
             homeLink.className = 'staging-logo-home';
-            homeLink.href = '/dev/home';
+            homeLink.href = `${appBase}/home`;
             homeLink.setAttribute('aria-label', 'Ir para a página inicial');
             headerLogo.before(homeLink);
             homeLink.appendChild(headerLogo);
@@ -283,6 +289,7 @@
 
                 const pendingList = pending.querySelector('#pendingTestsList');
                 const pendingCount = pending.querySelector('#pendingTestsCount');
+                if (isStaging) {
                 const demoTests = [
                     { name: 'Julia Progresso', time: '26:04', distance: '5 km', pace: '05:13 /km', testDate: '14/10/2026', sentAt: 'Hoje, 08:42' },
                     { name: 'Marina Forca', time: '51:00', distance: '10 km', pace: '05:06 /km', testDate: '13/10/2026', sentAt: 'Ontem, 19:18' },
@@ -335,6 +342,7 @@
 
                 renderDemoReviews();
                 if (pendingList) new MutationObserver(renderDemoReviews).observe(pendingList, { childList: true });
+                }
             }
         }
 
@@ -470,7 +478,7 @@
                 ], section);
 
                 const trainingScript = document.createElement('script');
-                trainingScript.src = '/dev/staging-home-training.js?v=2026101504';
+                trainingScript.src = `${appBase}/staging-home-training.js?v=2026101505`;
                 trainingScript.dataset.stagingHomeTraining = 'true';
                 document.body.appendChild(trainingScript);
             }
