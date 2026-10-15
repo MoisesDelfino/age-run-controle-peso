@@ -379,8 +379,7 @@ if (perfilForm) {
             }
 
             showMessage('Perfil atualizado com sucesso!', 'success');
-            const headerAvatar = document.querySelector('.user-menu-inicial');
-            if (headerAvatar) {
+            document.querySelectorAll('.user-menu-inicial, .user-menu-summary-avatar').forEach((headerAvatar) => {
                 headerAvatar.textContent = '';
                 if (perfilPhotoData) {
                     const avatarImage = document.createElement('img');
@@ -390,7 +389,7 @@ if (perfilForm) {
                 } else {
                     headerAvatar.textContent = nome.charAt(0).toUpperCase() || 'U';
                 }
-            }
+            });
         } catch (err) {
             showMessage(err.message || 'Erro ao salvar.', 'error');
         } finally {

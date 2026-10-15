@@ -44,13 +44,19 @@ body.staging-redesign {
 
 .staging-redesign .header {
     margin-bottom: 0;
-    padding: 16px 0;
-    background: linear-gradient(135deg, var(--secondary-color) 0%, var(--accent-purple) 100%);
-    box-shadow: 0 2px 8px rgba(123, 31, 162, 0.3);
+    padding: 11px 0;
+    border-bottom: 1px solid rgba(139, 195, 74, 0.3);
+    background: linear-gradient(120deg, #711892 0%, #8e20b5 55%, #6b168d 100%);
+    box-shadow: 0 8px 24px rgba(39, 12, 47, 0.22);
+}
+
+.staging-redesign .header-content {
+    gap: 12px;
 }
 
 .staging-redesign .header-text h1 {
-    font-size: 1.06rem;
+    font-size: 1rem;
+    font-weight: 700;
     letter-spacing: -0.01em;
 }
 
@@ -59,7 +65,29 @@ body.staging-redesign {
 }
 
 .staging-redesign .logo {
-    max-height: 44px;
+    max-height: 40px;
+}
+
+.staging-redesign .btn-dark-mode,
+.staging-redesign .btn-user-menu {
+    width: 42px;
+    height: 42px;
+    border: 1px solid rgba(255, 255, 255, 0.34);
+    background: rgba(255, 255, 255, 0.12);
+    box-shadow: inset 0 1px rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(10px);
+}
+
+.staging-redesign .btn-user-menu {
+    padding: 3px;
+    border-color: rgba(139, 195, 74, 0.7);
+}
+
+.staging-redesign .btn-user-menu:hover,
+.staging-redesign .btn-dark-mode:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+    transform: translateY(-1px);
 }
 
 .staging-redesign .nav-menu {
@@ -1387,7 +1415,125 @@ body.dark-mode.staging-redesign .staging-height-toggle .material-icons {
 }
 
 .staging-redesign .user-menu-panel {
-    border-radius: var(--ui-radius-md);
+    top: calc(100% + 12px);
+    width: 238px;
+    padding: 8px;
+    overflow: visible;
+    border: 1px solid rgba(171, 111, 190, 0.38);
+    border-radius: 18px;
+    background: #211c23;
+    box-shadow: 0 20px 48px rgba(8, 4, 10, 0.42);
+}
+
+.staging-redesign .user-menu-panel::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    right: 16px;
+    width: 11px;
+    height: 11px;
+    border-top: 1px solid rgba(171, 111, 190, 0.38);
+    border-left: 1px solid rgba(171, 111, 190, 0.38);
+    background: #211c23;
+    transform: rotate(45deg);
+}
+
+.staging-redesign .user-menu-summary {
+    padding: 8px 8px 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.staging-redesign .user-menu-summary-avatar {
+    width: 38px;
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    overflow: hidden;
+    border: 2px solid var(--primary-color);
+    border-radius: 50%;
+    background: #43204c;
+    color: #fff;
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.staging-redesign .user-menu-summary-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.staging-redesign .user-menu-summary-copy {
+    min-width: 0;
+    display: grid;
+    gap: 1px;
+}
+
+.staging-redesign .user-menu-summary-copy strong {
+    overflow: hidden;
+    color: #f6f1f7;
+    font-size: 0.78rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.staging-redesign .user-menu-summary-copy small {
+    color: #a99eac;
+    font-size: 0.62rem;
+}
+
+.staging-redesign .user-menu-divider {
+    height: 1px;
+    margin: 0 5px 6px;
+    background: #423746;
+}
+
+.staging-redesign .user-menu-item {
+    min-height: 43px;
+    margin-top: 3px;
+    padding: 8px 10px;
+    gap: 9px;
+    border-radius: 11px;
+    color: #eee7f0;
+    font-size: 0.76rem;
+}
+
+.staging-redesign .user-menu-item > .material-icons:first-child {
+    width: 30px;
+    height: 30px;
+    display: inline-grid;
+    place-items: center;
+    border-radius: 9px;
+    background: rgba(156, 39, 176, 0.14);
+    color: #d28be4;
+    font-size: 17px;
+    opacity: 1;
+}
+
+.staging-redesign .user-menu-item > span:nth-child(2) {
+    flex: 1;
+}
+
+.staging-redesign .user-menu-chevron {
+    color: #887d8b;
+    font-size: 17px !important;
+}
+
+.staging-redesign .user-menu-item:hover {
+    background: rgba(156, 39, 176, 0.13);
+}
+
+.staging-redesign .user-menu-logout {
+    color: #f29b99;
+}
+
+.staging-redesign .user-menu-logout > .material-icons:first-child {
+    background: rgba(239, 83, 80, 0.12);
+    color: #f28d8a;
 }
 
 /* Autenticação e primeiro acesso */
