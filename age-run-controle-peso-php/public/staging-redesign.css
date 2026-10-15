@@ -2529,8 +2529,7 @@ body.coach-photo-viewer-open {
     line-height: 1.35;
 }
 
-.staging-redesign .passkey-heading p,
-.staging-redesign .passkey-privacy {
+.staging-redesign .passkey-heading p {
     color: var(--staging-muted);
 }
 
@@ -2591,12 +2590,6 @@ body.coach-photo-viewer-open {
     font-size: 17px;
 }
 
-.staging-redesign .passkey-privacy {
-    grid-column: 1 / -1;
-    font-size: 0.7rem;
-    line-height: 1.25;
-}
-
 @media (max-width: 680px) {
     .staging-redesign .passkey-register-button {
         width: auto;
@@ -2604,8 +2597,8 @@ body.coach-photo-viewer-open {
 
     .staging-redesign .passkey-card {
         grid-template-columns: minmax(0, 1fr) auto;
-        gap: 9px 10px;
-        padding: 12px;
+        gap: 6px 10px;
+        padding: 9px 12px;
     }
 
     .staging-redesign .passkey-register-button {
@@ -3397,13 +3390,15 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
     }
 
     .staging-redesign.staging-page-perfil .perfil-grid {
-        height: 100%;
+        height: auto;
         min-height: 0;
+        align-content: start;
+        gap: 10px;
     }
 
     .staging-redesign.staging-page-perfil .perfil-grid > .card {
         position: relative;
-        height: 100%;
+        height: auto;
         min-height: 0;
         margin: 0;
         padding: 12px 14px;
@@ -3412,7 +3407,7 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
     }
 
     .staging-redesign.staging-page-perfil .perfil-heading {
-        margin-bottom: 10px;
+        margin-bottom: 8px;
         gap: 10px;
     }
 
@@ -3443,7 +3438,7 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
 
     .staging-redesign.staging-page-perfil .perfil-form {
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 9px;
+        gap: 7px 9px;
     }
 
     .staging-redesign.staging-page-perfil .perfil-photo-field,
@@ -3457,8 +3452,8 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
     }
 
     .staging-redesign.staging-page-perfil .perfil-photo-field {
-        min-height: 102px;
-        padding: 10px 12px;
+        min-height: 94px;
+        padding: 8px 10px;
         grid-template-columns: 64px minmax(0, 1fr);
         align-items: center;
         gap: 12px;
@@ -3497,7 +3492,7 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
 
     .staging-redesign.staging-page-perfil .perfil-form input,
     .staging-redesign.staging-page-perfil .perfil-form select {
-        min-height: 40px;
+        min-height: 38px;
         padding: 7px 10px;
         font-size: 0.78rem;
     }
@@ -3511,9 +3506,9 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
     }
 
     .staging-redesign.staging-page-perfil #btnSalvarPerfil {
-        min-height: 42px;
+        min-height: 38px;
         margin-top: 1px;
-        padding: 8px 12px;
+        padding: 6px 12px;
         font-size: 0.76rem;
     }
 
