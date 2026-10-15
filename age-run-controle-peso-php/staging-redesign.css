@@ -1696,7 +1696,8 @@ body.dark-mode.staging-redesign .staging-height-toggle .material-icons {
 
 .staging-redesign.staging-page-perfil .perfil-photo-field {
     padding: 16px;
-    display: flex;
+    display: grid;
+    grid-template-columns: 88px minmax(0, 1fr);
     align-items: center;
     gap: 16px;
     border: 1px solid rgba(142, 32, 181, 0.28);
@@ -1730,7 +1731,11 @@ body.dark-mode.staging-redesign .staging-height-toggle .material-icons {
 .staging-redesign.staging-page-perfil .perfil-photo-content {
     min-width: 0;
     display: grid;
-    gap: 5px;
+    gap: 10px;
+}
+
+.staging-redesign.staging-page-perfil .perfil-photo-content > strong {
+    line-height: 1.2;
 }
 
 .staging-redesign.staging-page-perfil .perfil-photo-content > span {
@@ -1740,19 +1745,19 @@ body.dark-mode.staging-redesign .staging-height-toggle .material-icons {
 }
 
 .staging-redesign.staging-page-perfil .perfil-photo-actions {
-    margin-top: 5px;
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     align-items: center;
-    flex-wrap: wrap;
     gap: 8px;
 }
 
 .staging-redesign.staging-page-perfil .perfil-photo-select {
-    width: auto;
+    width: 100%;
     min-height: 38px;
     padding: 8px 12px;
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 6px;
     border: 1px solid rgba(142, 32, 181, 0.45);
     background: rgba(142, 32, 181, 0.14);
@@ -1775,14 +1780,22 @@ body.dark-mode.staging-redesign .staging-height-toggle .material-icons {
 }
 
 .staging-redesign.staging-page-perfil .perfil-photo-remove {
-    min-height: 36px;
-    padding: 6px 10px;
-    border: 0;
-    background: transparent;
+    width: 100%;
+    min-height: 38px;
+    padding: 7px 10px;
+    border: 1px solid rgba(216, 155, 232, 0.22);
+    border-radius: 10px;
+    background: rgba(216, 155, 232, 0.06);
     color: #d89be8;
     font: inherit;
     font-size: 0.75rem;
     cursor: pointer;
+}
+
+.staging-redesign.staging-page-perfil #perfilPhotoRemove {
+    border-color: rgba(239, 83, 80, 0.22);
+    background: rgba(239, 83, 80, 0.06);
+    color: #efaaa8;
 }
 
 .staging-redesign.staging-page-perfil.perfil-photo-editor-open {
@@ -2742,6 +2755,8 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
 
     .staging-redesign.staging-page-perfil .perfil-photo-field {
         padding: 13px;
+        grid-template-columns: 72px minmax(0, 1fr);
+        align-items: start;
     }
 
     .staging-redesign.staging-page-perfil .perfil-photo-preview {
@@ -2755,6 +2770,10 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
 
     .staging-redesign.staging-page-perfil .perfil-photo-select {
         padding: 7px 10px;
+        font-size: 0.7rem;
+    }
+
+    .staging-redesign.staging-page-perfil .perfil-photo-remove {
         font-size: 0.7rem;
     }
 
