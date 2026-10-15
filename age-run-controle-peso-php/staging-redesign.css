@@ -2458,101 +2458,6 @@ body.coach-photo-viewer-open {
     overflow: hidden;
 }
 
-.passkey-confirm-modal[hidden] {
-    display: none;
-}
-
-.passkey-confirm-modal {
-    position: fixed;
-    inset: 0;
-    z-index: 13000;
-    display: grid;
-    place-items: center;
-    padding: 20px;
-}
-
-.passkey-confirm-backdrop {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    border: 0;
-    background: rgba(8, 7, 10, 0.78);
-    backdrop-filter: blur(6px);
-}
-
-.passkey-confirm-dialog {
-    position: relative;
-    z-index: 1;
-    width: min(100%, 420px);
-    display: grid;
-    grid-template-columns: 46px minmax(0, 1fr);
-    gap: 12px;
-    padding: 20px;
-    border: 1px solid rgba(142, 32, 181, 0.46);
-    border-radius: 20px;
-    background: #211d23;
-    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.45);
-    color: #f5f2f6;
-}
-
-.passkey-confirm-icon {
-    width: 46px;
-    height: 46px;
-    display: grid;
-    place-items: center;
-    border-radius: 14px;
-    background: rgba(239, 68, 68, 0.13);
-    color: #ff9d9d;
-}
-
-.passkey-confirm-copy h2,
-.passkey-confirm-copy p {
-    margin: 0;
-}
-
-.passkey-confirm-copy h2 {
-    font-size: 1.05rem;
-}
-
-.passkey-confirm-copy p {
-    margin-top: 5px;
-    color: #cfc7d0;
-    font-size: 0.82rem;
-    line-height: 1.5;
-}
-
-.passkey-confirm-actions {
-    grid-column: 1 / -1;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-top: 4px;
-}
-
-.passkey-confirm-actions .btn {
-    min-height: 44px;
-}
-
-.passkey-confirm-cancel {
-    border: 1px solid rgba(194, 123, 213, 0.4);
-    background: transparent;
-    color: #d99de6;
-}
-
-.passkey-confirm-remove {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    border: 1px solid rgba(239, 68, 68, 0.52);
-    background: rgba(239, 68, 68, 0.16);
-    color: #ffadad;
-}
-
-body.passkey-confirm-open {
-    overflow: hidden;
-}
-
 .staging-redesign .passkey-divider {
     display: flex;
     align-items: center;
@@ -2668,44 +2573,22 @@ body.passkey-confirm-open {
     list-style: none;
 }
 
-.staging-redesign .passkey-credential-list li:not(.passkey-empty) {
-    display: grid;
-    grid-template-columns: 28px minmax(0, 1fr) 34px;
+.staging-redesign .passkey-registered-tag {
+    width: fit-content;
+    display: inline-flex;
     align-items: center;
-    gap: 10px;
-    padding: 7px 9px;
-    border: 1px solid var(--staging-line);
-    border-radius: 12px;
-    background: var(--staging-surface);
+    gap: 6px;
+    padding: 7px 11px;
+    border: 1px solid rgba(34, 197, 94, 0.45);
+    border-radius: 999px;
+    background: rgba(34, 197, 94, 0.12);
+    color: #9ee6b3;
+    font-size: 0.78rem;
+    font-weight: 600;
 }
 
-.staging-redesign .passkey-credential-list div {
-    display: grid;
-    line-height: 1.25;
-}
-
-.staging-redesign .passkey-credential-list strong {
-    font-size: 0.82rem;
-}
-
-.staging-redesign .passkey-credential-list small {
-    font-size: 0.7rem;
-}
-
-.staging-redesign .passkey-credential-list small,
-.staging-redesign .passkey-empty {
-    color: var(--staging-muted);
-}
-
-.staging-redesign .passkey-credential-list button {
-    width: 32px;
-    height: 32px;
-    display: grid;
-    place-items: center;
-    border: 1px solid rgba(239, 68, 68, 0.28);
-    border-radius: 10px;
-    background: transparent;
-    color: #ef8c8c;
+.staging-redesign .passkey-registered-tag .material-icons {
+    font-size: 17px;
 }
 
 .staging-redesign .passkey-privacy {
@@ -2726,14 +2609,13 @@ body.passkey-confirm-open {
     }
 
     .staging-redesign .passkey-register-button {
-        width: 42px;
-        min-width: 42px;
-        padding: 0;
-        font-size: 0;
+        min-width: 0;
+        padding: 8px 12px;
+        font-size: 0.76rem;
     }
 
     .staging-redesign .passkey-register-button .material-icons {
-        font-size: 22px;
+        font-size: 18px;
     }
 }
 

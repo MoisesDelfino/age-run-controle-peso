@@ -35,66 +35,17 @@
         if (error?.name === 'SecurityError') return 'O navegador bloqueou a biometria. Confirme que o site está aberto por HTTPS.';
         return error?.message || 'Não foi possível usar a biometria neste aparelho.';
     };
-    let confirmResolver = null;
-    let confirmTrigger = null;
-
-    const closeRemoveConfirm = (confirmed) => {
-        const modal = document.getElementById('passkeyRemoveConfirm');
-        if (!modal || !confirmResolver) return;
-        modal.hidden = true;
-        document.body.classList.remove('passkey-confirm-open');
-        const resolve = confirmResolver;
-        confirmResolver = null;
-        resolve(confirmed);
-        confirmTrigger?.focus();
-        confirmTrigger = null;
-    };
-
-    const confirmPasskeyRemoval = (trigger) => {
-        let modal = document.getElementById('passkeyRemoveConfirm');
-        if (!modal) {
-            modal = document.createElement('div');
-            modal.id = 'passkeyRemoveConfirm';
-            modal.className = 'passkey-confirm-modal';
-            modal.hidden = true;
-            modal.innerHTML = `
-                <button type="button" class="passkey-confirm-backdrop" data-passkey-confirm="cancel" aria-label="Cancelar remoção"></button>
-                <section class="passkey-confirm-dialog" role="alertdialog" aria-modal="true" aria-labelledby="passkeyConfirmTitle" aria-describedby="passkeyConfirmDescription">
-                    <span class="material-icons passkey-confirm-icon" aria-hidden="true">fingerprint</span>
-                    <div class="passkey-confirm-copy">
-                        <h2 id="passkeyConfirmTitle">Remover biometria?</h2>
-                        <p id="passkeyConfirmDescription">Este aparelho não poderá mais entrar com biometria até um novo cadastro.</p>
-                    </div>
-                    <div class="passkey-confirm-actions">
-                        <button type="button" class="btn passkey-confirm-cancel" data-passkey-confirm="cancel">Cancelar</button>
-                        <button type="button" class="btn passkey-confirm-remove" data-passkey-confirm="remove"><span class="material-icons" aria-hidden="true">delete_outline</span> Remover</button>
-                    </div>
-                </section>`;
-            document.body.appendChild(modal);
-            modal.addEventListener('click', (event) => {
-                const action = event.target.closest('[data-passkey-confirm]')?.dataset.passkeyConfirm;
-                if (action) closeRemoveConfirm(action === 'remove');
-            });
-        }
-        confirmTrigger = trigger;
-        modal.hidden = false;
-        document.body.classList.add('passkey-confirm-open');
-        window.setTimeout(() => modal.querySelector('.passkey-confirm-cancel')?.focus(), 0);
-        return new Promise((resolve) => { confirmResolver = resolve; });
-    };
-
-    document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape' && confirmResolver) closeRemoveConfirm(false);
-    });
-
     async function loadCredentials() {
         if (!list || !supported) return;
         const data = await request('/auth/passkey/credentials');
         const credentials = data.credentials || [];
-        if (credentials[0]?.credential_id) localStorage.setItem('agerun-passkey-id', credentials[0].credential_id);
-        list.innerHTML = credentials.length
-            ? credentials.map((item) => `<li><span class="material-icons" aria-hidden="true">passkey</span><div><strong>${item.nome || 'Este aparelho'}</strong><small>Cadastrada em ${String(item.criado_em || '').slice(0, 10).split('-').reverse().join('/')}</small></div><button type="button" data-passkey-remove="${item.id}" aria-label="Remover passkey"><span class="material-icons">delete_outline</span></button></li>`).join('')
-            : '<li class="passkey-empty">Nenhum aparelho cadastrado.</li>';
+        const registered = Boolean(credentials[0]?.credential_id);
+        if (registered) localStorage.setItem('agerun-passkey-id', credentials[0].credential_id);
+        registerButton.hidden = registered;
+        list.innerHTML = registered
+            ? '<li class="passkey-registered-tag"><span class="material-icons" aria-hidden="true">check_circle</span> Biometria cadastrada</li>'
+            : '';
+        list.hidden = !registered;
     }
 
     if (!supported) {
@@ -125,28 +76,13 @@
                     name: /android/i.test(navigator.userAgent) ? 'Celular Android' : /iphone|ipad/i.test(navigator.userAgent) ? 'iPhone ou iPad' : 'Este aparelho',
                 }),
             });
-            showStatus('Biometria ativada com sucesso neste aparelho.', 'success');
             localStorage.setItem('agerun-passkey-id', credential.id);
+            showStatus('', 'success');
             await loadCredentials();
         } catch (error) {
             showStatus(friendlyError(error), 'error');
         } finally {
             registerButton.disabled = false;
-        }
-    });
-
-    list?.addEventListener('click', async (event) => {
-        const button = event.target.closest('[data-passkey-remove]');
-        if (!button || !await confirmPasskeyRemoval(button)) return;
-        button.disabled = true;
-        try {
-            await request(`/auth/passkey/credentials/${button.dataset.passkeyRemove}`, { method: 'DELETE' });
-            localStorage.removeItem('agerun-passkey-id');
-            showStatus('Passkey removida.', 'success');
-            await loadCredentials();
-        } catch (error) {
-            showStatus(friendlyError(error), 'error');
-            button.disabled = false;
         }
     });
 
