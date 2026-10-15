@@ -30,6 +30,49 @@
         banner.innerHTML = '<span class="staging-environment-dot" aria-hidden="true"></span><strong>Ambiente de testes</strong><span>Nova experiência Age Run</span>';
         document.body.prepend(banner);
 
+        const navMenu = document.querySelector('.nav-menu');
+        const navList = navMenu?.querySelector('.nav-list');
+        if (navMenu && navList && !navMenu.querySelector('.staging-nav-header')) {
+            const navHeader = document.createElement('div');
+            navHeader.className = 'staging-nav-header';
+            navHeader.innerHTML = `
+                <div class="staging-nav-brand">
+                    <img src="logo.png" alt="Age Run">
+                    <div><strong>Age Run</strong><span>Navegação</span></div>
+                </div>
+                <button type="button" class="staging-nav-close" aria-label="Fechar menu">
+                    <span class="material-icons" aria-hidden="true">close</span>
+                </button>`;
+            navMenu.querySelector('.container')?.prepend(navHeader);
+            navHeader.querySelector('.staging-nav-close')?.addEventListener('click', () => {
+                document.querySelector('.menu-toggle')?.click();
+            });
+
+            const iconMap = {
+                '/home': 'home',
+                '/pesagem': 'monitor_weight',
+                '/ranking': 'emoji_events',
+                '/grupos-treino': 'groups',
+                '/bioimpedancia': 'analytics',
+                '/treinador': 'sports',
+                '/monitoramento': 'terminal',
+                '/monitoramento-acessos': 'history'
+            };
+
+            const enhanceLinks = () => {
+                navList.querySelectorAll('.nav-link:not([data-staging-nav-ready])').forEach((link) => {
+                    const pathname = new URL(link.href, window.location.origin).pathname.replace(/^\/dev|^\/controle/, '');
+                    const icon = iconMap[pathname] || 'circle';
+                    const label = link.textContent.replace(/^[^\p{L}\p{N}]+/u, '').trim();
+                    link.innerHTML = `<span class="material-icons staging-nav-icon" aria-hidden="true">${icon}</span><span class="staging-nav-label">${label}</span><span class="material-icons staging-nav-chevron" aria-hidden="true">chevron_right</span>`;
+                    link.dataset.stagingNavReady = 'true';
+                });
+            };
+
+            enhanceLinks();
+            new MutationObserver(enhanceLinks).observe(navList, { childList: true, subtree: true });
+        }
+
         const path = window.location.pathname.replace(/\/$/, '');
         const main = document.querySelector('main');
         if (!main) return;
