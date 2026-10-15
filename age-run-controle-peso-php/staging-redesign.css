@@ -4205,22 +4205,6 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
     }
 }
 
-@media (max-width: 390px) {
-    .staging-redesign.staging-page-perfil .perfil-grid > .card {
-        overflow-y: auto;
-        overscroll-behavior: contain;
-    }
-
-    .staging-redesign.staging-page-perfil .perfil-form {
-        grid-template-columns: 1fr;
-    }
-
-    .staging-redesign.staging-page-perfil .perfil-photo-field,
-    .staging-redesign.staging-page-perfil #btnSalvarPerfil {
-        grid-column: auto;
-    }
-}
-
 @media (prefers-reduced-motion: reduce) {
     .staging-redesign *,
     .staging-redesign *::before,
