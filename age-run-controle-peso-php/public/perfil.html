@@ -285,10 +285,10 @@
                     <div class="perfil-photo-content">
                         <strong>Foto de perfil</strong>
                         <div class="perfil-photo-actions">
-                            <label for="perfilCameraInput" class="btn perfil-photo-select perfil-photo-camera">
+                            <button type="button" id="perfilCameraButton" class="btn perfil-photo-select perfil-photo-camera">
                                 <span class="material-icons" aria-hidden="true">photo_camera</span>
                                 Tirar foto
-                            </label>
+                            </button>
                             <label for="perfilPhotoInput" class="btn perfil-photo-select perfil-photo-gallery">
                                 <span class="material-icons" aria-hidden="true">photo_library</span>
                                 Galeria
@@ -353,6 +353,22 @@
             </section>
         </div>
 
+        <div id="perfilCameraModal" class="perfil-camera-modal" hidden>
+            <div class="perfil-photo-editor-backdrop" data-camera-close></div>
+            <section class="perfil-camera-panel" role="dialog" aria-modal="true" aria-labelledby="perfilCameraTitle">
+                <div class="perfil-photo-editor-header">
+                    <div><strong id="perfilCameraTitle">Tirar foto</strong><span>Posicione seu rosto no centro</span></div>
+                    <button type="button" class="perfil-photo-editor-close" data-camera-close aria-label="Fechar câmera">
+                        <span class="material-icons" aria-hidden="true">close</span>
+                    </button>
+                </div>
+                <div class="perfil-camera-stage"><video id="perfilCameraVideo" autoplay muted playsinline></video></div>
+                <button type="button" id="perfilCameraCapture" class="btn btn-primary perfil-camera-capture">
+                    <span class="material-icons" aria-hidden="true">photo_camera</span> Capturar foto
+                </button>
+            </section>
+        </div>
+
         <section id="garminCard" class="card garmin-card" hidden>
             <div class="garmin-heading">
                 <span class="garmin-mark" aria-hidden="true">▲</span>
@@ -396,8 +412,8 @@
         </div>
     </footer>
 
-    <script src="theme.js?v=2026101546"></script>
+    <script src="theme.js?v=2026101547"></script>
     <script src="menu.js?v=2026101503"></script>
-    <script src="perfil.js?v=2026101508"></script>
+    <script src="perfil.js?v=2026101509"></script>
 </body>
 </html>

@@ -24,6 +24,10 @@ const btnGarminLogin = document.getElementById('btnGarminLogin');
 const btnGarminCancel = document.getElementById('btnGarminCancel');
 const perfilPhotoInput = document.getElementById('perfilPhotoInput');
 const perfilCameraInput = document.getElementById('perfilCameraInput');
+const perfilCameraButton = document.getElementById('perfilCameraButton');
+const perfilCameraModal = document.getElementById('perfilCameraModal');
+const perfilCameraVideo = document.getElementById('perfilCameraVideo');
+const perfilCameraCapture = document.getElementById('perfilCameraCapture');
 const perfilPhotoImage = document.getElementById('perfilPhotoImage');
 const perfilPhotoInitial = document.getElementById('perfilPhotoInitial');
 const perfilPhotoRemove = document.getElementById('perfilPhotoRemove');
@@ -40,6 +44,7 @@ let photoEditorOffsetY = 0;
 let photoEditorZoom = 1;
 let photoEditorDrag = null;
 let perfilMessageTimer = null;
+let perfilCameraStream = null;
 
 function renderProfilePhoto(photo, name) {
     perfilPhotoData = photo || null;
@@ -144,6 +149,39 @@ function closeProfilePhotoEditor() {
     photoEditorDrag = null;
 }
 
+function closeProfileCamera() {
+    perfilCameraStream?.getTracks().forEach((track) => track.stop());
+    perfilCameraStream = null;
+    if (perfilCameraVideo) perfilCameraVideo.srcObject = null;
+    if (perfilCameraModal) perfilCameraModal.hidden = true;
+    document.body.classList.remove('perfil-photo-editor-open');
+}
+
+async function openProfileCamera() {
+    if (!navigator.mediaDevices?.getUserMedia) {
+        perfilCameraInput?.click();
+        return;
+    }
+    try {
+        perfilCameraStream = await navigator.mediaDevices.getUserMedia({
+            audio: false,
+            video: { facingMode: 'user', width: { ideal: 1920 }, height: { ideal: 1920 } }
+        });
+        perfilCameraVideo.srcObject = perfilCameraStream;
+        perfilCameraModal.hidden = false;
+        document.body.classList.add('perfil-photo-editor-open');
+        await perfilCameraVideo.play();
+    } catch (error) {
+        closeProfileCamera();
+        const messages = {
+            NotAllowedError: 'A permissão da câmera foi negada. Libere o acesso nas configurações do navegador.',
+            NotFoundError: 'Nenhuma câmera foi encontrada neste dispositivo.',
+            NotReadableError: 'A câmera está sendo usada por outro aplicativo. Feche-o e tente novamente.'
+        };
+        showMessage(messages[error.name] || 'Não foi possível abrir a câmera. Tente usar a Galeria.', 'error');
+    }
+}
+
 const GARMIN_CHECK_LABELS = {
     php: 'PHP compatível',
     curl: 'Comunicação HTTPS (cURL)',
@@ -239,7 +277,36 @@ async function handleProfilePhotoSelection(input) {
 
 perfilPhotoInput?.addEventListener('change', () => handleProfilePhotoSelection(perfilPhotoInput));
 perfilCameraInput?.addEventListener('change', () => handleProfilePhotoSelection(perfilCameraInput));
+perfilCameraButton?.addEventListener('click', openProfileCamera);
 perfilPhotoAdjust?.addEventListener('click', () => openProfilePhotoEditor(perfilPhotoData));
+
+perfilCameraModal?.querySelectorAll('[data-camera-close]').forEach((button) => button.addEventListener('click', closeProfileCamera));
+
+perfilCameraCapture?.addEventListener('click', () => {
+    const width = perfilCameraVideo?.videoWidth || 0;
+    const height = perfilCameraVideo?.videoHeight || 0;
+    if (!width || !height) {
+        showMessage('A câmera ainda está iniciando. Aguarde um instante e tente novamente.', 'error');
+        return;
+    }
+    try {
+        const maxDimension = 1920;
+        const scale = Math.min(1, maxDimension / Math.max(width, height));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(width * scale);
+        canvas.height = Math.round(height * scale);
+        const context = canvas.getContext('2d');
+        if (!context) throw new Error('Editor indisponível');
+        context.translate(canvas.width, 0);
+        context.scale(-1, 1);
+        context.drawImage(perfilCameraVideo, 0, 0, canvas.width, canvas.height);
+        const photo = canvas.toDataURL('image/jpeg', 0.92);
+        closeProfileCamera();
+        openProfilePhotoEditor(photo, { type: 'image/jpeg', name: 'camera.jpg' });
+    } catch (error) {
+        showMessage('Não foi possível capturar a foto. Libere memória no celular ou use a Galeria.', 'error');
+    }
+});
 
 perfilPhotoZoom?.addEventListener('input', () => {
     photoEditorZoom = Number(perfilPhotoZoom.value) || 1;
