@@ -1636,6 +1636,10 @@ body.dark-mode.staging-redesign .staging-height-toggle .material-icons {
     justify-content: center;
 }
 
+.staging-redesign.staging-page-perfil #garminCard {
+    display: none !important;
+}
+
 .staging-redesign.staging-page-perfil .perfil-grid > .card {
     padding: clamp(20px, 4vw, 30px);
     border-top: 4px solid var(--primary-color);
