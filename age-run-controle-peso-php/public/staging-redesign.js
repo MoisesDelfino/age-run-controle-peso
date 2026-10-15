@@ -78,6 +78,72 @@
 
             const submitLabel = document.querySelector('#pesagemForm .btn-primary span');
             if (submitLabel) submitLabel.textContent = 'Salvar pesagem';
+
+            const formSection = document.querySelector('.form-section');
+            const statsSection = document.querySelector('.stats-section');
+            const historySection = document.querySelector('.lista-section');
+
+            if (layout && formSection && statsSection && historySection) {
+                formSection.dataset.mobilePanel = 'register';
+                statsSection.dataset.mobilePanel = 'summary';
+                historySection.dataset.mobilePanel = 'history';
+
+                const tabs = document.createElement('div');
+                tabs.className = 'staging-mobile-tabs';
+                tabs.setAttribute('role', 'tablist');
+                tabs.setAttribute('aria-label', 'Áreas da pesagem');
+                tabs.innerHTML = `
+                    <button type="button" class="staging-mobile-tab is-active" role="tab" aria-selected="true" data-target="register">
+                        <span class="material-icons" aria-hidden="true">add_circle_outline</span>
+                        <span>Registrar</span>
+                    </button>
+                    <button type="button" class="staging-mobile-tab" role="tab" aria-selected="false" data-target="summary">
+                        <span class="material-icons" aria-hidden="true">insights</span>
+                        <span>Resumo</span>
+                    </button>
+                    <button type="button" class="staging-mobile-tab" role="tab" aria-selected="false" data-target="history">
+                        <span class="material-icons" aria-hidden="true">history</span>
+                        <span>Histórico</span>
+                    </button>
+                `;
+                layout.before(tabs);
+
+                const selectMobilePanel = (target) => {
+                    tabs.querySelectorAll('.staging-mobile-tab').forEach((tab) => {
+                        const selected = tab.dataset.target === target;
+                        tab.classList.toggle('is-active', selected);
+                        tab.setAttribute('aria-selected', String(selected));
+                    });
+
+                    [formSection, statsSection, historySection].forEach((section) => {
+                        section.classList.toggle('is-mobile-active', section.dataset.mobilePanel === target);
+                    });
+                };
+
+                tabs.addEventListener('click', (event) => {
+                    const tab = event.target.closest('.staging-mobile-tab');
+                    if (tab) selectMobilePanel(tab.dataset.target);
+                });
+
+                selectMobilePanel('register');
+                window.addEventListener('pesagem:registered', () => selectMobilePanel('summary'));
+            }
+
+            const heightCard = formSection?.querySelector('.card:nth-child(2)');
+            if (heightCard) {
+                heightCard.classList.add('staging-height-card');
+                const heightToggle = document.createElement('button');
+                heightToggle.type = 'button';
+                heightToggle.className = 'staging-height-toggle';
+                heightToggle.setAttribute('aria-expanded', 'false');
+                heightToggle.innerHTML = '<span><span class="material-icons" aria-hidden="true">height</span> Atualizar altura</span><span class="material-icons staging-height-chevron" aria-hidden="true">expand_more</span>';
+                heightCard.before(heightToggle);
+                heightToggle.addEventListener('click', () => {
+                    const expanded = heightToggle.getAttribute('aria-expanded') === 'true';
+                    heightToggle.setAttribute('aria-expanded', String(!expanded));
+                    heightCard.classList.toggle('is-open', !expanded);
+                });
+            }
         }
     });
 })();

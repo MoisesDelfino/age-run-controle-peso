@@ -287,6 +287,7 @@ async function registrarPesagem(peso, data) {
             showMessage('Pesagem registrada com sucesso! 🎉', 'success');
             pesagemForm.reset();
             await carregarHistorico();
+            window.dispatchEvent(new CustomEvent('pesagem:registered'));
         } else {
             showMessage(result.error || 'Erro ao registrar pesagem', 'error');
         }
