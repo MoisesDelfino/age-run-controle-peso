@@ -692,9 +692,11 @@ body.dark-mode.staging-redesign .staging-weighing .historico-item:hover {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 5px;
-    border: 1px solid var(--staging-line);
+    border: 0;
     border-radius: 16px;
     background: var(--staging-card);
+    box-shadow: inset 0 0 0 1px var(--staging-line);
+    overflow: hidden;
 }
 
 .staging-redesign.staging-page-home .staging-mobile-tab {
@@ -705,6 +707,7 @@ body.dark-mode.staging-redesign .staging-weighing .historico-item:hover {
     justify-content: center;
     gap: 6px;
     border: 0;
+    outline: 0;
     border-radius: 11px;
     background: transparent;
     color: var(--staging-muted);
@@ -717,6 +720,26 @@ body.dark-mode.staging-redesign .staging-weighing .historico-item:hover {
 .staging-redesign.staging-page-home .staging-mobile-tab.is-active {
     background: rgba(123, 31, 162, 0.11);
     color: var(--secondary-color);
+    box-shadow: none;
+}
+
+.staging-redesign.staging-page-home .staging-mobile-tab:first-child,
+.staging-redesign.staging-page-home .staging-mobile-tab:last-child {
+    border-radius: 11px;
+}
+
+.staging-redesign.staging-page-home .staging-mobile-tab:focus-visible {
+    box-shadow: inset 0 0 0 2px var(--secondary-color);
+}
+
+body.dark-mode.staging-redesign.staging-page-home .staging-mobile-tabs {
+    background: #1f1d20;
+    box-shadow: inset 0 0 0 1px #484049;
+}
+
+body.dark-mode.staging-redesign.staging-page-home .staging-mobile-tab.is-active {
+    background: rgba(156, 39, 176, 0.24);
+    color: #dfa8ed;
 }
 
 .staging-redesign.staging-page-home .staging-mobile-panel {
