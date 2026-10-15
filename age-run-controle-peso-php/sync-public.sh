@@ -18,6 +18,8 @@ bioimpedancia-scanner.js
 apple-touch-icon.png
 cadastro.html
 effects.css
+staging-redesign.css
+staging-redesign.js
 grupos-treino.html
 grupos-treino.js
 home.html
