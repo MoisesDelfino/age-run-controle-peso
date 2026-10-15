@@ -1727,6 +1727,74 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
     }
 }
 
+@media (max-width: 720px) {
+    .staging-redesign .staging-mobile-tabs {
+        position: static;
+        top: auto;
+        flex: 0 0 auto;
+    }
+
+    .staging-redesign .staging-weighing .pesagem-layout,
+    .staging-redesign .staging-weighing .form-section,
+    .staging-redesign .staging-weighing .form-section > .card,
+    .staging-redesign .staging-weighing .staging-height-toggle,
+    .staging-redesign .staging-weighing .staging-height-card {
+        width: 100% !important;
+        max-width: none !important;
+        min-width: 0 !important;
+    }
+
+    .staging-redesign .staging-weighing .form-section {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    .staging-redesign .staging-weighing .staging-height-card.is-open {
+        display: flex !important;
+    }
+
+    .staging-redesign.staging-page-grupos-treino .rp-section {
+        display: none !important;
+        margin: 0 !important;
+    }
+
+    .staging-redesign.staging-page-grupos-treino .rp-section:has(.staging-mobile-panel.is-mobile-active) {
+        display: block !important;
+    }
+
+    .staging-redesign.staging-page-grupos-treino .rp-section > .card > h2,
+    .staging-redesign.staging-page-grupos-treino .rp-section > .card > .welcome-text {
+        display: none;
+    }
+
+    .staging-redesign.staging-page-grupos-treino .rp-section > .card {
+        padding: 16px;
+    }
+
+    .staging-redesign.staging-page-grupos-treino .rp-form,
+    .staging-redesign.staging-page-grupos-treino .athlete-test-panel,
+    .staging-redesign.staging-page-grupos-treino .grupos-section {
+        width: 100%;
+        max-width: none;
+    }
+
+    .staging-redesign.staging-page-grupos-treino .rp-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .staging-redesign.staging-page-grupos-treino .rp-actions {
+        margin-top: 10px;
+    }
+
+    .staging-redesign.staging-page-grupos-treino #adminGruposSection {
+        display: none !important;
+    }
+
+    .staging-redesign.staging-page-grupos-treino .coach-rp-test-panel {
+        border: 0;
+        background: transparent;
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     .staging-redesign *,
     .staging-redesign *::before,

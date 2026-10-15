@@ -87,9 +87,12 @@
 
         if (path.endsWith('/grupos-treino')) {
             const rp = main.querySelector('.rp-section');
+            const records = rp?.querySelector('#rpForm');
+            const tests = rp?.querySelector('.athlete-test-panel');
             const groups = main.querySelector('.grupos-section');
             setupMobilePanels([
-                { key: 'records', label: 'Recordes', icon: 'timer', section: rp },
+                { key: 'records', label: 'Recordes', icon: 'timer', section: records },
+                { key: 'tests', label: 'Testes', icon: 'speed', section: tests },
                 { key: 'groups', label: 'Grupos', icon: 'groups', section: groups }
             ], rp);
         }
