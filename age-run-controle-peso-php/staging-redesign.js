@@ -245,7 +245,11 @@
                 const tests = document.createElement('section');
                 tests.className = 'card staging-home-training-card';
                 tests.innerHTML = `
-                    <form id="homeAthleteTestForm" class="coach-rp-test-controls">
+                    <button type="button" id="homeTestFormToggle" class="staging-test-form-toggle" aria-expanded="false">
+                        <span class="material-icons" aria-hidden="true">add</span>
+                        <span>Cadastrar teste</span>
+                    </button>
+                    <form id="homeAthleteTestForm" class="coach-rp-test-controls staging-test-form" hidden>
                         <div class="coach-rp-test-field">
                             <label class="group-meta" for="homeAthleteTestTime">Tempo</label>
                             <input id="homeAthleteTestTime" class="coach-rp-test-input" type="text" placeholder="12:00" required>
@@ -264,6 +268,7 @@
                         </div>
                         <div class="coach-rp-test-buttons">
                             <button type="submit" class="btn btn-secondary">Salvar teste</button>
+                            <button type="button" id="homeTestFormCancel" class="btn staging-test-form-cancel">Cancelar</button>
                         </div>
                     </form>
                     <div id="homeAthleteTestMessage" class="message" role="status"></div>
@@ -277,7 +282,7 @@
                 ], section);
 
                 const trainingScript = document.createElement('script');
-                trainingScript.src = '/dev/staging-home-training.js?v=2026101502';
+                trainingScript.src = '/dev/staging-home-training.js?v=2026101503';
                 trainingScript.dataset.stagingHomeTraining = 'true';
                 document.body.appendChild(trainingScript);
             }

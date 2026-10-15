@@ -734,6 +734,40 @@ body.dark-mode.staging-redesign .staging-weighing .historico-item:hover {
     color: var(--staging-muted);
 }
 
+.staging-redesign.staging-page-home .staging-test-form-toggle {
+    width: 100%;
+    min-height: 48px;
+    margin-bottom: 12px;
+    padding: 10px 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    border: 0;
+    border-radius: 12px;
+    background: var(--primary-color);
+    color: #fff;
+    font: inherit;
+    font-size: 0.84rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.staging-redesign.staging-page-home .staging-test-form-toggle.is-open {
+    background: rgba(123, 31, 162, 0.1);
+    color: var(--secondary-color);
+}
+
+.staging-redesign.staging-page-home .staging-test-form[hidden] {
+    display: none !important;
+}
+
+.staging-redesign.staging-page-home .staging-test-form-cancel {
+    border: 1px solid var(--staging-line);
+    background: transparent;
+    color: var(--staging-muted);
+}
+
 @media (max-width: 720px) {
     body.staging-redesign {
         overflow-x: hidden;
@@ -2709,6 +2743,8 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
 
     .staging-redesign.staging-page-home .staging-home-training-card .coach-rp-test-buttons {
         grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .staging-redesign.staging-page-home .staging-home-training-card .coach-rp-test-buttons .btn {

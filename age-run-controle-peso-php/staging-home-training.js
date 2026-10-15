@@ -110,10 +110,23 @@
     });
 
     const testForm = document.getElementById('homeAthleteTestForm');
+    const testFormToggle = document.getElementById('homeTestFormToggle');
+    const testFormCancel = document.getElementById('homeTestFormCancel');
     const testTime = document.getElementById('homeAthleteTestTime');
     const testDistance = document.getElementById('homeAthleteTestDistance');
     const testDate = document.getElementById('homeAthleteTestDate');
     const testPace = document.getElementById('homeAthleteTestPace');
+
+    const setTestFormOpen = (open) => {
+        if (!testForm || !testFormToggle) return;
+        testForm.hidden = !open;
+        testForm.classList.toggle('is-open', open);
+        testFormToggle.setAttribute('aria-expanded', String(open));
+        testFormToggle.classList.toggle('is-open', open);
+        testFormToggle.querySelector('.material-icons').textContent = open ? 'close' : 'add';
+        testFormToggle.querySelector('span:last-child').textContent = open ? 'Fechar cadastro' : 'Cadastrar teste';
+        if (open) testTime?.focus();
+    };
 
     const updateTestPace = () => {
         const seconds = parseTime(testTime?.value);
@@ -122,6 +135,8 @@
     };
 
     if (testDate && !testDate.value) testDate.value = new Date().toLocaleDateString('en-CA');
+    testFormToggle?.addEventListener('click', () => setTestFormOpen(testForm?.hidden !== false));
+    testFormCancel?.addEventListener('click', () => setTestFormOpen(false));
     testTime?.addEventListener('input', updateTestPace);
     testDistance?.addEventListener('input', updateTestPace);
     testForm?.addEventListener('submit', async (event) => {
@@ -146,6 +161,7 @@
             testDistance.value = '';
             updateTestPace();
             await loadRecords();
+            setTestFormOpen(false);
         } catch (error) {
             showMessage(document.getElementById('homeAthleteTestMessage'), error.message, 'error');
         }
