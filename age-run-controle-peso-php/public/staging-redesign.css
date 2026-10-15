@@ -2458,6 +2458,101 @@ body.coach-photo-viewer-open {
     overflow: hidden;
 }
 
+.passkey-confirm-modal[hidden] {
+    display: none;
+}
+
+.passkey-confirm-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 13000;
+    display: grid;
+    place-items: center;
+    padding: 20px;
+}
+
+.passkey-confirm-backdrop {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    border: 0;
+    background: rgba(8, 7, 10, 0.78);
+    backdrop-filter: blur(6px);
+}
+
+.passkey-confirm-dialog {
+    position: relative;
+    z-index: 1;
+    width: min(100%, 420px);
+    display: grid;
+    grid-template-columns: 46px minmax(0, 1fr);
+    gap: 12px;
+    padding: 20px;
+    border: 1px solid rgba(142, 32, 181, 0.46);
+    border-radius: 20px;
+    background: #211d23;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.45);
+    color: #f5f2f6;
+}
+
+.passkey-confirm-icon {
+    width: 46px;
+    height: 46px;
+    display: grid;
+    place-items: center;
+    border-radius: 14px;
+    background: rgba(239, 68, 68, 0.13);
+    color: #ff9d9d;
+}
+
+.passkey-confirm-copy h2,
+.passkey-confirm-copy p {
+    margin: 0;
+}
+
+.passkey-confirm-copy h2 {
+    font-size: 1.05rem;
+}
+
+.passkey-confirm-copy p {
+    margin-top: 5px;
+    color: #cfc7d0;
+    font-size: 0.82rem;
+    line-height: 1.5;
+}
+
+.passkey-confirm-actions {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 4px;
+}
+
+.passkey-confirm-actions .btn {
+    min-height: 44px;
+}
+
+.passkey-confirm-cancel {
+    border: 1px solid rgba(194, 123, 213, 0.4);
+    background: transparent;
+    color: #d99de6;
+}
+
+.passkey-confirm-remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border: 1px solid rgba(239, 68, 68, 0.52);
+    background: rgba(239, 68, 68, 0.16);
+    color: #ffadad;
+}
+
+body.passkey-confirm-open {
+    overflow: hidden;
+}
+
 .staging-redesign .passkey-divider {
     display: flex;
     align-items: center;
