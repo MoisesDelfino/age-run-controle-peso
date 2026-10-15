@@ -656,6 +656,23 @@ body.dark-mode.staging-redesign .staging-weighing .historico-item:hover {
     display: none;
 }
 
+.staging-redesign .staging-nav-header,
+.staging-redesign .staging-nav-chevron {
+    display: none;
+}
+
+@media (min-width: 769px) {
+    .staging-redesign .nav-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .staging-redesign .staging-nav-icon {
+        font-size: 18px;
+    }
+}
+
 .staging-redesign.staging-page-grupos-treino .staging-relocated-training {
     display: none !important;
 }
@@ -1500,7 +1517,7 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
     .staging-redesign .staging-nav-header {
         min-height: 96px;
         padding: max(16px, env(safe-area-inset-top)) 18px 16px;
-        display: flex;
+        display: none;
         align-items: center;
         justify-content: space-between;
         gap: 12px;
@@ -2701,11 +2718,8 @@ body.dark-mode.staging-redesign.staging-auth-page .auth-inline-action {
 
     .staging-redesign.staging-page-home .staging-test-history-title {
         margin: 0 0 8px;
-        position: sticky;
-        top: 0;
-        z-index: 1;
-        padding: 2px 0 6px;
-        background: var(--staging-card);
+        position: static;
+        padding: 2px 0 4px;
     }
 
     .staging-redesign.staging-page-grupos-treino main.home-content {
