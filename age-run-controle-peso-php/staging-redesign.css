@@ -984,6 +984,47 @@ body.dark-mode.staging-redesign.staging-page-home .staging-mobile-tab.is-active 
 
     .staging-redesign .staging-height-card.is-open {
         display: flex !important;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+
+    .staging-redesign .staging-height-card > h3 {
+        width: 100%;
+        margin: 0 !important;
+        display: flex;
+        align-items: center;
+        gap: 9px;
+    }
+
+    .staging-redesign .staging-height-card > .form-row {
+        width: 100%;
+        margin: 0;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: end;
+        gap: 12px;
+    }
+
+    .staging-redesign .staging-height-card > .form-row .form-group {
+        min-width: 0;
+        margin: 0;
+    }
+
+    .staging-redesign .staging-height-card #altura {
+        width: 100%;
+    }
+
+    .staging-redesign .staging-height-card #btnSalvarAltura {
+        width: auto;
+        min-width: 104px;
+        min-height: 48px;
+        margin: 0;
+    }
+
+    .staging-redesign .staging-height-card #messageAltura {
+        width: 100%;
+        margin: 0 !important;
     }
 
     body.dark-mode.staging-redesign .staging-mobile-tabs {
