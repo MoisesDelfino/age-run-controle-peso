@@ -338,14 +338,68 @@ function renderGroupList(container, itens) {
     }
 
     container.innerHTML = itens.map((item) => {
+        const initial = String(item.nome || 'A').trim().charAt(0).toUpperCase();
+        const hasPhoto = typeof item.foto_perfil === 'string' && item.foto_perfil.startsWith('data:image/');
+        const avatar = hasPhoto
+            ? `<button type="button" class="group-athlete-avatar group-photo-trigger" data-group-user-id="${item.usuario_id}" aria-label="Visualizar foto de ${item.nome || 'atleta'}"><img src="${item.foto_perfil}" alt=""></button>`
+            : `<span class="group-athlete-avatar" aria-hidden="true">${initial}</span>`;
         return `
             <div class="group-item">
-                <strong>${item.nome}</strong>
-                <div class="group-meta">Ritmo médio: ${item.ritmo_medio_formatado || '-'}</div>
+                ${avatar}
+                <div class="group-athlete-info"><strong>${item.nome}</strong>
+                <div class="group-meta">Ritmo médio: ${item.ritmo_medio_formatado || '-'}</div></div>
             </div>
         `;
     }).join('');
 }
+
+let groupAthletesCache = [];
+
+function openGroupPhoto(item) {
+    if (!item?.foto_perfil) return;
+    let viewer = document.getElementById('groupPhotoViewer');
+    if (!viewer) {
+        viewer = document.createElement('div');
+        viewer.id = 'groupPhotoViewer';
+        viewer.className = 'coach-photo-viewer';
+        viewer.setAttribute('role', 'dialog');
+        viewer.setAttribute('aria-modal', 'true');
+        viewer.innerHTML = `
+            <button type="button" class="coach-photo-viewer-backdrop" aria-label="Fechar foto"></button>
+            <div class="coach-photo-viewer-content">
+                <button type="button" class="coach-photo-viewer-close" aria-label="Fechar foto"><span class="material-icons" aria-hidden="true">close</span></button>
+                <img alt="">
+                <strong></strong>
+            </div>`;
+        document.body.appendChild(viewer);
+        viewer.addEventListener('click', (event) => {
+            if (event.target.closest('.coach-photo-viewer-backdrop, .coach-photo-viewer-close')) closeGroupPhoto();
+        });
+    }
+    const image = viewer.querySelector('img');
+    image.src = item.foto_perfil;
+    image.alt = `Foto ampliada de ${item.nome || 'atleta'}`;
+    viewer.querySelector('strong').textContent = item.nome || 'Atleta';
+    viewer.classList.add('is-open');
+    document.body.classList.add('coach-photo-viewer-open');
+    viewer.querySelector('.coach-photo-viewer-close')?.focus();
+}
+
+function closeGroupPhoto() {
+    document.getElementById('groupPhotoViewer')?.classList.remove('is-open');
+    document.body.classList.remove('coach-photo-viewer-open');
+}
+
+document.addEventListener('click', (event) => {
+    const trigger = event.target.closest('.group-photo-trigger');
+    if (!trigger) return;
+    const item = groupAthletesCache.find((athlete) => Number(athlete.usuario_id ?? athlete.id) === Number(trigger.dataset.groupUserId));
+    if (item) openGroupPhoto(item);
+});
+
+document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') closeGroupPhoto();
+});
 
 async function carregarGruposTreino() {
     try {
@@ -368,6 +422,11 @@ async function carregarGruposTreino() {
             }
         }
 
+        groupAthletesCache = [
+            ...(data.grupos?.mesmo_nivel || []),
+            ...(data.grupos?.nivel_mais_alto || []),
+            ...(data.grupos?.nivel_mais_baixo || [])
+        ];
         renderGroupList(groupSameLevel, data.grupos?.mesmo_nivel || []);
         renderGroupList(groupHigherLevel, data.grupos?.nivel_mais_alto || []);
         renderGroupList(groupLowerLevel, data.grupos?.nivel_mais_baixo || []);
