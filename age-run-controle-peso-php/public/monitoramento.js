@@ -847,12 +847,19 @@ function renderAutocomplete() {
         return;
     }
 
+    const typePresentation = {
+        table: ['table_view', 'tabela'], view: ['visibility', 'view'], column: ['view_column', 'coluna'],
+        schema: ['account_tree', 'schema'], function: ['functions', 'função'], sequence: ['format_list_numbered', 'sequência'],
+        keyword: ['code', 'comando']
+    };
     dbAutocompleteEl.innerHTML = autocompleteState.items.map((item, index) => {
         const activeClass = index === autocompleteState.selectedIndex ? ' active' : '';
+        const [icon, typeLabel] = typePresentation[item.type] || ['data_object', item.type];
         return `
-            <div class="db-autocomplete-item${activeClass}" data-index="${index}">
-                <span>${escapeHtml(item.label)}</span>
-                <span class="db-autocomplete-type">${escapeHtml(item.type)}</span>
+            <div class="db-autocomplete-item${activeClass}" data-index="${index}" title="${escapeHtml(item.label)}">
+                <span class="db-autocomplete-icon"><span class="material-icons">${icon}</span></span>
+                <span class="db-autocomplete-label">${escapeHtml(item.label)}</span>
+                <span class="db-autocomplete-type">${escapeHtml(typeLabel)}</span>
             </div>
         `;
     }).join('');
@@ -866,18 +873,19 @@ function renderAutocomplete() {
 
 function getAutocompletePosition() {
     if (!dbSqlEditorEl) {
-        return { left: 12, top: 12, width: 320 };
+        return { left: 12, top: 12, width: 430 };
     }
 
     const caret = getTextareaCaretCoordinates(dbSqlEditorEl, dbSqlEditorEl.selectionStart || 0);
     const editorWidth = Math.max(dbSqlEditorEl.clientWidth, 320);
     const lineHeight = Number.parseFloat(window.getComputedStyle(dbSqlEditorEl).lineHeight) || 22;
-    const left = Math.min(Math.max(caret.left, 12), Math.max(12, editorWidth - 332));
+    const preferredWidth = Math.min(430, Math.max(280, editorWidth - 24));
+    const left = Math.min(Math.max(caret.left, 12), Math.max(12, editorWidth - preferredWidth - 12));
 
     return {
         left,
         top: caret.top + lineHeight + 6,
-        width: Math.min(320, Math.max(220, editorWidth - left - 12))
+        width: Math.min(preferredWidth, Math.max(260, editorWidth - left - 12))
     };
 }
 
