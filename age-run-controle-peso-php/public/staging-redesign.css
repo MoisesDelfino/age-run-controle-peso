@@ -2791,7 +2791,11 @@ body.historia-compose-open::before {
     position: fixed;
     inset: 0;
     z-index: 2100;
-    background: var(--staging-bg, #f5f5f5);
+    background: #f5f5f5;
+}
+
+body.dark-mode.historia-compose-open::before {
+    background: #121212;
 }
 
 .staging-redesign .historia-form-card:not([hidden]) {
