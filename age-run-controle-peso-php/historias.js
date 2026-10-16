@@ -115,7 +115,7 @@
         context.fillText('HISTÓRIAS AGE RUN', 98, 212);
 
         context.fillStyle = 'rgba(255, 255, 255, 0.055)';
-        roundedRect(context, 60, 270, 960, 870, 44);
+        roundedRect(context, 60, 270, 960, 1010, 44);
         context.fill();
         context.strokeStyle = 'rgba(255, 255, 255, 0.12)';
         context.lineWidth = 2;
@@ -162,27 +162,6 @@
         if (wrapCanvasText(context, historia.conteudo, 820).length > 11 && lines.length) lines[10] = `${lines[10].replace(/[.,;:]?$/, '')}…`;
         lines.forEach((line, index) => context.fillText(line, 130, 565 + (index * 57)));
 
-        context.strokeStyle = 'rgba(139, 195, 74, 0.35)';
-        context.lineWidth = 2;
-        context.beginPath();
-        context.moveTo(96, 1185);
-        context.lineTo(984, 1185);
-        context.stroke();
-        context.fillStyle = '#8bc34a';
-        context.font = '700 28px Poppins, sans-serif';
-        context.fillText('Leia a história completa', 72, 1250);
-        context.fillStyle = '#ffffff';
-        context.font = '500 23px Poppins, sans-serif';
-        context.fillText('agerun.com.br', 72, 1290);
-        context.fillStyle = '#8e20b5';
-        context.beginPath();
-        context.arc(968, 1255, 38, 0, Math.PI * 2);
-        context.fill();
-        context.fillStyle = '#ffffff';
-        context.font = '700 30px Poppins, sans-serif';
-        context.textAlign = 'center';
-        context.fillText('↗', 968, 1266);
-        context.textAlign = 'left';
         const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png', 0.95));
         return blob ? new File([blob], 'historia-age-run.png', { type: 'image/png' }) : null;
     };
