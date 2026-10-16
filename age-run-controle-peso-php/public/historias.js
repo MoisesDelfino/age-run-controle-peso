@@ -108,14 +108,14 @@
         }
 
         context.fillStyle = 'rgba(139, 195, 74, 0.14)';
-        roundedRect(context, 72, 176, 330, 54, 27);
+        roundedRect(context, 330, 78, 330, 54, 27);
         context.fill();
         context.fillStyle = '#bce881';
         context.font = '700 23px Poppins, sans-serif';
-        context.fillText('HISTÓRIAS AGE RUN', 98, 212);
+        context.fillText('HISTÓRIAS AGE RUN', 356, 114);
 
         context.fillStyle = 'rgba(255, 255, 255, 0.055)';
-        roundedRect(context, 60, 270, 960, 1010, 44);
+        roundedRect(context, 60, 180, 960, 1100, 44);
         context.fill();
         context.strokeStyle = 'rgba(255, 255, 255, 0.12)';
         context.lineWidth = 2;
@@ -123,44 +123,44 @@
 
         context.save();
         context.beginPath();
-        context.arc(142, 375, 54, 0, Math.PI * 2);
+        context.arc(142, 285, 54, 0, Math.PI * 2);
         context.clip();
         if (avatar) {
             const scale = Math.max(108 / avatar.width, 108 / avatar.height);
             const width = avatar.width * scale;
             const height = avatar.height * scale;
-            context.drawImage(avatar, 142 - width / 2, 375 - height / 2, width, height);
+            context.drawImage(avatar, 142 - width / 2, 285 - height / 2, width, height);
         } else {
             context.fillStyle = '#34203d';
-            context.fillRect(88, 321, 108, 108);
+            context.fillRect(88, 231, 108, 108);
             context.fillStyle = '#c785da';
             context.font = '700 36px Poppins, sans-serif';
             context.textAlign = 'center';
-            context.fillText(initials(historia.autor), 142, 388);
+            context.fillText(initials(historia.autor), 142, 298);
             context.textAlign = 'left';
         }
         context.restore();
         context.strokeStyle = '#8bc34a';
         context.lineWidth = 6;
         context.beginPath();
-        context.arc(142, 375, 57, 0, Math.PI * 2);
+        context.arc(142, 285, 57, 0, Math.PI * 2);
         context.stroke();
 
         context.fillStyle = '#d7f4af';
         context.font = '700 34px Poppins, sans-serif';
-        context.fillText(historia.autor || 'História anônima', 225, 368);
+        context.fillText(historia.autor || 'História anônima', 225, 278);
         context.fillStyle = '#bdb8c0';
         context.font = '400 23px Poppins, sans-serif';
-        context.fillText(formatDate(historia.criado_em), 225, 407);
+        context.fillText(formatDate(historia.criado_em), 225, 317);
 
         context.fillStyle = 'rgba(139, 195, 74, 0.22)';
         context.font = '700 100px Georgia, serif';
-        context.fillText('“', 92, 555);
+        context.fillText('“', 92, 465);
         context.fillStyle = '#ffffff';
         context.font = '500 36px Poppins, sans-serif';
         const lines = wrapCanvasText(context, historia.conteudo, 820).slice(0, 11);
         if (wrapCanvasText(context, historia.conteudo, 820).length > 11 && lines.length) lines[10] = `${lines[10].replace(/[.,;:]?$/, '')}…`;
-        lines.forEach((line, index) => context.fillText(line, 130, 565 + (index * 57)));
+        lines.forEach((line, index) => context.fillText(line, 130, 475 + (index * 57)));
 
         const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png', 0.95));
         return blob ? new File([blob], 'historia-age-run.png', { type: 'image/png' }) : null;
