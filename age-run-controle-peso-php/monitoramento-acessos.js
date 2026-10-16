@@ -76,15 +76,15 @@ function renderAccessRows(events) {
 
         return `
             <tr>
-                <td>${escapeHtml(dateText)}</td>
-                <td>
+                <td data-label="Data/hora">${escapeHtml(dateText)}</td>
+                <td data-label="Usuário">
                     <strong>${escapeHtml(userName)}</strong><br>
                     <span class="access-muted">${escapeHtml(userEmail)}</span>
                 </td>
-                <td><span class="access-badge ${escapeHtml(eventType)}">${escapeHtml(formatEventType(eventType))}</span></td>
-                <td>${escapeHtml(method)}</td>
-                <td>${escapeHtml(path)}</td>
-                <td>${escapeHtml(ip)}</td>
+                <td data-label="Evento"><span class="access-badge ${escapeHtml(eventType)}">${escapeHtml(formatEventType(eventType))}</span></td>
+                <td data-label="Método">${escapeHtml(method)}</td>
+                <td data-label="Rota">${escapeHtml(path)}</td>
+                <td data-label="IP">${escapeHtml(ip)}</td>
             </tr>
         `;
     }).join('');

@@ -631,6 +631,38 @@
         .pg-utility .db-reset-panel { margin-top: 10px; }
         @media (max-width: 1180px) { .pg-shell { grid-template-columns:260px minmax(0,1fr); } .pg-inspector { display:none; } .pg-results { grid-column:2; } }
         @media (max-width: 980px) { .pg-shell { grid-template-columns: 1fr; grid-template-rows: auto 250px minmax(380px,1fr) 330px; } .pg-browser { grid-row: 2; border-right:0; border-bottom:1px solid #343740; } .pg-editor-area { grid-row:3; } .pg-results { grid-row:4; grid-column:1; } }
+        @media (max-width: 600px) {
+            .pg-workspace { padding: 9px 7px 92px !important; }
+            .pg-shell { min-height: 0; grid-template-rows: auto 205px 300px 310px; border-radius: 12px; }
+            .pg-topbar { display:grid; grid-template-columns:1fr; gap:10px; padding:11px; }
+            .pg-connection { padding: 2px 3px; }
+            .pg-connection-copy strong { font-size:.82rem; }
+            .pg-connection-copy span { font-size:.61rem; }
+            .pg-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; }
+            .pg-action { width:100%; min-width:0; justify-content:center; padding:7px 6px !important; font-size:.67rem !important; }
+            .pg-browser-head { padding:10px; }
+            .pg-browser-title { margin-bottom:7px; font-size:.7rem; }
+            .pg-search { height:34px; font-size:.7rem !important; }
+            .pg-tree { height:calc(100% - 75px); font-size:.69rem; padding:6px; }
+            .pg-tree summary { min-height:29px; padding:4px 5px; }
+            .pg-tree-children { margin-left:10px; padding-left:4px; }
+            .pg-object { min-height:28px !important; font-size:.67rem !important; }
+            .pg-tabs, .pg-tab { min-height:36px; }
+            .pg-tab { padding:7px 11px; font-size:.68rem; }
+            .pg-editor-area .db-tool-editor { min-height:0; padding:14px; font-size:.78rem; line-height:1.55; }
+            .pg-editor-toolbar { min-height:32px; padding:6px 9px; }
+            .pg-editor-toolbar .db-shortcuts:first-child { font-size:0; }
+            .pg-editor-toolbar .db-shortcuts:first-child::after { content:'Executar e completar pelo menu acima'; font-size:.6rem; }
+            .pg-editor-area .db-message { padding:8px 10px; font-size:.68rem; }
+            .pg-result-tabs { min-height:36px; padding:0 9px; }
+            .pg-result-tabs strong { font-size:.7rem; }
+            .pg-result-tools .pg-action { width:auto; }
+            .pg-results .query-meta { padding:6px 9px; font-size:.65rem; }
+            .pg-results .db-tool-result { font-size:.68rem; }
+            .pg-results .db-tool-result th, .pg-results .db-tool-result td { padding:7px 8px; white-space:nowrap; }
+            .pg-utility { margin-top:9px; padding:12px; }
+            .db-autocomplete { max-width:calc(100% - 16px); max-height:210px; }
+        }
     </style>
 </head>
 <body>
