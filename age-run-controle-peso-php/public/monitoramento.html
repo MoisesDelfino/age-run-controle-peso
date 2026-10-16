@@ -553,6 +553,65 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        .pg-workspace { width: min(100%, 1680px); max-width: none !important; padding: 18px !important; }
+        .pg-shell { min-height: calc(100vh - 190px); display: grid; grid-template-columns: 290px minmax(0, 1fr) 300px; grid-template-rows: auto minmax(360px, 1fr) minmax(260px, 42vh); overflow: hidden; border: 1px solid #31343a; border-radius: 14px; background: #111318; box-shadow: 0 18px 50px rgba(0,0,0,.24); }
+        .pg-topbar { grid-column: 1 / -1; min-height: 54px; display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 8px 14px; border-bottom: 1px solid #343740; background: #202329; }
+        .pg-connection { min-width: 0; display: flex; align-items: center; gap: 10px; color: #f1f5f9; }
+        .pg-connection .material-icons { color: #8bc34a; }
+        .pg-connection-copy { min-width: 0; display: grid; }
+        .pg-connection-copy strong, .pg-connection-copy span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .pg-connection-copy span { color: #9ca3af; font-size: .72rem; }
+        .pg-actions { display: flex; flex-wrap: wrap; gap: 7px; }
+        .pg-action { min-height: 36px !important; display: inline-flex; align-items: center; gap: 6px; padding: 7px 11px !important; border: 1px solid #414550 !important; border-radius: 8px !important; background: #292d34 !important; color: #e5e7eb !important; font-size: .74rem !important; }
+        .pg-action.primary { border-color: #8bc34a !important; background: #709f38 !important; color: #fff !important; }
+        .pg-action .material-icons { font-size: 17px; }
+        .pg-browser { grid-row: 2 / 4; min-width: 0; overflow: hidden; border-right: 1px solid #343740; background: #181b20; }
+        .pg-browser-head { padding: 12px; border-bottom: 1px solid #30333a; }
+        .pg-browser-title { display: flex; align-items: center; justify-content: space-between; margin-bottom: 9px; color: #e5e7eb; font-size: .8rem; font-weight: 700; }
+        .pg-search { width: 100%; height: 36px; padding: 7px 10px !important; border: 1px solid #3a3e47 !important; border-radius: 8px !important; background: #22252b !important; color: #f8fafc !important; font-size: .76rem !important; }
+        .pg-tree { height: calc(100% - 82px); overflow: auto; padding: 8px; color: #d1d5db; font-size: .76rem; }
+        .pg-tree details { margin: 1px 0; }
+        .pg-tree summary { min-height: 32px; display: flex; align-items: center; gap: 7px; padding: 5px 7px; border-radius: 6px; cursor: pointer; list-style: none; }
+        .pg-tree summary:hover { background: #292d34; }
+        .pg-tree summary::-webkit-details-marker { display:none; }
+        .pg-tree summary::before { content: 'chevron_right'; font-family: 'Material Icons'; color: #8d939d; font-size: 17px; }
+        .pg-tree details[open] > summary::before { content: 'expand_more'; }
+        .pg-tree-children { margin-left: 15px; border-left: 1px solid #343740; padding-left: 6px; }
+        .pg-object { width: 100%; min-height: 30px !important; display: flex !important; align-items: center; gap: 7px; padding: 5px 8px !important; border: 0 !important; border-radius: 6px !important; background: transparent !important; color: #cfd3da !important; text-align: left; font: inherit !important; }
+        .pg-object:hover, .pg-object.is-active { background: #30343c !important; color: #fff !important; }
+        .pg-object .material-icons { color: #65b9df; font-size: 17px; }
+        .pg-editor-area { min-width: 0; display: grid; grid-template-rows: auto minmax(0,1fr) auto auto; background: #15171b; }
+        .pg-inspector { min-width:0; overflow:auto; border-left:1px solid #343740; background:#1a1d22; color:#d7dbe1; }
+        .pg-inspector-head { position:sticky; top:0; z-index:2; padding:12px 14px; border-bottom:1px solid #343740; background:#202329; }
+        .pg-inspector-head strong { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:.8rem; }
+        .pg-inspector-head span { color:#9298a2; font-size:.68rem; }
+        .pg-inspector-body { padding:12px; display:grid; gap:14px; }
+        .pg-inspector-group h4 { margin:0 0 7px; color:#bce881; font-size:.72rem; text-transform:uppercase; letter-spacing:.06em; }
+        .pg-inspector-item { padding:7px 8px; border-bottom:1px solid #30333a; font-size:.7rem; overflow-wrap:anywhere; }
+        .pg-inspector-item strong { display:block; color:#eef2f7; }
+        .pg-inspector-item span { color:#9da3ad; }
+        .pg-tabs { display: flex; align-items: end; min-height: 39px; overflow-x: auto; border-bottom: 1px solid #343740; background: #1d2025; }
+        .pg-tab { min-height: 38px; display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px; border-right: 1px solid #343740; background: #25282e; color: #e5e7eb; font-size: .75rem; }
+        .pg-tab.is-active { border-top: 2px solid #8bc34a; background: #15171b; }
+        .pg-editor-area .db-editor-wrap { min-height: 0; }
+        .pg-editor-area .db-tool-editor { height: 100%; min-height: 300px; resize: none; border: 0; border-radius: 0; padding: 18px 20px; background: #111318; color: #e5e7eb; font-size: .9rem; line-height: 1.6; outline: none; }
+        .pg-editor-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 12px; border-top: 1px solid #30333a; background: #1d2025; }
+        .pg-editor-toolbar .db-shortcuts { color: #9298a2; }
+        .pg-editor-area .db-message { margin: 0; border-radius: 0; }
+        .pg-results { grid-column:2 / 4; min-width: 0; display: grid; grid-template-rows: auto auto minmax(0,1fr); overflow: hidden; border-top: 1px solid #3a3d45; background: #17191e; }
+        .pg-result-tabs { display: flex; align-items: center; justify-content: space-between; min-height: 40px; padding: 0 12px; border-bottom: 1px solid #30333a; background: #202329; }
+        .pg-result-tabs strong { color: #f1f5f9; font-size: .78rem; }
+        .pg-result-tools { display:flex; gap:6px; }
+        .pg-results .query-meta { padding: 7px 12px; color: #9ca3af; font-size: .74rem; }
+        .pg-results .db-tool-result { max-height: none; height: 100%; border: 0; border-radius: 0; }
+        .pg-results .db-tool-result table { background: #17191e; color: #e5e7eb; }
+        .pg-results .db-tool-result thead th { background: #252932; color: #dce1e8; }
+        .pg-utility { margin: 0; }
+        .pg-utility summary { cursor: pointer; color: #d1d5db; font-size: .75rem; }
+        .pg-utility .db-reset-panel { margin-top: 10px; }
+        @media (max-width: 1180px) { .pg-shell { grid-template-columns:260px minmax(0,1fr); } .pg-inspector { display:none; } .pg-results { grid-column:2; } }
+        @media (max-width: 980px) { .pg-shell { grid-template-columns: 1fr; grid-template-rows: auto 250px minmax(380px,1fr) 330px; } .pg-browser { grid-row: 2; border-right:0; border-bottom:1px solid #343740; } .pg-editor-area { grid-row:3; } .pg-results { grid-row:4; grid-column:1; } }
     </style>
 </head>
 <body>
@@ -599,10 +658,47 @@
         </div>
     </nav>
 
-    <main class="container home-content">
-        <section class="card query-layout">
-            <div class="db-tool-grid">
-                <section class="db-tool-panel">
+    <main class="container home-content pg-workspace">
+        <section class="pg-shell">
+            <header class="pg-topbar">
+                <div class="pg-connection"><span class="material-icons">dns</span><div class="pg-connection-copy"><strong id="pgDatabaseName">Banco de dados</strong><span id="pgServerInfo">Carregando conexão...</span></div></div>
+                <div class="pg-actions">
+                    <button id="btnNewQuery" type="button" class="pg-action"><span class="material-icons">note_add</span>Nova query</button>
+                    <button id="btnRefreshSchema" type="button" class="pg-action"><span class="material-icons">refresh</span>Atualizar</button>
+                    <button id="btnExportCsv" type="button" class="pg-action"><span class="material-icons">download</span>Exportar CSV</button>
+                    <button id="btnRunSql" type="button" class="pg-action primary"><span class="material-icons">play_arrow</span>Executar</button>
+                </div>
+            </header>
+
+            <aside class="pg-browser">
+                <div class="pg-browser-head"><div class="pg-browser-title"><span>Browser</span><span id="dbTablesCountLabel">Tabelas: -</span></div><input id="pgObjectSearch" class="pg-search" placeholder="Buscar objeto..." autocomplete="off"></div>
+                <div id="dbSchemaList" class="pg-tree"><div class="db-caption">Carregando objetos...</div></div>
+            </aside>
+
+            <section class="pg-editor-area">
+                <div class="pg-tabs"><div class="pg-tab is-active"><span class="material-icons">terminal</span><span>Query 1</span></div></div>
+                <select id="dbTableSelect" hidden></select>
+                <button id="btnLoadTableSql" type="button" hidden></button>
+                <span id="dbDriverLabel" hidden></span>
+                <div class="db-editor-wrap">
+                    <textarea id="dbSqlEditor" class="db-tool-editor" spellcheck="false">SELECT * FROM usuarios ORDER BY id DESC LIMIT 50;</textarea>
+                    <div id="dbAutocomplete" class="db-autocomplete" role="listbox" aria-label="Sugestões SQL"></div>
+                </div>
+                <div class="pg-editor-toolbar"><span class="db-shortcuts">Ctrl+Enter executa · Ctrl+Espaço completa · Esc fecha sugestões</span><span id="pgQueryTimer" class="db-shortcuts"></span></div>
+                <div id="dbToolMessage" class="db-message"></div>
+            </section>
+
+            <aside class="pg-inspector"><div class="pg-inspector-head"><strong id="pgInspectorTitle">Propriedades</strong><span id="pgInspectorSubtitle">Selecione um objeto</span></div><div id="pgInspectorBody" class="pg-inspector-body"><p class="db-caption">As colunas, índices e restrições aparecerão aqui.</p></div></aside>
+
+            <section class="pg-results">
+                <div class="pg-result-tabs"><strong>Data Output</strong><div class="pg-result-tools"><button id="btnQueryHistory" type="button" class="pg-action"><span class="material-icons">history</span>Histórico</button></div></div>
+                <div class="query-meta"><span id="dbResultMeta">Nenhuma query executada ainda.</span></div>
+                <div id="dbResultWrap" class="db-tool-result"><table class="db-result-table"><thead id="dbResultHead"><tr><th>Resultado</th></tr></thead><tbody id="dbResultBody"><tr><td>Execute uma query para ver os dados aqui.</td></tr></tbody></table></div>
+            </section>
+        </section>
+
+        <details class="pg-utility card">
+            <summary>Utilitários administrativos · Reset de senha</summary>
                     <div class="db-reset-panel">
                         <p class="db-reset-title">Reset de senha para usuário ativo</p>
                         <p class="db-caption">Digite o nome e selecione no dropdown para gerar senha temporária com hash.</p>
@@ -621,43 +717,11 @@
                             <div id="resetOutputNote" class="db-caption"></div>
                         </div>
                     </div>
-
-                    <div class="db-editor-wrap">
-                        <textarea id="dbSqlEditor" class="db-tool-editor" spellcheck="false">SELECT * FROM usuarios ORDER BY id DESC LIMIT 50;</textarea>
-                        <div id="dbAutocomplete" class="db-autocomplete" role="listbox" aria-label="Sugestões SQL"></div>
-                    </div>
-
-                    <div class="db-tool-controls">
-                        <button id="btnRunSql" type="button" class="btn btn-primary">Executar SQL</button>
-                        <span class="db-shortcuts">Atalhos: Ctrl+Enter executa, Enter ou Tab completa, Esc fecha sugestões</span>
-                    </div>
-
-                    <div id="dbToolMessage" class="db-message"></div>
-                </section>
-            </div>
-
-            <div class="db-tool-panel">
-                <div>
-                    <h3>Resultado da Query</h3>
-                    <p class="db-caption">Clique em uma célula para editar. Enter salva, Esc cancela e o cabeçalho permanece visível durante a rolagem.</p>
-                </div>
-                <div class="query-meta">
-                    <span id="dbResultMeta">Nenhuma query executada ainda.</span>
-                </div>
-                <div id="dbResultWrap" class="db-tool-result">
-                    <table class="db-result-table">
-                        <thead id="dbResultHead">
-                            <tr><th>Resultado</th></tr>
-                        </thead>
-                        <tbody id="dbResultBody"><tr><td>Execute uma query para ver os dados aqui.</td></tr></tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
+        </details>
     </main>
 
-    <script src="theme.js?v=2026101602"></script>
+    <script src="theme.js?v=2026101616"></script>
     <script src="menu.js?v=2026101602"></script>
-    <script src="monitoramento.js?v=2026060201"></script>
+    <script src="monitoramento.js?v=2026101603"></script>
 </body>
 </html>

@@ -106,11 +106,11 @@ function db(bool $forceReconnect = false): PDO
 
 function dbOperationFromSql(string $sql): string
 {
-    if (preg_match('/^\s*(insert|update|delete|replace|alter|create|drop|truncate)\b/i', $sql, $matches) === 1) {
+    if (preg_match('/^\s*(insert|update|delete|replace|alter|create|drop|truncate|grant|revoke|comment|analyze|vacuum|reindex|refresh|cluster)\b/i', $sql, $matches) === 1) {
         return strtolower((string) ($matches[1] ?? ''));
     }
 
-    if (preg_match('/^\s*(select|show|pragma|describe|desc|with)\b/i', $sql, $matches) === 1) {
+    if (preg_match('/^\s*(select|show|pragma|describe|desc|with|explain)\b/i', $sql, $matches) === 1) {
         return strtolower((string) ($matches[1] ?? ''));
     }
 
@@ -119,7 +119,7 @@ function dbOperationFromSql(string $sql): string
 
 function isDbWriteOperation(string $operation): bool
 {
-    return in_array($operation, ['insert', 'update', 'delete', 'replace', 'alter', 'create', 'drop', 'truncate'], true);
+    return in_array($operation, ['insert', 'update', 'delete', 'replace', 'alter', 'create', 'drop', 'truncate', 'grant', 'revoke', 'comment', 'analyze', 'vacuum', 'reindex', 'refresh', 'cluster'], true);
 }
 
 function isRetryableDbError(Throwable $e): bool

@@ -2976,12 +2976,83 @@ if ($method === 'GET' && $path === '/api/admin/db-structure') {
         }
     }
 
+    $databaseInfo = ['name' => '', 'user' => '', 'version' => ''];
+    $schemaNames = [];
+    $objects = [];
+    try {
+        if ($driver === 'sqlite') {
+            $databaseInfo = ['name' => 'main', 'user' => 'local', 'version' => (string) (dbFetchOne('SELECT sqlite_version() AS version')['version'] ?? '')];
+            $schemaNames = ['main'];
+            foreach ($normalizedTables as $table) {
+                $objects[] = ['schema' => 'main', 'name' => $table, 'type' => 'table'];
+            }
+            foreach (dbFetchAll("SELECT name FROM sqlite_master WHERE type = 'view' ORDER BY name") as $view) {
+                $objects[] = ['schema' => 'main', 'name' => (string) ($view['name'] ?? ''), 'type' => 'view'];
+            }
+        } elseif ($driver === 'pgsql' || $driver === 'postgres' || $driver === 'postgresql') {
+            $info = dbFetchOne('SELECT current_database() AS name, current_user AS "user", version() AS version') ?? [];
+            $databaseInfo = ['name' => (string) ($info['name'] ?? ''), 'user' => (string) ($info['user'] ?? ''), 'version' => (string) ($info['version'] ?? '')];
+            $schemaNames = array_values(array_filter(array_map(static fn (array $row): string => (string) ($row['schema_name'] ?? ''), dbFetchAll("SELECT schema_name FROM information_schema.schemata WHERE schema_name NOT LIKE 'pg_toast%' AND schema_name NOT LIKE 'pg_temp_%' ORDER BY schema_name"))));
+            foreach (dbFetchAll("SELECT table_schema AS schema_name, table_name AS object_name, CASE WHEN table_type = 'VIEW' THEN 'view' ELSE 'table' END AS object_type FROM information_schema.tables WHERE table_schema NOT LIKE 'pg_toast%' AND table_schema NOT LIKE 'pg_temp_%' UNION ALL SELECT sequence_schema, sequence_name, 'sequence' FROM information_schema.sequences UNION ALL SELECT routine_schema, routine_name, 'function' FROM information_schema.routines WHERE routine_schema NOT LIKE 'pg_%' ORDER BY 1, 3, 2") as $object) {
+                $objects[] = ['schema' => (string) ($object['schema_name'] ?? ''), 'name' => (string) ($object['object_name'] ?? ''), 'type' => (string) ($object['object_type'] ?? 'object')];
+            }
+        } else {
+            $info = dbFetchOne('SELECT DATABASE() AS name, CURRENT_USER() AS user, VERSION() AS version') ?? [];
+            $databaseInfo = ['name' => (string) ($info['name'] ?? ''), 'user' => (string) ($info['user'] ?? ''), 'version' => (string) ($info['version'] ?? '')];
+            $schemaNames = [$databaseInfo['name']];
+            foreach (dbFetchAll('SHOW FULL TABLES') as $object) {
+                $values = array_values($object);
+                $objects[] = ['schema' => $databaseInfo['name'], 'name' => (string) ($values[0] ?? ''), 'type' => strtolower((string) ($values[1] ?? 'table')) === 'view' ? 'view' : 'table'];
+            }
+        }
+    } catch (Throwable $e) {
+        error_log('[AgeRun] Falha ao carregar metadados avançados do banco: ' . $e->getMessage());
+    }
+
     jsonResponse([
         'success' => true,
         'driver' => $driver,
         'tables' => $normalizedTables,
         'schemas' => $schemas,
+        'database' => $databaseInfo,
+        'schema_names' => $schemaNames,
+        'objects' => $objects,
     ]);
+}
+
+if ($method === 'GET' && $path === '/api/admin/db-object') {
+    requireMonitorOwnerAuth();
+    $schema = trim((string) ($_GET['schema'] ?? ''));
+    $name = trim((string) ($_GET['name'] ?? ''));
+    if ($name === '' || preg_match('/^[a-zA-Z_][a-zA-Z0-9_$]*$/', $name) !== 1 || ($schema !== '' && preg_match('/^[a-zA-Z_][a-zA-Z0-9_$]*$/', $schema) !== 1)) {
+        jsonResponse(['error' => 'Objeto de banco inválido.'], 422);
+    }
+    $driver = strtolower((string) (appConfig()['db']['driver'] ?? 'mysql'));
+    $columns = [];
+    $indexes = [];
+    $constraints = [];
+    try {
+        if ($driver === 'sqlite') {
+            $quoted = '"' . str_replace('"', '""', $name) . '"';
+            $columns = dbFetchAll("PRAGMA table_info({$quoted})");
+            $indexes = dbFetchAll("PRAGMA index_list({$quoted})");
+            $constraints = dbFetchAll("PRAGMA foreign_key_list({$quoted})");
+        } elseif ($driver === 'pgsql' || $driver === 'postgres' || $driver === 'postgresql') {
+            $schema = $schema !== '' ? $schema : 'public';
+            $params = [':schema' => $schema, ':name' => $name];
+            $columns = dbFetchAll('SELECT column_name, data_type, udt_name, is_nullable, column_default, character_maximum_length, numeric_precision FROM information_schema.columns WHERE table_schema = :schema AND table_name = :name ORDER BY ordinal_position', $params);
+            $indexes = dbFetchAll('SELECT indexname AS name, indexdef AS definition FROM pg_indexes WHERE schemaname = :schema AND tablename = :name ORDER BY indexname', $params);
+            $constraints = dbFetchAll('SELECT tc.constraint_name AS name, tc.constraint_type AS type, kcu.column_name, ccu.table_schema AS foreign_schema, ccu.table_name AS foreign_table, ccu.column_name AS foreign_column FROM information_schema.table_constraints tc LEFT JOIN information_schema.key_column_usage kcu ON tc.constraint_name = kcu.constraint_name AND tc.constraint_schema = kcu.constraint_schema LEFT JOIN information_schema.constraint_column_usage ccu ON tc.constraint_name = ccu.constraint_name AND tc.constraint_schema = ccu.constraint_schema WHERE tc.table_schema = :schema AND tc.table_name = :name ORDER BY tc.constraint_type, tc.constraint_name', $params);
+        } else {
+            $quoted = '`' . str_replace('`', '``', $name) . '`';
+            $columns = dbFetchAll("SHOW FULL COLUMNS FROM {$quoted}");
+            $indexes = dbFetchAll("SHOW INDEX FROM {$quoted}");
+            $constraints = dbFetchAll('SELECT CONSTRAINT_NAME AS name, CONSTRAINT_TYPE AS type FROM information_schema.TABLE_CONSTRAINTS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :name ORDER BY CONSTRAINT_TYPE, CONSTRAINT_NAME', [':name' => $name]);
+        }
+    } catch (Throwable $e) {
+        jsonResponse(['error' => 'Falha ao inspecionar objeto: ' . $e->getMessage()], 500);
+    }
+    jsonResponse(['success' => true, 'schema' => $schema, 'name' => $name, 'columns' => $columns, 'indexes' => $indexes, 'constraints' => $constraints]);
 }
 
 if ($method === 'POST' && $path === '/api/admin/db-query') {
@@ -3009,7 +3080,7 @@ if ($method === 'POST' && $path === '/api/admin/db-query') {
     }
 
     try {
-        if (in_array($operation, ['select', 'show', 'pragma', 'describe', 'desc', 'with'], true)) {
+        if (in_array($operation, ['select', 'show', 'pragma', 'describe', 'desc', 'with', 'explain'], true)) {
             $rows = dbFetchAll($sql);
             jsonResponse([
                 'success' => true,

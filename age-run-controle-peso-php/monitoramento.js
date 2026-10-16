@@ -6,7 +6,9 @@ const SQL_KEYWORDS = [
     'INSERT INTO', 'VALUES', 'UPDATE', 'SET', 'DELETE', 'JOIN', 'LEFT JOIN',
     'RIGHT JOIN', 'INNER JOIN', 'ON', 'AND', 'OR', 'IN', 'NOT IN', 'IS NULL',
     'IS NOT NULL', 'CREATE TABLE', 'ALTER TABLE', 'DROP TABLE', 'TRUNCATE TABLE',
-    'SHOW TABLES', 'DESCRIBE', 'PRAGMA table_info', 'WITH'
+    'SHOW TABLES', 'DESCRIBE', 'PRAGMA table_info', 'WITH', 'CREATE VIEW',
+    'CREATE INDEX', 'CREATE SCHEMA', 'DROP VIEW', 'DROP INDEX', 'DROP SCHEMA',
+    'EXPLAIN', 'EXPLAIN ANALYZE', 'ANALYZE', 'VACUUM', 'GRANT', 'REVOKE', 'COMMENT ON'
 ];
 
 const btnLogout = document.getElementById('btnLogout');
@@ -32,6 +34,16 @@ const resetTempPasswordEl = document.getElementById('resetTempPassword');
 const resetPasswordHashEl = document.getElementById('resetPasswordHash');
 const resetUpdateSqlEl = document.getElementById('resetUpdateSql');
 const resetOutputNoteEl = document.getElementById('resetOutputNote');
+const pgDatabaseNameEl = document.getElementById('pgDatabaseName');
+const pgServerInfoEl = document.getElementById('pgServerInfo');
+const pgObjectSearchEl = document.getElementById('pgObjectSearch');
+const pgQueryTimerEl = document.getElementById('pgQueryTimer');
+const btnNewQueryEl = document.getElementById('btnNewQuery');
+const btnExportCsvEl = document.getElementById('btnExportCsv');
+const btnQueryHistoryEl = document.getElementById('btnQueryHistory');
+const pgInspectorTitleEl = document.getElementById('pgInspectorTitle');
+const pgInspectorSubtitleEl = document.getElementById('pgInspectorSubtitle');
+const pgInspectorBodyEl = document.getElementById('pgInspectorBody');
 
 let activeUsersState = [];
 let resetUserDropdownState = {
@@ -63,6 +75,8 @@ let resultState = {
     activeCell: null,
     savingCell: false
 };
+let dbMetadataState = { database: {}, schemaNames: [], objects: [] };
+let queryHistoryState = JSON.parse(localStorage.getItem('agerun-query-history') || '[]');
 
 function hideResetOutput() {
     if (!resetOutputEl) return;
@@ -264,10 +278,15 @@ function normalizeColumnType(column) {
     ).trim();
 }
 
-function renderDbSchema(driver, tables, schemas) {
+function renderDbSchema(driver, tables, schemas, metadata = {}) {
     schemaState.driver = driver || '-';
     schemaState.tables = Array.isArray(tables) ? tables : [];
     schemaState.columnsByTable = {};
+    dbMetadataState = {
+        database: metadata.database || {},
+        schemaNames: Array.isArray(metadata.schema_names) ? metadata.schema_names : [],
+        objects: Array.isArray(metadata.objects) ? metadata.objects : []
+    };
 
     schemaState.tables.forEach((table) => {
         const cols = Array.isArray(schemas?.[table]) ? schemas[table] : [];
@@ -283,6 +302,11 @@ function renderDbSchema(driver, tables, schemas) {
     if (dbTablesCountLabel) {
         dbTablesCountLabel.textContent = `Tabelas: ${schemaState.tables.length}`;
     }
+    if (pgDatabaseNameEl) pgDatabaseNameEl.textContent = dbMetadataState.database.name || 'Banco de dados';
+    if (pgServerInfoEl) {
+        const version = String(dbMetadataState.database.version || '').split(',')[0];
+        pgServerInfoEl.textContent = [schemaState.driver, dbMetadataState.database.user, version].filter(Boolean).join(' · ');
+    }
 
     if (dbTableSelectEl) {
         dbTableSelectEl.innerHTML = schemaState.tables.length
@@ -297,22 +321,102 @@ function renderDbSchema(driver, tables, schemas) {
         return;
     }
 
-    dbSchemaListEl.innerHTML = schemaState.tables.map((table) => {
-        const cols = Array.isArray(schemas?.[table]) ? schemas[table] : [];
+    renderPgObjectTree('');
+}
 
-        const colList = cols.length
-            ? `<ul class="db-schema-columns">${cols.map((col) => {
-                const name = normalizeColumnName(col) || 'coluna';
-                const type = normalizeColumnType(col);
-                const nullable = String(col.is_nullable || '').trim();
-                const key = String(col.column_key || col.Key || '').trim();
-                const parts = [type, nullable, key].filter(Boolean).map((part) => escapeHtml(part));
-                return `<li><strong>${escapeHtml(name)}</strong>${parts.length ? ` - ${parts.join(' - ')}` : ''}</li>`;
-            }).join('')}</ul>`
-            : '<p class="db-caption">Sem colunas detectadas.</p>';
+function renderPgObjectTree(filterValue) {
+    if (!dbSchemaListEl) return;
+    const filter = normalizeSearchText(filterValue);
+    const sourceObjects = dbMetadataState.objects.length
+        ? dbMetadataState.objects
+        : schemaState.tables.map((name) => ({ schema: 'public', name, type: 'table' }));
+    const objects = sourceObjects.filter((object) => !filter || normalizeSearchText(`${object.schema} ${object.name} ${object.type}`).includes(filter));
+    const grouped = objects.reduce((acc, object) => {
+        const schema = object.schema || 'public';
+        const type = object.type || 'object';
+        acc[schema] ||= {};
+        acc[schema][type] ||= [];
+        acc[schema][type].push(object);
+        return acc;
+    }, {});
+    const typeLabels = { table: ['Tabelas', 'table_view'], view: ['Views', 'visibility'], sequence: ['Sequências', 'format_list_numbered'], function: ['Funções', 'functions'] };
+    dbSchemaListEl.innerHTML = Object.keys(grouped).sort().map((schema) => `<details class="pg-schema" ${schema === 'public' || schema === 'main' ? 'open' : ''}><summary><span class="material-icons">account_tree</span><strong>${escapeHtml(schema)}</strong></summary><div class="pg-tree-children">${Object.entries(grouped[schema]).map(([type, entries]) => {
+        const [label, icon] = typeLabels[type] || [type, 'category'];
+        return `<details ${type === 'table' ? 'open' : ''}><summary><span class="material-icons">${icon}</span>${escapeHtml(label)} <small>(${entries.length})</small></summary><div class="pg-tree-children">${entries.sort((a,b) => a.name.localeCompare(b.name)).map((object) => `<button type="button" class="pg-object" data-schema="${escapeHtml(schema)}" data-name="${escapeHtml(object.name)}" data-type="${escapeHtml(type)}"><span class="material-icons">${icon}</span><span>${escapeHtml(object.name)}</span></button>`).join('')}</div></details>`;
+    }).join('')}</div></details>`).join('') || '<div class="db-caption">Nenhum objeto encontrado.</div>';
+}
 
-        return `<div class="db-schema-card"><h4>${escapeHtml(table)}</h4>${colList}</div>`;
-    }).join('');
+function qualifiedObjectName(schema, name) {
+    return [schema, name].filter(Boolean).map(quoteSqlIdentifier).join('.');
+}
+
+function renderInspectorGroup(title, items, renderItem) {
+    if (!items.length) return `<section class="pg-inspector-group"><h4>${escapeHtml(title)}</h4><p class="db-caption">Nenhum item.</p></section>`;
+    return `<section class="pg-inspector-group"><h4>${escapeHtml(title)} (${items.length})</h4>${items.map(renderItem).join('')}</section>`;
+}
+
+async function loadObjectDetails(schema, name, type) {
+    if (!pgInspectorBodyEl) return;
+    if (pgInspectorTitleEl) pgInspectorTitleEl.textContent = name;
+    if (pgInspectorSubtitleEl) pgInspectorSubtitleEl.textContent = `${schema || 'public'} · ${type}`;
+    pgInspectorBodyEl.innerHTML = '<p class="db-caption">Carregando propriedades...</p>';
+
+    if (!['table', 'view'].includes(type)) {
+        pgInspectorBodyEl.innerHTML = '<p class="db-caption">Selecione uma tabela ou view para consultar colunas, índices e restrições.</p>';
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE}/admin/db-object?schema=${encodeURIComponent(schema)}&name=${encodeURIComponent(name)}`, { credentials: 'include' });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || 'Falha ao carregar propriedades.');
+        const columns = Array.isArray(data.columns) ? data.columns : [];
+        const indexes = Array.isArray(data.indexes) ? data.indexes : [];
+        const constraints = Array.isArray(data.constraints) ? data.constraints : [];
+        pgInspectorBodyEl.innerHTML = [
+            renderInspectorGroup('Colunas', columns, (column) => {
+                const columnName = column.column_name || column.Field || column.name || 'coluna';
+                const typeName = column.data_type || column.Type || column.type || column.udt_name || '-';
+                const nullable = column.is_nullable || column.Null;
+                const defaultValue = column.column_default ?? column.Default;
+                return `<div class="pg-inspector-item"><strong>${escapeHtml(columnName)}</strong><span>${escapeHtml(typeName)}${nullable ? ` · nulo: ${escapeHtml(nullable)}` : ''}${defaultValue !== null && defaultValue !== undefined ? ` · padrão: ${escapeHtml(defaultValue)}` : ''}</span></div>`;
+            }),
+            renderInspectorGroup('Índices', indexes, (index) => `<div class="pg-inspector-item"><strong>${escapeHtml(index.name || index.indexname || index.Key_name || 'índice')}</strong><span>${escapeHtml(index.definition || index.Column_name || '')}</span></div>`),
+            renderInspectorGroup('Restrições', constraints, (constraint) => `<div class="pg-inspector-item"><strong>${escapeHtml(constraint.name || constraint.constraint_name || 'restrição')}</strong><span>${escapeHtml(constraint.type || constraint.constraint_type || '')}${constraint.column_name ? ` · ${escapeHtml(constraint.column_name)}` : ''}${constraint.foreign_table ? ` → ${escapeHtml(`${constraint.foreign_schema}.${constraint.foreign_table}.${constraint.foreign_column}`)}` : ''}</span></div>`)
+        ].join('');
+    } catch (error) {
+        pgInspectorBodyEl.innerHTML = `<p class="db-caption">${escapeHtml(error.message || 'Não foi possível carregar as propriedades.')}</p>`;
+    }
+}
+
+function exportResultsCsv() {
+    if (!resultState.rows.length) return setDbMessage('Execute uma consulta com dados antes de exportar.', 'error');
+    const columns = resultState.columns;
+    const escapeCsv = (value) => `"${formatDbValue(value).replace(/"/g, '""')}"`;
+    const csv = [columns.map(escapeCsv).join(','), ...resultState.rows.map((row) => columns.map((column) => escapeCsv(row[column])).join(','))].join('\n');
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(new Blob(['\uFEFF', csv], { type: 'text/csv;charset=utf-8' }));
+    link.download = `query-result-${new Date().toISOString().slice(0,19).replace(/[:T]/g, '-')}.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+}
+
+function saveQueryHistory(sql, success, durationMs) {
+    queryHistoryState.unshift({ sql, success, durationMs, at: new Date().toISOString() });
+    queryHistoryState = queryHistoryState.slice(0, 30);
+    localStorage.setItem('agerun-query-history', JSON.stringify(queryHistoryState));
+}
+
+function openQueryHistory() {
+    const modal = document.createElement('div');
+    modal.className = 'historia-delete-modal';
+    modal.innerHTML = `<div class="historia-delete-backdrop"></div><section style="width:min(760px,100%);text-align:left"><h2>Histórico de queries</h2><div style="max-height:55vh;overflow:auto;margin-top:14px">${queryHistoryState.length ? queryHistoryState.map((item, index) => `<button type="button" class="pg-object" data-history-index="${index}" style="margin-bottom:6px"><span class="material-icons">${item.success ? 'check_circle' : 'error'}</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(item.sql)}</span></button>`).join('') : '<p class="db-caption">Nenhuma query no histórico.</p>'}</div><div style="display:flex;justify-content:flex-end;margin-top:14px"><button type="button" class="pg-action" data-history-close>Fechar</button></div></section>`;
+    modal.addEventListener('click', (event) => {
+        const item = event.target.closest('[data-history-index]');
+        if (item) { dbSqlEditorEl.value = queryHistoryState[Number(item.dataset.historyIndex)]?.sql || ''; modal.remove(); }
+        if (event.target.closest('[data-history-close]') || event.target.classList.contains('historia-delete-backdrop')) modal.remove();
+    });
+    document.body.appendChild(modal);
 }
 
 function parsePrimaryTableFromSql(sql) {
@@ -543,7 +647,7 @@ async function carregarEstruturaDb() {
         throw new Error(data?.error || 'Falha ao carregar estrutura do banco');
     }
 
-    renderDbSchema(data?.driver || '-', data?.tables || [], data?.schemas || {});
+    renderDbSchema(data?.driver || '-', data?.tables || [], data?.schemas || {}, data || {});
     updateAutocompleteSuggestions();
     setDbMessage('Schema atualizado.', 'success');
 }
@@ -560,6 +664,7 @@ async function executarSqlDb() {
         return;
     }
 
+    const startedAt = performance.now();
     hideAutocomplete();
     setDbMessage('Executando query...', 'info');
     setDbResultMeta('Processando query...');
@@ -580,6 +685,7 @@ async function executarSqlDb() {
 
     const data = await response.json();
     if (!response.ok || data?.error) {
+        saveQueryHistory(sql, false, Math.round(performance.now() - startedAt));
         throw new Error(data?.error || `Falha ao executar query (HTTP ${response.status})`);
     }
 
@@ -598,6 +704,9 @@ async function executarSqlDb() {
     }
 
     setDbMessage('Query executada com sucesso.', 'success');
+    const durationMs = Math.round(performance.now() - startedAt);
+    if (pgQueryTimerEl) pgQueryTimerEl.textContent = `${durationMs} ms`;
+    saveQueryHistory(sql, true, durationMs);
 }
 
 function getCurrentTokenInfo() {
@@ -1056,6 +1165,30 @@ function bindAutocompleteEvents() {
 }
 
 function initDbTool() {
+    pgObjectSearchEl?.addEventListener('input', () => renderPgObjectTree(pgObjectSearchEl.value));
+    dbSchemaListEl?.addEventListener('click', (event) => {
+        const object = event.target.closest('.pg-object[data-name]');
+        if (!object || !dbSqlEditorEl) return;
+        dbSchemaListEl.querySelectorAll('.pg-object').forEach((node) => node.classList.toggle('is-active', node === object));
+        const schema = object.dataset.schema || '';
+        const name = object.dataset.name || '';
+        const type = object.dataset.type || 'table';
+        const qualified = qualifiedObjectName(schema, name);
+        dbSqlEditorEl.value = type === 'function'
+            ? `SELECT * FROM ${qualified}();`
+            : `SELECT * FROM ${qualified} LIMIT 100;`;
+        updateAutocompleteSuggestions();
+        setDbMessage(`${type} ${schema}.${name} aberto no editor.`, 'success');
+        loadObjectDetails(schema, name, type);
+    });
+    btnNewQueryEl?.addEventListener('click', () => {
+        dbSqlEditorEl.value = '';
+        dbSqlEditorEl.focus();
+        resetActiveCell();
+        setDbMessage('Nova query pronta.', 'info');
+    });
+    btnExportCsvEl?.addEventListener('click', exportResultsCsv);
+    btnQueryHistoryEl?.addEventListener('click', openQueryHistory);
     if (btnRefreshSchema) {
         btnRefreshSchema.addEventListener('click', () => {
             carregarEstruturaDb().catch((error) => {
