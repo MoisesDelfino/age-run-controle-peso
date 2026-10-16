@@ -81,6 +81,13 @@ CREATE TABLE IF NOT EXISTS historia_curtidas (
     INDEX idx_historia_curtidas_usuario (usuario_id)
 );
 
+CREATE TABLE IF NOT EXISTS historia_links (
+    historia_id BIGINT UNSIGNED NOT NULL UNIQUE,
+    token VARCHAR(64) NOT NULL UNIQUE,
+    criado_em DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_historia_links_token (token)
+);
+
 CREATE INDEX idx_pesagens_usuario_id ON pesagens(usuario_id);
 CREATE INDEX idx_pesagens_data ON pesagens(data_pesagem);
 CREATE INDEX idx_pesagens_excluido ON pesagens(excluido);

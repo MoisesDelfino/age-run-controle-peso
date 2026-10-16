@@ -31,11 +31,11 @@
         const date = new Date(String(value || '').replace(' ', 'T'));
         return Number.isNaN(date.getTime()) ? '' : new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' }).format(date);
     };
-    const storyUrl = (id) => {
+    const storyUrl = (token) => {
         const url = new URL(window.location.href);
         url.search = '';
         url.hash = '';
-        url.searchParams.set('historia', String(id));
+        url.searchParams.set('h', String(token));
         return url.toString();
     };
     const wrapCanvasText = (context, text, maxWidth) => {
@@ -184,7 +184,7 @@
         context.fillText('↗', 968, 1266);
         context.textAlign = 'left';
         const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png', 0.95));
-        return blob ? new File([blob], `historia-age-run-${historia.id}.png`, { type: 'image/png' }) : null;
+        return blob ? new File([blob], 'historia-age-run.png', { type: 'image/png' }) : null;
     };
     const initials = (name) => String(name || 'A').split(/\s+/).slice(0, 2).map((part) => part.charAt(0)).join('').toUpperCase();
     const showMessage = (text, type = 'success') => {
@@ -254,9 +254,14 @@
         feed.innerHTML = '<div class="loading">Carregando histórias...</div>';
         try {
             const historias = (await request('/historias')).historias || [];
-            const requestedId = new URLSearchParams(window.location.search).get('historia');
-            if (requestedId && !historias.some((historia) => String(historia.id) === requestedId)) {
-                try { historias.unshift((await request(`/historias/${encodeURIComponent(requestedId)}`)).historia); } catch (error) { /* Mantém o mural disponível. */ }
+            const shareToken = new URLSearchParams(window.location.search).get('h');
+            let requestedId = null;
+            if (shareToken) {
+                try {
+                    const sharedStory = (await request(`/historias/compartilhada/${encodeURIComponent(shareToken)}`)).historia;
+                    requestedId = String(sharedStory.id);
+                    if (!historias.some((historia) => String(historia.id) === requestedId)) historias.unshift(sharedStory);
+                } catch (error) { /* Mantém o mural disponível. */ }
             }
             render(historias);
             if (requestedId) window.setTimeout(() => {
@@ -316,7 +321,8 @@
         if (button.classList.contains('historia-share-button')) {
             if (button.disabled) return;
             button.disabled = true;
-            const directUrl = storyUrl(id);
+            const { token } = await request(`/historias/${encodeURIComponent(id)}/link`, { method: 'POST' });
+            const directUrl = storyUrl(token);
             const shareData = { text: directUrl };
             try {
                 const cardFile = await createStoryCard(historia);

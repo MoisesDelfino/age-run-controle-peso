@@ -4617,6 +4617,20 @@ function ensureHistoriaCurtidasTable(): void
     dbExecute('CREATE TABLE IF NOT EXISTS historia_curtidas (historia_id BIGINT UNSIGNED NOT NULL, usuario_id BIGINT NOT NULL, criado_em DATETIME DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (historia_id, usuario_id), INDEX idx_historia_curtidas_usuario (usuario_id))');
 }
 
+function ensureHistoriaLinksTable(): void
+{
+    $driver = strtolower((string) (appConfig()['db']['driver'] ?? 'mysql'));
+    if ($driver === 'sqlite') {
+        dbExecute('CREATE TABLE IF NOT EXISTS historia_links (historia_id INTEGER NOT NULL UNIQUE, token TEXT NOT NULL UNIQUE, criado_em DATETIME DEFAULT CURRENT_TIMESTAMP)');
+        return;
+    }
+    if (in_array($driver, ['pgsql', 'postgres', 'postgresql'], true)) {
+        dbExecute('CREATE TABLE IF NOT EXISTS historia_links (historia_id BIGINT NOT NULL UNIQUE, token VARCHAR(64) NOT NULL UNIQUE, criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP)');
+        return;
+    }
+    dbExecute('CREATE TABLE IF NOT EXISTS historia_links (historia_id BIGINT UNSIGNED NOT NULL UNIQUE, token VARCHAR(64) NOT NULL UNIQUE, criado_em DATETIME DEFAULT CURRENT_TIMESTAMP, INDEX idx_historia_links_token (token))');
+}
+
 if ($method === 'GET' && $path === '/api/historias') {
     $userId = requireAuth();
     ensureHistoriasTable();
@@ -4647,6 +4661,46 @@ if ($method === 'GET' && preg_match('#^/api/historias/(\d+)$#', $path, $matches)
     ensureHistoriaCurtidasTable();
     $row = dbFetchOne('SELECT h.id, h.usuario_id, h.titulo, h.conteudo, h.identificado, h.criado_em, u.nome, u.foto_perfil, (SELECT COUNT(*) FROM historia_curtidas hc WHERE hc.historia_id = h.id) AS curtidas, (SELECT COUNT(*) FROM historia_curtidas hc WHERE hc.historia_id = h.id AND hc.usuario_id = :usuario_id) AS curtiu FROM historias h LEFT JOIN usuarios u ON u.id = h.usuario_id WHERE h.id = :historia_id LIMIT 1', [':usuario_id' => $userId, ':historia_id' => $historiaId]);
     if (!$row) jsonResponse(['error' => 'História não encontrada.'], 404);
+    $identificado = (int) ($row['identificado'] ?? 0) === 1;
+    jsonResponse(['historia' => [
+        'id' => (int) $row['id'],
+        'titulo' => trim((string) ($row['titulo'] ?? '')),
+        'conteudo' => (string) ($row['conteudo'] ?? ''),
+        'criado_em' => (string) ($row['criado_em'] ?? ''),
+        'autor' => $identificado ? (trim((string) ($row['nome'] ?? '')) ?: 'Atleta Age Run') : 'História anônima',
+        'foto_perfil' => $identificado ? ($row['foto_perfil'] ?? null) : null,
+        'identificado' => $identificado,
+        'curtidas' => (int) ($row['curtidas'] ?? 0),
+        'curtiu' => (int) ($row['curtiu'] ?? 0) > 0,
+        'propria' => (int) ($row['usuario_id'] ?? 0) === $userId,
+    ]]);
+}
+
+if ($method === 'POST' && preg_match('#^/api/historias/(\d+)/link$#', $path, $matches) === 1) {
+    requireAuth();
+    $historiaId = (int) $matches[1];
+    ensureHistoriasTable();
+    ensureHistoriaLinksTable();
+    if (!dbFetchOne('SELECT id FROM historias WHERE id = :id LIMIT 1', [':id' => $historiaId])) {
+        jsonResponse(['error' => 'História não encontrada.'], 404);
+    }
+    $link = dbFetchOne('SELECT token FROM historia_links WHERE historia_id = :historia_id LIMIT 1', [':historia_id' => $historiaId]);
+    if (!$link) {
+        $token = bin2hex(random_bytes(24));
+        dbExecute('INSERT INTO historia_links (historia_id, token) VALUES (:historia_id, :token)', [':historia_id' => $historiaId, ':token' => $token]);
+    } else {
+        $token = (string) $link['token'];
+    }
+    jsonResponse(['token' => $token]);
+}
+
+if ($method === 'GET' && preg_match('#^/api/historias/compartilhada/([a-f0-9]{48})$#', $path, $matches) === 1) {
+    $userId = requireAuth();
+    ensureHistoriasTable();
+    ensureHistoriaCurtidasTable();
+    ensureHistoriaLinksTable();
+    $row = dbFetchOne('SELECT h.id, h.usuario_id, h.titulo, h.conteudo, h.identificado, h.criado_em, u.nome, u.foto_perfil, (SELECT COUNT(*) FROM historia_curtidas hc WHERE hc.historia_id = h.id) AS curtidas, (SELECT COUNT(*) FROM historia_curtidas hc WHERE hc.historia_id = h.id AND hc.usuario_id = :usuario_id) AS curtiu FROM historia_links hl INNER JOIN historias h ON h.id = hl.historia_id LEFT JOIN usuarios u ON u.id = h.usuario_id WHERE hl.token = :token LIMIT 1', [':usuario_id' => $userId, ':token' => $matches[1]]);
+    if (!$row) jsonResponse(['error' => 'História compartilhada não encontrada.'], 404);
     $identificado = (int) ($row['identificado'] ?? 0) === 1;
     jsonResponse(['historia' => [
         'id' => (int) $row['id'],
@@ -4727,10 +4781,12 @@ if ($method === 'DELETE' && preg_match('#^/api/historias/(\d+)$#', $path, $match
     $historiaId = (int) $matches[1];
     ensureHistoriasTable();
     ensureHistoriaCurtidasTable();
+    ensureHistoriaLinksTable();
     if (!dbFetchOne('SELECT id FROM historias WHERE id = :id AND usuario_id = :usuario_id LIMIT 1', [':id' => $historiaId, ':usuario_id' => $userId])) {
         jsonResponse(['error' => 'História não encontrada ou não pertence a você.'], 404);
     }
     dbExecute('DELETE FROM historia_curtidas WHERE historia_id = :historia_id', [':historia_id' => $historiaId]);
+    dbExecute('DELETE FROM historia_links WHERE historia_id = :historia_id', [':historia_id' => $historiaId]);
     dbExecute('DELETE FROM historias WHERE id = :id AND usuario_id = :usuario_id', [':id' => $historiaId, ':usuario_id' => $userId]);
     jsonResponse(['success' => true, 'message' => 'História excluída.']);
 }
