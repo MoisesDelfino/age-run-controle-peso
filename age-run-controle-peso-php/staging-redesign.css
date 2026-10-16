@@ -3018,25 +3018,11 @@ body.passkey-confirm-open {
     color: #ef476f;
 }
 
-.staging-redesign .historia-save-button {
-    margin-left: auto;
-}
-
-.staging-redesign .historia-save-button.is-active {
-    color: var(--primary-color);
-}
-
-.staging-redesign .historia-post-footer {
-    display: block;
+.staging-redesign .historia-like-count {
     padding: 0 17px 15px;
-    color: var(--staging-muted);
-    font-size: 0.7rem;
-    line-height: 1.45;
-}
-
-.staging-redesign .historia-post-footer strong {
-    margin-right: 4px;
     color: var(--staging-ink);
+    font-size: 0.78rem;
+    font-weight: 700;
 }
 
 .staging-redesign .historias-empty {
@@ -3109,7 +3095,7 @@ body.passkey-confirm-open {
         padding: 4px 14px 16px;
     }
 
-    .staging-redesign .historia-post-footer {
+    .staging-redesign .historia-like-count {
         padding: 0 14px 14px;
     }
 

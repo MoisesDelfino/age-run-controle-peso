@@ -68,6 +68,13 @@ CREATE TABLE IF NOT EXISTS historias (
   criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS historia_curtidas (
+  historia_id BIGINT NOT NULL,
+  usuario_id BIGINT NOT NULL,
+  criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (historia_id, usuario_id)
+);
+
 CREATE INDEX IF NOT EXISTS idx_pesagens_usuario_id ON pesagens(usuario_id);
 CREATE INDEX IF NOT EXISTS idx_pesagens_data ON pesagens(data_pesagem);
 CREATE INDEX IF NOT EXISTS idx_pesagens_excluido ON pesagens(excluido);

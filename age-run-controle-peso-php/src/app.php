@@ -4603,10 +4603,25 @@ function ensureHistoriasTable(): void
     dbExecute('CREATE TABLE IF NOT EXISTS historias (id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, usuario_id BIGINT NOT NULL, titulo VARCHAR(120) NULL, conteudo TEXT NOT NULL, identificado TINYINT(1) NOT NULL DEFAULT 1, criado_em DATETIME DEFAULT CURRENT_TIMESTAMP, INDEX idx_historias_criado_em (criado_em), INDEX idx_historias_usuario (usuario_id))');
 }
 
+function ensureHistoriaCurtidasTable(): void
+{
+    $driver = strtolower((string) (appConfig()['db']['driver'] ?? 'mysql'));
+    if ($driver === 'sqlite') {
+        dbExecute('CREATE TABLE IF NOT EXISTS historia_curtidas (historia_id INTEGER NOT NULL, usuario_id INTEGER NOT NULL, criado_em DATETIME DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (historia_id, usuario_id))');
+        return;
+    }
+    if (in_array($driver, ['pgsql', 'postgres', 'postgresql'], true)) {
+        dbExecute('CREATE TABLE IF NOT EXISTS historia_curtidas (historia_id BIGINT NOT NULL, usuario_id BIGINT NOT NULL, criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (historia_id, usuario_id))');
+        return;
+    }
+    dbExecute('CREATE TABLE IF NOT EXISTS historia_curtidas (historia_id BIGINT UNSIGNED NOT NULL, usuario_id BIGINT NOT NULL, criado_em DATETIME DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY (historia_id, usuario_id), INDEX idx_historia_curtidas_usuario (usuario_id))');
+}
+
 if ($method === 'GET' && $path === '/api/historias') {
-    requireAuth();
+    $userId = requireAuth();
     ensureHistoriasTable();
-    $rows = dbFetchAll('SELECT h.id, h.usuario_id, h.titulo, h.conteudo, h.identificado, h.criado_em, u.nome, u.foto_perfil FROM historias h LEFT JOIN usuarios u ON u.id = h.usuario_id ORDER BY h.criado_em DESC, h.id DESC LIMIT 100');
+    ensureHistoriaCurtidasTable();
+    $rows = dbFetchAll('SELECT h.id, h.usuario_id, h.titulo, h.conteudo, h.identificado, h.criado_em, u.nome, u.foto_perfil, (SELECT COUNT(*) FROM historia_curtidas hc WHERE hc.historia_id = h.id) AS curtidas, (SELECT COUNT(*) FROM historia_curtidas hc WHERE hc.historia_id = h.id AND hc.usuario_id = :usuario_id) AS curtiu FROM historias h LEFT JOIN usuarios u ON u.id = h.usuario_id ORDER BY h.criado_em DESC, h.id DESC LIMIT 100', [':usuario_id' => $userId]);
     $historias = array_map(static function (array $row): array {
         $identificado = (int) ($row['identificado'] ?? 0) === 1;
         return [
@@ -4617,9 +4632,31 @@ if ($method === 'GET' && $path === '/api/historias') {
             'autor' => $identificado ? (trim((string) ($row['nome'] ?? '')) ?: 'Atleta Age Run') : 'História anônima',
             'foto_perfil' => $identificado ? ($row['foto_perfil'] ?? null) : null,
             'identificado' => $identificado,
+            'curtidas' => (int) ($row['curtidas'] ?? 0),
+            'curtiu' => (int) ($row['curtiu'] ?? 0) > 0,
         ];
     }, $rows);
     jsonResponse(['historias' => $historias]);
+}
+
+if ($method === 'POST' && preg_match('#^/api/historias/(\d+)/curtir$#', $path, $matches) === 1) {
+    $userId = requireAuth();
+    $historiaId = (int) $matches[1];
+    ensureHistoriasTable();
+    ensureHistoriaCurtidasTable();
+    if (!dbFetchOne('SELECT id FROM historias WHERE id = :id LIMIT 1', [':id' => $historiaId])) {
+        jsonResponse(['error' => 'História não encontrada.'], 404);
+    }
+    $curtida = dbFetchOne('SELECT historia_id FROM historia_curtidas WHERE historia_id = :historia_id AND usuario_id = :usuario_id LIMIT 1', [':historia_id' => $historiaId, ':usuario_id' => $userId]);
+    if ($curtida) {
+        dbExecute('DELETE FROM historia_curtidas WHERE historia_id = :historia_id AND usuario_id = :usuario_id', [':historia_id' => $historiaId, ':usuario_id' => $userId]);
+        $curtiu = false;
+    } else {
+        dbExecute('INSERT INTO historia_curtidas (historia_id, usuario_id) VALUES (:historia_id, :usuario_id)', [':historia_id' => $historiaId, ':usuario_id' => $userId]);
+        $curtiu = true;
+    }
+    $total = (int) (dbFetchOne('SELECT COUNT(*) AS total FROM historia_curtidas WHERE historia_id = :historia_id', [':historia_id' => $historiaId])['total'] ?? 0);
+    jsonResponse(['success' => true, 'curtiu' => $curtiu, 'curtidas' => $total]);
 }
 
 if ($method === 'POST' && $path === '/api/historias') {

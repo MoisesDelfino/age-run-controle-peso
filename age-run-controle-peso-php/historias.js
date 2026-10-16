@@ -36,8 +36,8 @@
         }
         feed.innerHTML = historias.map((historia) => {
             const id = String(historia.id);
-            const liked = localStorage.getItem(`agerun-historia-curtida-${id}`) === '1';
-            const saved = localStorage.getItem(`agerun-historia-salva-${id}`) === '1';
+            const liked = Boolean(historia.curtiu);
+            const likes = Number(historia.curtidas) || 0;
             const photo = historia.foto_perfil
                 ? `<img src="${escapeHtml(historia.foto_perfil)}" alt="">`
                 : `<span>${escapeHtml(historia.identificado ? initials(historia.autor) : '•')}</span>`;
@@ -54,9 +54,8 @@
                 <div class="historia-post-actions" aria-label="Ações da publicação">
                     <button type="button" class="historia-social-action historia-like-button${liked ? ' is-active' : ''}" aria-label="Curtir história" aria-pressed="${liked}"><span class="material-icons">${liked ? 'favorite' : 'favorite_border'}</span></button>
                     <button type="button" class="historia-social-action historia-share-button" aria-label="Compartilhar história"><span class="material-icons">send</span></button>
-                    <button type="button" class="historia-social-action historia-save-button${saved ? ' is-active' : ''}" aria-label="Salvar história" aria-pressed="${saved}"><span class="material-icons">${saved ? 'bookmark' : 'bookmark_border'}</span></button>
                 </div>
-                <footer class="historia-post-footer"><strong>${escapeHtml(historia.autor)}</strong><span>compartilhou uma história com a comunidade Age Run</span></footer>
+                <div class="historia-like-count" aria-live="polite">${likes === 1 ? '1 curtida' : `${likes} curtidas`}</div>
             </article>`;
         }).join('');
     };
@@ -75,18 +74,20 @@
         if (!card || !button) return;
         const id = card.dataset.historiaId;
         if (button.classList.contains('historia-like-button')) {
-            const active = !button.classList.contains('is-active');
-            button.classList.toggle('is-active', active);
-            button.setAttribute('aria-pressed', String(active));
-            button.querySelector('.material-icons').textContent = active ? 'favorite' : 'favorite_border';
-            localStorage.setItem(`agerun-historia-curtida-${id}`, active ? '1' : '0');
-        }
-        if (button.classList.contains('historia-save-button')) {
-            const active = !button.classList.contains('is-active');
-            button.classList.toggle('is-active', active);
-            button.setAttribute('aria-pressed', String(active));
-            button.querySelector('.material-icons').textContent = active ? 'bookmark' : 'bookmark_border';
-            localStorage.setItem(`agerun-historia-salva-${id}`, active ? '1' : '0');
+            if (button.disabled) return;
+            button.disabled = true;
+            try {
+                const data = await request(`/historias/${encodeURIComponent(id)}/curtir`, { method: 'POST' });
+                button.classList.toggle('is-active', data.curtiu);
+                button.setAttribute('aria-pressed', String(data.curtiu));
+                button.querySelector('.material-icons').textContent = data.curtiu ? 'favorite' : 'favorite_border';
+                const counter = card.querySelector('.historia-like-count');
+                if (counter) counter.textContent = data.curtidas === 1 ? '1 curtida' : `${data.curtidas} curtidas`;
+            } catch (error) {
+                showMessage(error.message, 'error');
+            } finally {
+                button.disabled = false;
+            }
         }
         if (button.classList.contains('historia-share-button')) {
             const historia = historiasAtuais.get(id);
