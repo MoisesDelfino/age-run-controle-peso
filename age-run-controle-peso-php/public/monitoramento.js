@@ -238,6 +238,25 @@ function setDbResultMeta(text) {
     }
 }
 
+function encodeUtf8Base64(value) {
+    const bytes = new TextEncoder().encode(String(value || ''));
+    let binary = '';
+    bytes.forEach((byte) => { binary += String.fromCharCode(byte); });
+    return btoa(binary);
+}
+
+async function parseDbApiResponse(response, fallbackMessage) {
+    const contentType = String(response.headers.get('content-type') || '').toLowerCase();
+    if (contentType.includes('application/json')) {
+        return response.json();
+    }
+    const raw = await response.text();
+    console.error('Resposta não JSON da API do banco:', { status: response.status, contentType, preview: raw.slice(0, 180) });
+    if (response.status === 403) throw new Error('A consulta foi bloqueada pelo servidor. Atualize a página e tente novamente.');
+    if (response.status >= 500) throw new Error('O servidor não conseguiu processar a consulta.');
+    throw new Error(fallbackMessage || `Resposta inválida do servidor (HTTP ${response.status}).`);
+}
+
 function formatDbValue(value) {
     if (value === null || value === undefined) return 'NULL';
     if (typeof value === 'object') {
@@ -675,7 +694,7 @@ async function executarSqlDb() {
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ sql })
+        body: JSON.stringify({ sql_base64: encodeUtf8Base64(sql) })
     });
 
     if (response.status === 401) {
@@ -683,7 +702,7 @@ async function executarSqlDb() {
         return;
     }
 
-    const data = await response.json();
+    const data = await parseDbApiResponse(response, 'Falha ao executar a consulta.');
     if (!response.ok || data?.error) {
         saveQueryHistory(sql, false, Math.round(performance.now() - startedAt));
         throw new Error(data?.error || `Falha ao executar query (HTTP ${response.status})`);
@@ -1057,10 +1076,10 @@ async function saveActiveCellEdit() {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ sql })
+            body: JSON.stringify({ sql_base64: encodeUtf8Base64(sql) })
         });
 
-        const data = await response.json();
+        const data = await parseDbApiResponse(response, 'Falha ao salvar a alteração.');
         if (!response.ok || data?.error) {
             throw new Error(data?.error || 'Falha ao salvar edição');
         }

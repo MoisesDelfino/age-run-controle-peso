@@ -3065,6 +3065,13 @@ if ($method === 'POST' && $path === '/api/admin/db-query') {
 
     $input = jsonInput();
     $sql = trim((string) ($input['sql'] ?? ''));
+    if ($sql === '' && isset($input['sql_base64'])) {
+        $decodedSql = base64_decode((string) $input['sql_base64'], true);
+        if ($decodedSql === false) {
+            jsonResponse(['error' => 'Conteúdo SQL codificado inválido'], 422);
+        }
+        $sql = trim($decodedSql);
+    }
 
     if ($sql === '') {
         jsonResponse(['error' => 'SQL é obrigatório'], 400);
