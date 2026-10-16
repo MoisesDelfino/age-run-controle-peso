@@ -21,6 +21,7 @@ function withBasePath(path) {
 function normalizarLinksMenu() {
     const rotasAplicacao = new Set([
         '/home',
+        '/evolucao',
         '/pesagem',
         '/ranking',
         '/grupos-treino',
@@ -195,13 +196,13 @@ function ensurePerfilLink() {
     // Mantida por compatibilidade — o perfil agora fica no dropdown de usuário
 }
 
-function ensureHistoriasLink() {
+function ensureEvolucaoLink() {
     const navList = document.querySelector('.nav-list');
-    if (!navList || navList.querySelector('a[href$="/historias"], a[href="./historias"]')) return;
+    if (!navList || navList.querySelector('a[href$="/evolucao"], a[href="./evolucao"]')) return;
     const item = document.createElement('li');
-    item.innerHTML = `<a href="${withBasePath('/historias')}" class="nav-link">💬 Histórias</a>`;
-    const trainerItem = navList.querySelector('.trainer-only');
-    navList.insertBefore(item, trainerItem || null);
+    item.innerHTML = `<a href="${withBasePath('/evolucao')}" class="nav-link">📈 Evolução</a>`;
+    const homeItem = navList.querySelector('a[href$="/home"], a[href="./home"]')?.closest('li');
+    homeItem?.after(item);
 }
 
 function ocultarRankingParaMulher() {
@@ -296,7 +297,7 @@ async function aplicarPermissoesMenu() {
 
 document.addEventListener('DOMContentLoaded', function() {
     normalizarLinksMenu();
-    ensureHistoriasLink();
+    ensureEvolucaoLink();
 
     const menuToggle = document.querySelector('.menu-toggle');
     const menuOverlay = document.querySelector('.menu-overlay');

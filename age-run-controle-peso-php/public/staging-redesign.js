@@ -19,7 +19,7 @@
     const initPage = () => {
         document.body.classList.add('staging-redesign');
 
-        const pageSlug = window.location.pathname
+        const pageSlug = document.querySelector('.historias-page') ? 'historias' : window.location.pathname
             .replace(/^\/(?:dev|controle)\/?/, '')
             .replace(/\/$/, '')
             .replace(/[^a-z0-9-]/gi, '-') || 'index';
@@ -56,6 +56,7 @@
 
             const iconMap = {
                 '/home': 'home',
+                '/evolucao': 'trending_up',
                 '/pesagem': 'monitor_weight',
                 '/ranking': 'emoji_events',
                 '/grupos-treino': 'groups',
@@ -102,7 +103,7 @@
 
             document.body.append(moreOverlay, moreSheet, bottomNav);
 
-            const coreRoutes = ['/home', '/pesagem', '/ranking', '/grupos-treino'];
+            const coreRoutes = ['/home', '/evolucao', '/pesagem', '/grupos-treino'];
             const closeMore = () => {
                 moreSheet.classList.remove('is-open');
                 moreOverlay.classList.remove('is-open');
@@ -125,7 +126,7 @@
 
                 const isAdmin = Boolean(navList.querySelector('.owner-monitor-link, .owner-access-link'));
                 const isTrainer = document.body.classList.contains('is-trainer') && !isAdmin;
-                const usesMore = isAdmin || isTrainer || byRoute.has('/historias');
+                const usesMore = true;
 
                 bottomNav.innerHTML = coreRoutes.map((route) => {
                     const source = byRoute.get(route);
@@ -148,9 +149,9 @@
 
                 const secondary = links.filter((link) => {
                     const route = new URL(link.href, window.location.origin).pathname.replace(/^\/dev|^\/controle/, '');
-                    if (isTrainer) return route === '/treinador' || route === '/historias' || route === '/bioimpedancia';
+                    if (isTrainer) return route === '/treinador' || route === '/ranking' || route === '/bioimpedancia';
                     if (isAdmin) return !coreRoutes.includes(route);
-                    return route === '/historias' || route === '/bioimpedancia';
+                    return route === '/ranking' || route === '/bioimpedancia';
                 });
                 const target = moreSheet.querySelector('.staging-more-links');
                 target.innerHTML = secondary.map((source) => {

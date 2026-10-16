@@ -13,7 +13,7 @@
 
         if (!document.querySelector('script[data-staging-redesign]')) {
             const stagingScript = document.createElement('script');
-            stagingScript.src = `${redesignBasePath}/staging-redesign.js?v=2026101601`;
+            stagingScript.src = `${redesignBasePath}/staging-redesign.js?v=2026101602`;
             stagingScript.dataset.stagingRedesign = 'true';
             document.head.appendChild(stagingScript);
         }

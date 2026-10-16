@@ -3,6 +3,7 @@ const CACHE_NAME = `age-run-pwa-${CACHE_VERSION}`;
 const STATIC_ASSETS = [
   './',
   './home',
+  './evolucao',
   './login',
   './pesagem',
   './ranking',

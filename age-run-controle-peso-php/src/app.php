@@ -4646,7 +4646,8 @@ $pages = [
     '/cadastro' => 'cadastro.html',
     '/recuperar-senha' => 'recuperar-senha.html',
     '/primeiro-acesso' => 'primeiro-acesso.html',
-    '/home' => 'home.html',
+    '/home' => 'historias.html',
+    '/evolucao' => 'home.html',
     '/pesagem' => 'pesagem.html',
     '/ranking' => 'ranking.html',
     '/bioimpedancia' => 'bioimpedancia.html',
@@ -4666,7 +4667,7 @@ if ($path === '/' || $path === '') {
 }
 
 if (array_key_exists($path, $pages)) {
-    $protectedPages = ['/home', '/pesagem', '/ranking', '/bioimpedancia', '/grupos-treino', '/treinador', '/monitoramento', '/monitoramento-acessos', '/perfil', '/historias'];
+    $protectedPages = ['/home', '/evolucao', '/pesagem', '/ranking', '/bioimpedancia', '/grupos-treino', '/treinador', '/monitoramento', '/monitoramento-acessos', '/perfil', '/historias'];
     if (in_array($path, $protectedPages, true) && empty($_SESSION['userId'])) {
         redirectTo('/login');
     }
@@ -4690,7 +4691,7 @@ if (array_key_exists($path, $pages)) {
         }
     }
 
-    if (in_array($path, ['/home', '/pesagem', '/ranking', '/bioimpedancia', '/grupos-treino', '/historias'], true)) {
+    if (in_array($path, ['/home', '/evolucao', '/pesagem', '/ranking', '/bioimpedancia', '/grupos-treino', '/historias'], true)) {
         trackAlunoPageAccess($path);
     }
 
