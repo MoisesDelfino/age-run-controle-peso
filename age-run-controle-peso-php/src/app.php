@@ -4622,7 +4622,7 @@ if ($method === 'GET' && $path === '/api/historias') {
     ensureHistoriasTable();
     ensureHistoriaCurtidasTable();
     $rows = dbFetchAll('SELECT h.id, h.usuario_id, h.titulo, h.conteudo, h.identificado, h.criado_em, u.nome, u.foto_perfil, (SELECT COUNT(*) FROM historia_curtidas hc WHERE hc.historia_id = h.id) AS curtidas, (SELECT COUNT(*) FROM historia_curtidas hc WHERE hc.historia_id = h.id AND hc.usuario_id = :usuario_id) AS curtiu FROM historias h LEFT JOIN usuarios u ON u.id = h.usuario_id ORDER BY h.criado_em DESC, h.id DESC LIMIT 100', [':usuario_id' => $userId]);
-    $historias = array_map(static function (array $row): array {
+    $historias = array_map(static function (array $row) use ($userId): array {
         $identificado = (int) ($row['identificado'] ?? 0) === 1;
         return [
             'id' => (int) $row['id'],
@@ -4634,6 +4634,7 @@ if ($method === 'GET' && $path === '/api/historias') {
             'identificado' => $identificado,
             'curtidas' => (int) ($row['curtidas'] ?? 0),
             'curtiu' => (int) ($row['curtiu'] ?? 0) > 0,
+            'propria' => (int) ($row['usuario_id'] ?? 0) === $userId,
         ];
     }, $rows);
     jsonResponse(['historias' => $historias]);
@@ -4676,6 +4677,40 @@ if ($method === 'POST' && $path === '/api/historias') {
         ':identificado' => $identificado,
     ]);
     jsonResponse(['success' => true, 'message' => 'Sua história foi publicada.'], 201);
+}
+
+if ($method === 'PUT' && preg_match('#^/api/historias/(\d+)$#', $path, $matches) === 1) {
+    $userId = requireAuth();
+    $historiaId = (int) $matches[1];
+    ensureHistoriasTable();
+    if (!dbFetchOne('SELECT id FROM historias WHERE id = :id AND usuario_id = :usuario_id LIMIT 1', [':id' => $historiaId, ':usuario_id' => $userId])) {
+        jsonResponse(['error' => 'História não encontrada ou não pertence a você.'], 404);
+    }
+    $input = jsonInput();
+    $conteudo = trim((string) ($input['conteudo'] ?? ''));
+    $identificado = !empty($input['identificado']) ? 1 : 0;
+    if (mb_strlen($conteudo) < 10) jsonResponse(['error' => 'Conte sua história com pelo menos 10 caracteres.'], 422);
+    if (mb_strlen($conteudo) > 5000) jsonResponse(['error' => 'A história deve ter no máximo 5.000 caracteres.'], 422);
+    dbExecute('UPDATE historias SET titulo = NULL, conteudo = :conteudo, identificado = :identificado WHERE id = :id AND usuario_id = :usuario_id', [
+        ':conteudo' => $conteudo,
+        ':identificado' => $identificado,
+        ':id' => $historiaId,
+        ':usuario_id' => $userId,
+    ]);
+    jsonResponse(['success' => true, 'message' => 'História atualizada.']);
+}
+
+if ($method === 'DELETE' && preg_match('#^/api/historias/(\d+)$#', $path, $matches) === 1) {
+    $userId = requireAuth();
+    $historiaId = (int) $matches[1];
+    ensureHistoriasTable();
+    ensureHistoriaCurtidasTable();
+    if (!dbFetchOne('SELECT id FROM historias WHERE id = :id AND usuario_id = :usuario_id LIMIT 1', [':id' => $historiaId, ':usuario_id' => $userId])) {
+        jsonResponse(['error' => 'História não encontrada ou não pertence a você.'], 404);
+    }
+    dbExecute('DELETE FROM historia_curtidas WHERE historia_id = :historia_id', [':historia_id' => $historiaId]);
+    dbExecute('DELETE FROM historias WHERE id = :id AND usuario_id = :usuario_id', [':id' => $historiaId, ':usuario_id' => $userId]);
+    jsonResponse(['success' => true, 'message' => 'História excluída.']);
 }
 
 $pages = [

@@ -43,12 +43,12 @@
         </section>
 
         <section id="historiaFormCard" class="card historia-form-card" hidden>
-            <div class="historias-section-heading"><div><h2>Nova história</h2><p>Você pode publicar quantas histórias quiser.</p></div><button type="button" id="fecharHistoriaForm" class="historias-icon-button" aria-label="Fechar"><span class="material-icons">close</span></button></div>
+            <div class="historias-section-heading"><div><h2 id="historiaFormTitulo">Nova história</h2><p id="historiaFormDescricao">Você pode publicar quantas histórias quiser.</p></div><button type="button" id="fecharHistoriaForm" class="historias-icon-button" aria-label="Fechar"><span class="material-icons">close</span></button></div>
             <form id="historiaForm" class="historia-form">
                 <label>Sua história<textarea id="historiaConteudo" minlength="10" maxlength="5000" rows="7" required placeholder="Conte como a corrida transformou sua vida..."></textarea></label>
                 <label class="historia-identidade"><input id="historiaIdentificada" type="checkbox" checked><span><strong>Mostrar meu nome e foto</strong><small>Desmarque para publicar como história anônima.</small></span></label>
                 <div id="historiaMensagem" class="message" role="status"></div>
-                <button type="submit" class="btn btn-primary historia-publicar"><span class="material-icons">send</span> Publicar história</button>
+                <button type="submit" class="btn btn-primary historia-publicar"><span class="material-icons">send</span><span id="historiaSubmitTexto">Publicar história</span></button>
             </form>
         </section>
 
@@ -58,8 +58,8 @@
         </section>
     </main>
 
-    <script src="theme.js?v=2026101610"></script>
+    <script src="theme.js?v=2026101611"></script>
     <script src="menu.js?v=2026101602"></script>
-    <script src="historias.js?v=2026101606"></script>
+    <script src="historias.js?v=2026101607"></script>
 </body>
 </html>

@@ -6,8 +6,15 @@
     const form = document.getElementById('historiaForm');
     const message = document.getElementById('historiaMensagem');
     let historiasAtuais = new Map();
+    let historiaEmEdicao = null;
 
-    const openComposer = () => {
+    const openComposer = (historia = null) => {
+        historiaEmEdicao = historia?.id ? String(historia.id) : null;
+        document.getElementById('historiaFormTitulo').textContent = historiaEmEdicao ? 'Editar história' : 'Nova história';
+        document.getElementById('historiaFormDescricao').textContent = historiaEmEdicao ? 'Atualize o texto ou a forma de identificação.' : 'Você pode publicar quantas histórias quiser.';
+        document.getElementById('historiaSubmitTexto').textContent = historiaEmEdicao ? 'Salvar alterações' : 'Publicar história';
+        document.getElementById('historiaConteudo').value = historia?.conteudo || '';
+        document.getElementById('historiaIdentificada').checked = historia ? Boolean(historia.identificado) : true;
         formCard.hidden = false;
         document.body.classList.add('historia-compose-open');
         window.setTimeout(() => document.getElementById('historiaConteudo')?.focus({ preventScroll: true }), 50);
@@ -15,6 +22,7 @@
     const closeComposer = () => {
         formCard.hidden = true;
         document.body.classList.remove('historia-compose-open');
+        historiaEmEdicao = null;
         showMessage('');
     };
 
@@ -39,6 +47,23 @@
         if (!response.ok) throw new Error(data.error || 'Não foi possível concluir a solicitação.');
         return data;
     };
+    const confirmDelete = () => new Promise((resolve) => {
+        const modal = document.createElement('div');
+        modal.className = 'historia-delete-modal';
+        modal.innerHTML = `<div class="historia-delete-backdrop"></div><section role="alertdialog" aria-modal="true" aria-labelledby="historiaDeleteTitle"><span class="material-icons historia-delete-icon">delete_outline</span><h2 id="historiaDeleteTitle">Excluir história?</h2><p>Esta publicação e suas curtidas serão removidas permanentemente.</p><div><button type="button" class="btn btn-secondary" data-delete-answer="cancel">Cancelar</button><button type="button" class="btn btn-danger" data-delete-answer="confirm">Excluir</button></div></section>`;
+        const finish = (answer) => {
+            modal.remove();
+            document.body.classList.remove('historia-delete-open');
+            resolve(answer);
+        };
+        modal.addEventListener('click', (event) => {
+            if (event.target.closest('[data-delete-answer="confirm"]')) finish(true);
+            if (event.target.closest('[data-delete-answer="cancel"]') || event.target.classList.contains('historia-delete-backdrop')) finish(false);
+        });
+        document.body.appendChild(modal);
+        document.body.classList.add('historia-delete-open');
+        modal.querySelector('[data-delete-answer="cancel"]').focus();
+    });
     const render = (historias) => {
         historiasAtuais = new Map(historias.map((historia) => [String(historia.id), historia]));
         if (!historias.length) {
@@ -57,6 +82,7 @@
                     <div class="historia-avatar${historia.identificado ? '' : ' is-anonymous'}">${photo}</div>
                     <div class="historia-post-author"><strong>${escapeHtml(historia.autor)}</strong><span><time>${escapeHtml(formatDate(historia.criado_em))}</time><span aria-hidden="true">·</span><span class="material-icons" aria-label="Publicação visível para a comunidade">public</span></span></div>
                     ${historia.identificado ? '' : '<span class="historia-anonymous-badge">Anônima</span>'}
+                    ${historia.propria ? `<details class="historia-owner-menu"><summary aria-label="Opções da história"><span class="material-icons">more_horiz</span></summary><div><button type="button" class="historia-edit-button"><span class="material-icons">edit</span>Editar</button><button type="button" class="historia-delete-button"><span class="material-icons">delete_outline</span>Excluir</button></div></details>` : ''}
                 </header>
                 <div class="historia-post-body">
                     <p>${escapeHtml(historia.conteudo).replace(/\n/g, '<br>')}</p>
@@ -75,7 +101,7 @@
         catch (error) { feed.innerHTML = `<div class="error-message">${escapeHtml(error.message)}</div>`; }
     };
 
-    document.getElementById('abrirHistoriaForm')?.addEventListener('click', openComposer);
+    document.getElementById('abrirHistoriaForm')?.addEventListener('click', () => openComposer());
     document.getElementById('fecharHistoriaForm')?.addEventListener('click', closeComposer);
     document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape' && !formCard.hidden) closeComposer();
@@ -83,9 +109,27 @@
     document.getElementById('atualizarHistorias')?.addEventListener('click', load);
     feed?.addEventListener('click', async (event) => {
         const card = event.target.closest('[data-historia-id]');
-        const button = event.target.closest('.historia-social-action');
+        const button = event.target.closest('button');
         if (!card || !button) return;
         const id = card.dataset.historiaId;
+        const historia = historiasAtuais.get(id);
+        if (button.classList.contains('historia-edit-button')) {
+            openComposer(historia);
+            return;
+        }
+        if (button.classList.contains('historia-delete-button')) {
+            const confirmed = await confirmDelete();
+            if (!confirmed) return;
+            button.disabled = true;
+            try {
+                await request(`/historias/${encodeURIComponent(id)}`, { method: 'DELETE' });
+                await load();
+            } catch (error) {
+                button.disabled = false;
+                feed.insertAdjacentHTML('afterbegin', `<div class="error-message">${escapeHtml(error.message)}</div>`);
+            }
+            return;
+        }
         if (button.classList.contains('historia-like-button')) {
             if (button.disabled) return;
             button.disabled = true;
@@ -103,7 +147,6 @@
             }
         }
         if (button.classList.contains('historia-share-button')) {
-            const historia = historiasAtuais.get(id);
             const shareData = { title: 'História Age Run', text: historia?.conteudo || '', url: window.location.href };
             try {
                 if (navigator.share) await navigator.share(shareData);
@@ -124,7 +167,8 @@
         submit.disabled = true;
         showMessage('');
         try {
-            const data = await request('/historias', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+            const endpoint = historiaEmEdicao ? `/historias/${encodeURIComponent(historiaEmEdicao)}` : '/historias';
+            const data = await request(endpoint, { method: historiaEmEdicao ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
                 conteudo: document.getElementById('historiaConteudo').value,
                 identificado: document.getElementById('historiaIdentificada').checked,
             }) });
