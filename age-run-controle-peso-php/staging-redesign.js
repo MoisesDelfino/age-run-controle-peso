@@ -481,7 +481,7 @@
                 ], section);
 
                 const trainingScript = document.createElement('script');
-                trainingScript.src = `${appBase}/staging-home-training.js?v=2026101505`;
+                trainingScript.src = `${appBase}/staging-home-training.js?v=2026101606`;
                 trainingScript.dataset.stagingHomeTraining = 'true';
                 document.body.appendChild(trainingScript);
             }

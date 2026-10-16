@@ -2791,11 +2791,13 @@ body.historia-compose-open::before {
     position: fixed;
     inset: 0;
     z-index: 2100;
-    background: #f5f5f5;
+    background: rgba(15, 18, 22, 0.62);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
 }
 
 body.dark-mode.historia-compose-open::before {
-    background: #121212;
+    background: rgba(5, 7, 9, 0.7);
 }
 
 .staging-redesign .historia-form-card:not([hidden]) {

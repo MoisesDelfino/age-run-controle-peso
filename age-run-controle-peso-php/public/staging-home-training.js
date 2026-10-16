@@ -1,6 +1,6 @@
 (function initStagingHomeTraining() {
-    const isStaging = window.location.pathname === '/dev/home' || window.location.pathname === '/dev/home/';
-    const isProduction = window.location.pathname === '/controle/home' || window.location.pathname === '/controle/home/';
+    const isStaging = ['/dev/home', '/dev/home/', '/dev/evolucao', '/dev/evolucao/'].includes(window.location.pathname);
+    const isProduction = ['/controle/home', '/controle/home/', '/controle/evolucao', '/controle/evolucao/'].includes(window.location.pathname);
     if (!isStaging && !isProduction) return;
 
     const apiBase = isStaging ? '/dev/api' : '/controle/api';
