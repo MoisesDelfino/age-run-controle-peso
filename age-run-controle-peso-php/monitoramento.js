@@ -760,26 +760,38 @@ function collectSuggestions(prefix, context, forceAll) {
     const contextUpper = String(context || '').toUpperCase();
     const out = [];
 
-    if (!normalizedPrefix && !forceAll) {
+    const tableContext = /(?:FROM|JOIN|UPDATE|INTO|TABLE|DESCRIBE|TRUNCATE|REFERENCES)\s*$/i.test(contextUpper);
+    const columnContext = /(?:SELECT|WHERE|ON|SET|GROUP\s+BY|ORDER\s+BY|HAVING|RETURNING|AND|OR|,)\s*$/i.test(contextUpper);
+    if (!normalizedPrefix && !forceAll && !tableContext && !columnContext) {
         return [];
     }
-
-    const tableContext = /(FROM|JOIN|UPDATE|INTO|TABLE|DESCRIBE|TRUNCATE)\s*$/i.test(contextUpper);
+    const databaseObjects = dbMetadataState.objects.filter((object) => ['table', 'view', 'sequence', 'function'].includes(object.type));
+    const relationObjects = databaseObjects.filter((object) => ['table', 'view'].includes(object.type));
 
     if (normalizedPrefix.includes('.')) {
-        const [tablePart, columnPart] = normalizedPrefix.split('.', 2);
-        const table = schemaState.tables.find((t) => t.toLowerCase() === tablePart);
+        const dotIndex = normalizedPrefix.lastIndexOf('.');
+        const ownerPart = normalizedPrefix.slice(0, dotIndex);
+        const memberPart = normalizedPrefix.slice(dotIndex + 1);
+        const schemaMatch = dbMetadataState.schemaNames.find((schema) => schema.toLowerCase() === ownerPart);
+        if (schemaMatch) {
+            databaseObjects.filter((object) => object.schema === schemaMatch && (!memberPart || object.name.toLowerCase().startsWith(memberPart))).forEach((object) => {
+                out.push({ label: `${object.schema}.${object.name}`, value: `${object.schema}.${object.name}`, type: object.type });
+            });
+            return dedupeSuggestions(out).slice(0, 14);
+        }
+        const tablePart = ownerPart.split('.').pop();
+        const table = schemaState.tables.find((candidate) => candidate.toLowerCase() === tablePart);
         if (table) {
             (schemaState.columnsByTable[table] || []).forEach((column) => {
-                if (!columnPart || column.toLowerCase().startsWith(columnPart)) {
+                if (!memberPart || column.toLowerCase().startsWith(memberPart)) {
                     out.push({ label: `${table}.${column}`, value: `${table}.${column}`, type: 'column' });
                 }
             });
         }
-        return dedupeSuggestions(out).slice(0, 12);
+        return dedupeSuggestions(out).slice(0, 14);
     }
 
-    if (!tableContext || forceAll) {
+    if (!tableContext) {
         SQL_KEYWORDS.forEach((keyword) => {
             if (!normalizedPrefix || keyword.toLowerCase().startsWith(normalizedPrefix)) {
                 out.push({ label: keyword, value: keyword, type: 'keyword' });
@@ -787,13 +799,14 @@ function collectSuggestions(prefix, context, forceAll) {
         });
     }
 
-    schemaState.tables.forEach((table) => {
-        if (!normalizedPrefix || table.toLowerCase().startsWith(normalizedPrefix)) {
-            out.push({ label: table, value: table, type: 'table' });
+    relationObjects.forEach((object) => {
+        const qualified = object.schema && !['public', 'main'].includes(object.schema) ? `${object.schema}.${object.name}` : object.name;
+        if (!normalizedPrefix || object.name.toLowerCase().startsWith(normalizedPrefix) || qualified.toLowerCase().startsWith(normalizedPrefix)) {
+            out.push({ label: qualified, value: qualified, type: object.type });
         }
     });
 
-    if (!tableContext || forceAll) {
+    if (!tableContext) {
         Object.entries(schemaState.columnsByTable).forEach(([table, columns]) => {
             columns.forEach((column) => {
                 if (!normalizedPrefix || column.toLowerCase().startsWith(normalizedPrefix)) {
@@ -801,16 +814,28 @@ function collectSuggestions(prefix, context, forceAll) {
                 }
             });
         });
+        dbMetadataState.schemaNames.forEach((schema) => {
+            if (!normalizedPrefix || schema.toLowerCase().startsWith(normalizedPrefix)) {
+                out.push({ label: `${schema}.`, value: `${schema}.`, type: 'schema' });
+            }
+        });
     }
 
     return dedupeSuggestions(out)
         .sort((a, b) => {
+            const priority = tableContext
+                ? { table: 0, view: 1, schema: 2, keyword: 4, column: 5 }
+                : columnContext
+                    ? { column: 0, keyword: 1, table: 2, view: 3, schema: 4 }
+                    : { keyword: 0, table: 1, view: 2, column: 3, schema: 4 };
             const aStarts = a.value.toLowerCase().startsWith(normalizedPrefix) ? 0 : 1;
             const bStarts = b.value.toLowerCase().startsWith(normalizedPrefix) ? 0 : 1;
             if (aStarts !== bStarts) return aStarts - bStarts;
+            const typeDifference = (priority[a.type] ?? 9) - (priority[b.type] ?? 9);
+            if (typeDifference !== 0) return typeDifference;
             return a.value.localeCompare(b.value);
         })
-        .slice(0, 12);
+        .slice(0, forceAll ? 18 : 14);
 }
 
 function renderAutocomplete() {
