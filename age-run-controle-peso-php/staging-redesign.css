@@ -2782,6 +2782,32 @@ body.passkey-confirm-open {
     display: none !important;
 }
 
+body.historia-compose-open {
+    overflow: hidden;
+}
+
+body.historia-compose-open::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 2100;
+    background: var(--staging-bg, #f5f5f5);
+}
+
+.staging-redesign .historia-form-card:not([hidden]) {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    z-index: 2200;
+    width: min(560px, calc(100vw - 32px));
+    max-height: calc(100dvh - 32px);
+    margin: 0;
+    overflow-y: auto;
+    transform: translate(-50%, -50%);
+    border-top: 4px solid var(--primary-color);
+    box-shadow: 0 22px 70px rgba(0, 0, 0, 0.34);
+}
+
 .staging-redesign .historias-section-heading {
     justify-content: space-between;
     margin-bottom: 12px;
@@ -3094,6 +3120,12 @@ body.passkey-confirm-open {
 
     .staging-redesign .historia-form-card {
         padding: 14px !important;
+    }
+
+    .staging-redesign .historia-form-card:not([hidden]) {
+        width: calc(100vw - 20px);
+        max-height: calc(100dvh - 20px);
+        border-radius: 18px;
     }
 
     .staging-redesign .historia-publicar {

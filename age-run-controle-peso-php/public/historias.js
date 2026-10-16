@@ -7,6 +7,17 @@
     const message = document.getElementById('historiaMensagem');
     let historiasAtuais = new Map();
 
+    const openComposer = () => {
+        formCard.hidden = false;
+        document.body.classList.add('historia-compose-open');
+        window.setTimeout(() => document.getElementById('historiaConteudo')?.focus({ preventScroll: true }), 50);
+    };
+    const closeComposer = () => {
+        formCard.hidden = true;
+        document.body.classList.remove('historia-compose-open');
+        showMessage('');
+    };
+
     const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
     const formatDate = (value) => {
         const date = new Date(String(value || '').replace(' ', 'T'));
@@ -64,8 +75,11 @@
         catch (error) { feed.innerHTML = `<div class="error-message">${escapeHtml(error.message)}</div>`; }
     };
 
-    document.getElementById('abrirHistoriaForm')?.addEventListener('click', () => { formCard.hidden = false; formCard.scrollIntoView({ behavior: 'smooth', block: 'start' }); document.getElementById('historiaConteudo')?.focus({ preventScroll: true }); });
-    document.getElementById('fecharHistoriaForm')?.addEventListener('click', () => { formCard.hidden = true; showMessage(''); });
+    document.getElementById('abrirHistoriaForm')?.addEventListener('click', openComposer);
+    document.getElementById('fecharHistoriaForm')?.addEventListener('click', closeComposer);
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && !formCard.hidden) closeComposer();
+    });
     document.getElementById('atualizarHistorias')?.addEventListener('click', load);
     feed?.addEventListener('click', async (event) => {
         const card = event.target.closest('[data-historia-id]');
@@ -116,8 +130,8 @@
             }) });
             form.reset();
             document.getElementById('historiaIdentificada').checked = true;
-            showMessage(data.message || 'História publicada.');
             await load();
+            closeComposer();
         } catch (error) { showMessage(error.message, 'error'); }
         finally { submit.disabled = false; }
     });
