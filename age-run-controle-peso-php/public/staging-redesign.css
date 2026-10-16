@@ -2460,6 +2460,10 @@ body.coach-photo-viewer-open {
     overflow: hidden;
 }
 
+.staging-redesign .passkey-mobile-login {
+    display: none;
+}
+
 .staging-redesign .passkey-divider {
     display: flex;
     align-items: center;
@@ -2488,6 +2492,13 @@ body.coach-photo-viewer-open {
 
 .staging-redesign .passkey-login-button .material-icons {
     font-size: 23px;
+}
+
+@media (max-width: 768px) {
+    .staging-redesign .passkey-mobile-login {
+        display: grid;
+        gap: 10px;
+    }
 }
 
 .staging-redesign .passkey-card {
