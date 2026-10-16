@@ -48,7 +48,6 @@
                     ${historia.identificado ? '' : '<span class="historia-anonymous-badge">Anônima</span>'}
                 </header>
                 <div class="historia-post-body">
-                    ${historia.titulo ? `<h3>${escapeHtml(historia.titulo)}</h3>` : ''}
                     <p>${escapeHtml(historia.conteudo).replace(/\n/g, '<br>')}</p>
                 </div>
                 <div class="historia-post-actions" aria-label="Ações da publicação">
@@ -65,7 +64,7 @@
         catch (error) { feed.innerHTML = `<div class="error-message">${escapeHtml(error.message)}</div>`; }
     };
 
-    document.getElementById('abrirHistoriaForm')?.addEventListener('click', () => { formCard.hidden = false; formCard.scrollIntoView({ behavior: 'smooth', block: 'start' }); document.getElementById('historiaTitulo')?.focus({ preventScroll: true }); });
+    document.getElementById('abrirHistoriaForm')?.addEventListener('click', () => { formCard.hidden = false; formCard.scrollIntoView({ behavior: 'smooth', block: 'start' }); document.getElementById('historiaConteudo')?.focus({ preventScroll: true }); });
     document.getElementById('fecharHistoriaForm')?.addEventListener('click', () => { formCard.hidden = true; showMessage(''); });
     document.getElementById('atualizarHistorias')?.addEventListener('click', load);
     feed?.addEventListener('click', async (event) => {
@@ -91,7 +90,7 @@
         }
         if (button.classList.contains('historia-share-button')) {
             const historia = historiasAtuais.get(id);
-            const shareData = { title: historia?.titulo || 'História Age Run', text: historia?.conteudo || '', url: window.location.href };
+            const shareData = { title: 'História Age Run', text: historia?.conteudo || '', url: window.location.href };
             try {
                 if (navigator.share) await navigator.share(shareData);
                 else {
@@ -112,7 +111,6 @@
         showMessage('');
         try {
             const data = await request('/historias', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
-                titulo: document.getElementById('historiaTitulo').value,
                 conteudo: document.getElementById('historiaConteudo').value,
                 identificado: document.getElementById('historiaIdentificada').checked,
             }) });

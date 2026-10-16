@@ -2963,13 +2963,6 @@ body.passkey-confirm-open {
     padding: 4px 17px 18px;
 }
 
-.staging-redesign .historia-card h3 {
-    margin: 0 0 8px;
-    color: var(--staging-ink);
-    font-size: 1.02rem;
-    line-height: 1.35;
-}
-
 .staging-redesign .historia-post-body > p {
     margin: 0;
     color: var(--staging-ink);
