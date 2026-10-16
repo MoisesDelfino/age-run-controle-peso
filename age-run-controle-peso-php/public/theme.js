@@ -437,9 +437,11 @@
             return;
         }
 
-        navigator.serviceWorker.register('sw.js').catch(() => {
-            // Registro opcional; a web app segue funcionando sem o SW.
-        });
+        navigator.serviceWorker.register('sw.js?v=2026101603', { updateViaCache: 'none' })
+            .then((registration) => registration.update())
+            .catch(() => {
+                // Registro opcional; a web app segue funcionando sem o SW.
+            });
     }
 
     function initPwa() {

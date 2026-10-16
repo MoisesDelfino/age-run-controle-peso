@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'age-run-pwa-v2-20261016';
+const CACHE_VERSION = 'age-run-pwa-v3-20261016';
 const CACHE_NAME = `age-run-pwa-${CACHE_VERSION}`;
 const STATIC_ASSETS = [
   './',
