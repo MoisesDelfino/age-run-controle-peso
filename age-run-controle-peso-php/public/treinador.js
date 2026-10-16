@@ -239,9 +239,13 @@ function renderCoachTesteHistorico(usuario) {
     `;
 }
 
+function getPendingReviewTests(usuario) {
+    return (usuario?.rp_testes_historico || [])
+        .filter((teste) => teste.requer_revisao && !teste.revisado_em);
+}
+
 function getPendingAthleteTests(usuarios) {
-    return (usuarios || []).flatMap((usuario) => (usuario.rp_testes_historico || [])
-        .filter((teste) => teste.requer_revisao && !teste.revisado_em)
+    return (usuarios || []).flatMap((usuario) => getPendingReviewTests(usuario)
         .map((teste) => ({ usuario, teste })))
         .sort((a, b) => String(b.teste.cadastrado_em || '').localeCompare(String(a.teste.cadastrado_em || '')));
 }
@@ -1013,11 +1017,12 @@ function renderAnaliseBioDoUsuario(usuario) {
 function getPendenciasUsuario(usuario) {
     const rps = usuario.rps || {};
     const provas = ['rp_5k', 'rp_10k', 'rp_21k', 'rp_42k'];
-    return provas.filter((prova) => {
+    const rpsPendentes = provas.filter((prova) => {
         const valor = rps[prova];
         const status = rps[`${prova}_status`] || null;
         return valor !== null && valor !== undefined && status === 'pendente';
     }).length;
+    return rpsPendentes + getPendingReviewTests(usuario).length;
 }
 
 function usuarioTemRp(usuario) {
