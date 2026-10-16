@@ -1468,6 +1468,51 @@ body.dark-mode.staging-redesign .staging-height-toggle .material-icons {
     }
 }
 
+@media (min-width: 1180px) {
+    .staging-redesign .nav-menu > .container {
+        width: 100%;
+        max-width: 1460px;
+        padding-inline: 18px;
+    }
+
+    .staging-redesign .nav-list {
+        justify-content: center;
+        overflow-x: visible;
+    }
+
+    .staging-redesign .nav-link {
+        padding-inline: 13px;
+        font-size: 0.82rem;
+    }
+
+    .staging-redesign.staging-page-monitoramento-acessos main.container {
+        max-width: 1380px;
+    }
+
+    .staging-redesign.staging-page-monitoramento-acessos .access-table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+    }
+
+    .staging-redesign.staging-page-monitoramento-acessos .access-table th:nth-child(1),
+    .staging-redesign.staging-page-monitoramento-acessos .access-table td:nth-child(1) {
+        width: 170px;
+        white-space: nowrap;
+    }
+
+    .staging-redesign.staging-page-monitoramento-acessos .access-table th:nth-child(4),
+    .staging-redesign.staging-page-monitoramento-acessos .access-table td:nth-child(4) {
+        width: 84px;
+    }
+
+    .staging-redesign.staging-page-monitoramento-acessos .access-table th:nth-child(6),
+    .staging-redesign.staging-page-monitoramento-acessos .access-table td:nth-child(6) {
+        width: 130px;
+        white-space: nowrap;
+    }
+}
+
 .staging-redesign .nav-list {
     overflow-x: auto;
     scrollbar-width: none;
