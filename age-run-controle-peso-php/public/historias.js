@@ -5,6 +5,7 @@
     const formCard = document.getElementById('historiaFormCard');
     const form = document.getElementById('historiaForm');
     const message = document.getElementById('historiaMensagem');
+    let historiasAtuais = new Map();
 
     const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
     const formatDate = (value) => {
@@ -28,26 +29,34 @@
         return data;
     };
     const render = (historias) => {
+        historiasAtuais = new Map(historias.map((historia) => [String(historia.id), historia]));
         if (!historias.length) {
             feed.innerHTML = '<div class="historias-empty"><span class="material-icons">auto_stories</span><strong>O mural está esperando a primeira história.</strong><p>Que tal começar compartilhando a sua?</p></div>';
             return;
         }
         feed.innerHTML = historias.map((historia) => {
+            const id = String(historia.id);
+            const liked = localStorage.getItem(`agerun-historia-curtida-${id}`) === '1';
+            const saved = localStorage.getItem(`agerun-historia-salva-${id}`) === '1';
             const photo = historia.foto_perfil
                 ? `<img src="${escapeHtml(historia.foto_perfil)}" alt="">`
                 : `<span>${escapeHtml(historia.identificado ? initials(historia.autor) : '•')}</span>`;
-            return `<article class="historia-card">
+            return `<article class="historia-card" data-historia-id="${escapeHtml(id)}">
                 <header class="historia-post-header">
                     <div class="historia-avatar${historia.identificado ? '' : ' is-anonymous'}">${photo}</div>
                     <div class="historia-post-author"><strong>${escapeHtml(historia.autor)}</strong><span><time>${escapeHtml(formatDate(historia.criado_em))}</time><span aria-hidden="true">·</span><span class="material-icons" aria-label="Publicação visível para a comunidade">public</span></span></div>
                     ${historia.identificado ? '' : '<span class="historia-anonymous-badge">Anônima</span>'}
                 </header>
                 <div class="historia-post-body">
-                    <span class="material-icons historia-quote-mark" aria-hidden="true">format_quote</span>
                     ${historia.titulo ? `<h3>${escapeHtml(historia.titulo)}</h3>` : ''}
                     <p>${escapeHtml(historia.conteudo).replace(/\n/g, '<br>')}</p>
                 </div>
-                <footer class="historia-post-footer"><span class="material-icons" aria-hidden="true">auto_stories</span><span>História compartilhada com a comunidade Age Run</span></footer>
+                <div class="historia-post-actions" aria-label="Ações da publicação">
+                    <button type="button" class="historia-social-action historia-like-button${liked ? ' is-active' : ''}" aria-label="Curtir história" aria-pressed="${liked}"><span class="material-icons">${liked ? 'favorite' : 'favorite_border'}</span></button>
+                    <button type="button" class="historia-social-action historia-share-button" aria-label="Compartilhar história"><span class="material-icons">send</span></button>
+                    <button type="button" class="historia-social-action historia-save-button${saved ? ' is-active' : ''}" aria-label="Salvar história" aria-pressed="${saved}"><span class="material-icons">${saved ? 'bookmark' : 'bookmark_border'}</span></button>
+                </div>
+                <footer class="historia-post-footer"><strong>${escapeHtml(historia.autor)}</strong><span>compartilhou uma história com a comunidade Age Run</span></footer>
             </article>`;
         }).join('');
     };
@@ -60,6 +69,41 @@
     document.getElementById('abrirHistoriaForm')?.addEventListener('click', () => { formCard.hidden = false; formCard.scrollIntoView({ behavior: 'smooth', block: 'start' }); document.getElementById('historiaTitulo')?.focus({ preventScroll: true }); });
     document.getElementById('fecharHistoriaForm')?.addEventListener('click', () => { formCard.hidden = true; showMessage(''); });
     document.getElementById('atualizarHistorias')?.addEventListener('click', load);
+    feed?.addEventListener('click', async (event) => {
+        const card = event.target.closest('[data-historia-id]');
+        const button = event.target.closest('.historia-social-action');
+        if (!card || !button) return;
+        const id = card.dataset.historiaId;
+        if (button.classList.contains('historia-like-button')) {
+            const active = !button.classList.contains('is-active');
+            button.classList.toggle('is-active', active);
+            button.setAttribute('aria-pressed', String(active));
+            button.querySelector('.material-icons').textContent = active ? 'favorite' : 'favorite_border';
+            localStorage.setItem(`agerun-historia-curtida-${id}`, active ? '1' : '0');
+        }
+        if (button.classList.contains('historia-save-button')) {
+            const active = !button.classList.contains('is-active');
+            button.classList.toggle('is-active', active);
+            button.setAttribute('aria-pressed', String(active));
+            button.querySelector('.material-icons').textContent = active ? 'bookmark' : 'bookmark_border';
+            localStorage.setItem(`agerun-historia-salva-${id}`, active ? '1' : '0');
+        }
+        if (button.classList.contains('historia-share-button')) {
+            const historia = historiasAtuais.get(id);
+            const shareData = { title: historia?.titulo || 'História Age Run', text: historia?.conteudo || '', url: window.location.href };
+            try {
+                if (navigator.share) await navigator.share(shareData);
+                else {
+                    await navigator.clipboard.writeText(`${shareData.title}\n\n${shareData.text}\n\n${shareData.url}`);
+                    const icon = button.querySelector('.material-icons');
+                    icon.textContent = 'check';
+                    window.setTimeout(() => { icon.textContent = 'send'; }, 1600);
+                }
+            } catch (error) {
+                if (error?.name !== 'AbortError') console.warn('Não foi possível compartilhar a história.', error);
+            }
+        }
+    });
     form?.addEventListener('submit', async (event) => {
         event.preventDefault();
         const submit = form.querySelector('button[type="submit"]');

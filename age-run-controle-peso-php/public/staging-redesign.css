@@ -2862,7 +2862,7 @@ body.passkey-confirm-open {
 }
 
 .staging-redesign .historias-feed-section {
-    width: min(100%, 760px);
+    width: min(100%, 620px);
     margin-inline: auto;
 }
 
@@ -2960,21 +2960,11 @@ body.passkey-confirm-open {
 
 .staging-redesign .historia-post-body {
     position: relative;
-    padding: 2px 17px 17px;
-}
-
-.staging-redesign .historia-quote-mark {
-    position: absolute;
-    top: -6px;
-    right: 14px;
-    color: rgba(139, 195, 74, 0.14);
-    font-size: 42px;
-    pointer-events: none;
+    padding: 4px 17px 18px;
 }
 
 .staging-redesign .historia-card h3 {
     margin: 0 0 8px;
-    padding-right: 34px;
     color: var(--staging-ink);
     font-size: 1.02rem;
     line-height: 1.35;
@@ -2988,20 +2978,65 @@ body.passkey-confirm-open {
     overflow-wrap: anywhere;
 }
 
-.staging-redesign .historia-post-footer {
+.staging-redesign .historia-post-actions {
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 10px 17px;
+    gap: 2px;
+    padding: 7px 10px 5px;
     border-top: 1px solid var(--staging-line);
-    background: rgba(139, 195, 74, 0.045);
-    color: var(--staging-muted);
-    font-size: 0.66rem;
 }
 
-.staging-redesign .historia-post-footer .material-icons {
+.staging-redesign .historia-social-action {
+    width: 40px;
+    height: 40px;
+    min-height: 40px !important;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--staging-ink);
+    cursor: pointer;
+    transition: color 0.16s ease, background 0.16s ease, transform 0.16s ease;
+}
+
+.staging-redesign .historia-social-action:hover {
+    background: rgba(142, 32, 181, 0.09);
+    color: var(--secondary-color);
+}
+
+.staging-redesign .historia-social-action:active {
+    transform: scale(0.9);
+}
+
+.staging-redesign .historia-social-action .material-icons {
+    font-size: 25px;
+}
+
+.staging-redesign .historia-like-button.is-active {
+    color: #ef476f;
+}
+
+.staging-redesign .historia-save-button {
+    margin-left: auto;
+}
+
+.staging-redesign .historia-save-button.is-active {
     color: var(--primary-color);
-    font-size: 16px;
+}
+
+.staging-redesign .historia-post-footer {
+    display: block;
+    padding: 0 17px 15px;
+    color: var(--staging-muted);
+    font-size: 0.7rem;
+    line-height: 1.45;
+}
+
+.staging-redesign .historia-post-footer strong {
+    margin-right: 4px;
+    color: var(--staging-ink);
 }
 
 .staging-redesign .historias-empty {
@@ -3071,11 +3106,11 @@ body.passkey-confirm-open {
     }
 
     .staging-redesign .historia-post-body {
-        padding: 2px 14px 14px;
+        padding: 4px 14px 16px;
     }
 
     .staging-redesign .historia-post-footer {
-        padding: 9px 14px;
+        padding: 0 14px 14px;
     }
 
     .staging-redesign .historia-form-card {
