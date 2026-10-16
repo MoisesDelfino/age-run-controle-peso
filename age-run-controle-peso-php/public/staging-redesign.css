@@ -2857,24 +2857,41 @@ body.passkey-confirm-open {
 
 .staging-redesign .historias-feed {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr);
     gap: 12px;
+}
+
+.staging-redesign .historias-feed-section {
+    width: min(100%, 760px);
+    margin-inline: auto;
 }
 
 .staging-redesign .historia-card {
     min-width: 0;
-    padding: 18px;
+    position: relative;
+    overflow: hidden;
+    padding: 0;
     border: 1px solid var(--staging-line);
     border-radius: 18px;
     background: var(--staging-card);
     box-shadow: var(--ui-shadow-card);
 }
 
-.staging-redesign .historia-card header {
+.staging-redesign .historia-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+}
+
+.staging-redesign .historia-post-header {
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-bottom: 12px;
+    padding: 16px 17px 12px;
 }
 
 .staging-redesign .historia-avatar {
@@ -2903,27 +2920,88 @@ body.passkey-confirm-open {
     object-fit: cover;
 }
 
-.staging-redesign .historia-card header > div:last-child {
+.staging-redesign .historia-post-author {
+    min-width: 0;
+    flex: 1;
     display: grid;
 }
 
-.staging-redesign .historia-card time {
+.staging-redesign .historia-post-author > strong {
+    overflow: hidden;
+    color: var(--staging-ink);
+    font-size: 0.9rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.staging-redesign .historia-post-author > span {
+    display: flex;
+    align-items: center;
+    gap: 5px;
     color: var(--staging-muted);
     font-size: 0.7rem;
 }
 
-.staging-redesign .historia-card h3 {
-    margin: 0 0 8px;
-    color: var(--primary-light);
-    font-size: 1rem;
+.staging-redesign .historia-post-author .material-icons {
+    font-size: 13px;
 }
 
-.staging-redesign .historia-card > p {
+.staging-redesign .historia-anonymous-badge {
+    padding: 4px 8px;
+    border: 1px solid rgba(142, 32, 181, 0.3);
+    border-radius: 999px;
+    background: rgba(142, 32, 181, 0.1);
+    color: #c779dc;
+    font-size: 0.62rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.staging-redesign .historia-post-body {
+    position: relative;
+    padding: 2px 17px 17px;
+}
+
+.staging-redesign .historia-quote-mark {
+    position: absolute;
+    top: -6px;
+    right: 14px;
+    color: rgba(139, 195, 74, 0.14);
+    font-size: 42px;
+    pointer-events: none;
+}
+
+.staging-redesign .historia-card h3 {
+    margin: 0 0 8px;
+    padding-right: 34px;
+    color: var(--staging-ink);
+    font-size: 1.02rem;
+    line-height: 1.35;
+}
+
+.staging-redesign .historia-post-body > p {
     margin: 0;
     color: var(--staging-ink);
     font-size: 0.85rem;
-    line-height: 1.65;
+    line-height: 1.7;
     overflow-wrap: anywhere;
+}
+
+.staging-redesign .historia-post-footer {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 17px;
+    border-top: 1px solid var(--staging-line);
+    background: rgba(139, 195, 74, 0.045);
+    color: var(--staging-muted);
+    font-size: 0.66rem;
+}
+
+.staging-redesign .historia-post-footer .material-icons {
+    color: var(--primary-color);
+    font-size: 16px;
 }
 
 .staging-redesign .historias-empty {
@@ -2956,8 +3034,10 @@ body.passkey-confirm-open {
     .staging-redesign .historias-intro {
         align-items: stretch;
         flex-direction: column;
+        justify-content: flex-start;
         gap: 10px;
         padding: 14px;
+        min-height: 0;
     }
 
     .staging-redesign .historias-intro .btn {
@@ -2970,8 +3050,19 @@ body.passkey-confirm-open {
     }
 
     .staging-redesign .historia-card {
-        padding: 14px;
         border-radius: 15px;
+    }
+
+    .staging-redesign .historia-post-header {
+        padding: 14px 14px 10px;
+    }
+
+    .staging-redesign .historia-post-body {
+        padding: 2px 14px 14px;
+    }
+
+    .staging-redesign .historia-post-footer {
+        padding: 9px 14px;
     }
 
     .staging-redesign .historia-form-card {

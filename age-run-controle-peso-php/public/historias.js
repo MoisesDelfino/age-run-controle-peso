@@ -37,9 +37,17 @@
                 ? `<img src="${escapeHtml(historia.foto_perfil)}" alt="">`
                 : `<span>${escapeHtml(historia.identificado ? initials(historia.autor) : '•')}</span>`;
             return `<article class="historia-card">
-                <header><div class="historia-avatar${historia.identificado ? '' : ' is-anonymous'}">${photo}</div><div><strong>${escapeHtml(historia.autor)}</strong><time>${escapeHtml(formatDate(historia.criado_em))}</time></div></header>
-                ${historia.titulo ? `<h3>${escapeHtml(historia.titulo)}</h3>` : ''}
-                <p>${escapeHtml(historia.conteudo).replace(/\n/g, '<br>')}</p>
+                <header class="historia-post-header">
+                    <div class="historia-avatar${historia.identificado ? '' : ' is-anonymous'}">${photo}</div>
+                    <div class="historia-post-author"><strong>${escapeHtml(historia.autor)}</strong><span><time>${escapeHtml(formatDate(historia.criado_em))}</time><span aria-hidden="true">·</span><span class="material-icons" aria-label="Publicação visível para a comunidade">public</span></span></div>
+                    ${historia.identificado ? '' : '<span class="historia-anonymous-badge">Anônima</span>'}
+                </header>
+                <div class="historia-post-body">
+                    <span class="material-icons historia-quote-mark" aria-hidden="true">format_quote</span>
+                    ${historia.titulo ? `<h3>${escapeHtml(historia.titulo)}</h3>` : ''}
+                    <p>${escapeHtml(historia.conteudo).replace(/\n/g, '<br>')}</p>
+                </div>
+                <footer class="historia-post-footer"><span class="material-icons" aria-hidden="true">auto_stories</span><span>História compartilhada com a comunidade Age Run</span></footer>
             </article>`;
         }).join('');
     };
@@ -49,7 +57,7 @@
         catch (error) { feed.innerHTML = `<div class="error-message">${escapeHtml(error.message)}</div>`; }
     };
 
-    document.getElementById('abrirHistoriaForm')?.addEventListener('click', () => { formCard.hidden = false; formCard.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+    document.getElementById('abrirHistoriaForm')?.addEventListener('click', () => { formCard.hidden = false; formCard.scrollIntoView({ behavior: 'smooth', block: 'start' }); document.getElementById('historiaTitulo')?.focus({ preventScroll: true }); });
     document.getElementById('fecharHistoriaForm')?.addEventListener('click', () => { formCard.hidden = true; showMessage(''); });
     document.getElementById('atualizarHistorias')?.addEventListener('click', load);
     form?.addEventListener('submit', async (event) => {
