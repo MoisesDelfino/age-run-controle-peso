@@ -2909,6 +2909,18 @@ body.dark-mode.historia-compose-open::before {
     box-shadow: var(--ui-shadow-card);
 }
 
+.staging-redesign .historia-card.is-linked-story {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(139, 195, 74, 0.2), var(--ui-shadow-card);
+    animation: historia-linked-pulse 1.2s ease-out;
+}
+
+@keyframes historia-linked-pulse {
+    0% { transform: scale(0.985); }
+    55% { transform: scale(1.008); }
+    100% { transform: scale(1); }
+}
+
 .staging-redesign .historia-card::before {
     content: '';
     position: absolute;

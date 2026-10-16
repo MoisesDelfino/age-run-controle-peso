@@ -31,6 +31,65 @@
         const date = new Date(String(value || '').replace(' ', 'T'));
         return Number.isNaN(date.getTime()) ? '' : new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' }).format(date);
     };
+    const storyUrl = (id) => {
+        const url = new URL(window.location.href);
+        url.search = '';
+        url.hash = '';
+        url.searchParams.set('historia', String(id));
+        return url.toString();
+    };
+    const wrapCanvasText = (context, text, maxWidth) => {
+        const paragraphs = String(text || '').split(/\n/);
+        const lines = [];
+        paragraphs.forEach((paragraph) => {
+            const words = paragraph.split(/\s+/).filter(Boolean);
+            let line = '';
+            words.forEach((word) => {
+                const candidate = line ? `${line} ${word}` : word;
+                if (line && context.measureText(candidate).width > maxWidth) {
+                    lines.push(line);
+                    line = word;
+                } else line = candidate;
+            });
+            if (line) lines.push(line);
+            if (!words.length) lines.push('');
+        });
+        return lines;
+    };
+    const createStoryCard = async (historia) => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 1080;
+        canvas.height = 1350;
+        const context = canvas.getContext('2d');
+        const gradient = context.createLinearGradient(0, 0, 1080, 1350);
+        gradient.addColorStop(0, '#171717');
+        gradient.addColorStop(1, '#25142b');
+        context.fillStyle = gradient;
+        context.fillRect(0, 0, 1080, 1350);
+        context.fillStyle = '#8bc34a';
+        context.fillRect(0, 0, 1080, 18);
+        context.fillStyle = '#8bc34a';
+        context.font = '700 58px Poppins, sans-serif';
+        context.fillText('age', 76, 115);
+        context.fillStyle = '#ffffff';
+        context.font = '700 34px Poppins, sans-serif';
+        context.fillText('Histórias que inspiram', 76, 175);
+        context.fillStyle = '#d7f4af';
+        context.font = '700 36px Poppins, sans-serif';
+        context.fillText(historia.autor || 'História anônima', 76, 285);
+        context.fillStyle = '#bdb8c0';
+        context.font = '400 25px Poppins, sans-serif';
+        context.fillText(formatDate(historia.criado_em), 76, 330);
+        context.fillStyle = '#ffffff';
+        context.font = '500 38px Poppins, sans-serif';
+        const lines = wrapCanvasText(context, historia.conteudo, 928).slice(0, 18);
+        lines.forEach((line, index) => context.fillText(line, 76, 430 + (index * 58)));
+        context.fillStyle = '#8bc34a';
+        context.font = '600 25px Poppins, sans-serif';
+        context.fillText('Leia esta história na comunidade Age Run', 76, 1270);
+        const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png', 0.95));
+        return blob ? new File([blob], `historia-age-run-${historia.id}.png`, { type: 'image/png' }) : null;
+    };
     const initials = (name) => String(name || 'A').split(/\s+/).slice(0, 2).map((part) => part.charAt(0)).join('').toUpperCase();
     const showMessage = (text, type = 'success') => {
         message.textContent = text;
@@ -77,7 +136,7 @@
             const photo = historia.foto_perfil
                 ? `<img src="${escapeHtml(historia.foto_perfil)}" alt="">`
                 : `<span>${escapeHtml(historia.identificado ? initials(historia.autor) : '•')}</span>`;
-            return `<article class="historia-card" data-historia-id="${escapeHtml(id)}">
+            return `<article id="historia-${escapeHtml(id)}" class="historia-card" data-historia-id="${escapeHtml(id)}">
                 <header class="historia-post-header">
                     <div class="historia-avatar${historia.identificado ? '' : ' is-anonymous'}">${photo}</div>
                     <div class="historia-post-author"><strong>${escapeHtml(historia.autor)}</strong><span><time>${escapeHtml(formatDate(historia.criado_em))}</time><span aria-hidden="true">·</span><span class="material-icons" aria-label="Publicação visível para a comunidade">public</span></span></div>
@@ -97,7 +156,19 @@
     };
     const load = async () => {
         feed.innerHTML = '<div class="loading">Carregando histórias...</div>';
-        try { render((await request('/historias')).historias || []); }
+        try {
+            const historias = (await request('/historias')).historias || [];
+            const requestedId = new URLSearchParams(window.location.search).get('historia');
+            if (requestedId && !historias.some((historia) => String(historia.id) === requestedId)) {
+                try { historias.unshift((await request(`/historias/${encodeURIComponent(requestedId)}`)).historia); } catch (error) { /* Mantém o mural disponível. */ }
+            }
+            render(historias);
+            if (requestedId) window.setTimeout(() => {
+                const target = document.getElementById(`historia-${requestedId}`);
+                target?.classList.add('is-linked-story');
+                target?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
+        }
         catch (error) { feed.innerHTML = `<div class="error-message">${escapeHtml(error.message)}</div>`; }
     };
 
@@ -147,9 +218,15 @@
             }
         }
         if (button.classList.contains('historia-share-button')) {
-            const shareData = { title: 'História Age Run', text: historia?.conteudo || '', url: window.location.href };
+            if (button.disabled) return;
+            button.disabled = true;
+            const directUrl = storyUrl(id);
+            const shareData = { title: 'História Age Run', text: historia?.conteudo || '', url: directUrl };
             try {
-                if (navigator.share) await navigator.share(shareData);
+                const cardFile = await createStoryCard(historia);
+                if (navigator.share && cardFile && navigator.canShare?.({ files: [cardFile] })) {
+                    await navigator.share({ ...shareData, files: [cardFile] });
+                } else if (navigator.share) await navigator.share(shareData);
                 else {
                     await navigator.clipboard.writeText(`${shareData.title}\n\n${shareData.text}\n\n${shareData.url}`);
                     const icon = button.querySelector('.material-icons');
@@ -158,6 +235,8 @@
                 }
             } catch (error) {
                 if (error?.name !== 'AbortError') console.warn('Não foi possível compartilhar a história.', error);
+            } finally {
+                button.disabled = false;
             }
         }
     });

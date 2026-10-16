@@ -4640,6 +4640,28 @@ if ($method === 'GET' && $path === '/api/historias') {
     jsonResponse(['historias' => $historias]);
 }
 
+if ($method === 'GET' && preg_match('#^/api/historias/(\d+)$#', $path, $matches) === 1) {
+    $userId = requireAuth();
+    $historiaId = (int) $matches[1];
+    ensureHistoriasTable();
+    ensureHistoriaCurtidasTable();
+    $row = dbFetchOne('SELECT h.id, h.usuario_id, h.titulo, h.conteudo, h.identificado, h.criado_em, u.nome, u.foto_perfil, (SELECT COUNT(*) FROM historia_curtidas hc WHERE hc.historia_id = h.id) AS curtidas, (SELECT COUNT(*) FROM historia_curtidas hc WHERE hc.historia_id = h.id AND hc.usuario_id = :usuario_id) AS curtiu FROM historias h LEFT JOIN usuarios u ON u.id = h.usuario_id WHERE h.id = :historia_id LIMIT 1', [':usuario_id' => $userId, ':historia_id' => $historiaId]);
+    if (!$row) jsonResponse(['error' => 'História não encontrada.'], 404);
+    $identificado = (int) ($row['identificado'] ?? 0) === 1;
+    jsonResponse(['historia' => [
+        'id' => (int) $row['id'],
+        'titulo' => trim((string) ($row['titulo'] ?? '')),
+        'conteudo' => (string) ($row['conteudo'] ?? ''),
+        'criado_em' => (string) ($row['criado_em'] ?? ''),
+        'autor' => $identificado ? (trim((string) ($row['nome'] ?? '')) ?: 'Atleta Age Run') : 'História anônima',
+        'foto_perfil' => $identificado ? ($row['foto_perfil'] ?? null) : null,
+        'identificado' => $identificado,
+        'curtidas' => (int) ($row['curtidas'] ?? 0),
+        'curtiu' => (int) ($row['curtiu'] ?? 0) > 0,
+        'propria' => (int) ($row['usuario_id'] ?? 0) === $userId,
+    ]]);
+}
+
 if ($method === 'POST' && preg_match('#^/api/historias/(\d+)/curtir$#', $path, $matches) === 1) {
     $userId = requireAuth();
     $historiaId = (int) $matches[1];
