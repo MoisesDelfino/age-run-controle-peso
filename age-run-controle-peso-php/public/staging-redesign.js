@@ -59,6 +59,7 @@
                 '/pesagem': 'monitor_weight',
                 '/ranking': 'emoji_events',
                 '/grupos-treino': 'groups',
+                '/historias': 'auto_stories',
                 '/bioimpedancia': 'analytics',
                 '/treinador': 'sports',
                 '/monitoramento': 'terminal',
@@ -124,7 +125,7 @@
 
                 const isAdmin = Boolean(navList.querySelector('.owner-monitor-link, .owner-access-link'));
                 const isTrainer = document.body.classList.contains('is-trainer') && !isAdmin;
-                const usesMore = isAdmin || isTrainer;
+                const usesMore = isAdmin || isTrainer || byRoute.has('/historias');
 
                 bottomNav.innerHTML = coreRoutes.map((route) => {
                     const source = byRoute.get(route);
@@ -147,9 +148,9 @@
 
                 const secondary = links.filter((link) => {
                     const route = new URL(link.href, window.location.origin).pathname.replace(/^\/dev|^\/controle/, '');
-                    if (isTrainer) return route === '/treinador';
+                    if (isTrainer) return route === '/treinador' || route === '/historias' || route === '/bioimpedancia';
                     if (isAdmin) return !coreRoutes.includes(route);
-                    return false;
+                    return route === '/historias' || route === '/bioimpedancia';
                 });
                 const target = moreSheet.querySelector('.staging-more-links');
                 target.innerHTML = secondary.map((source) => {

@@ -6,14 +6,14 @@
         if (!document.querySelector('link[data-staging-redesign]')) {
             const stagingStyles = document.createElement('link');
             stagingStyles.rel = 'stylesheet';
-            stagingStyles.href = `${redesignBasePath}/staging-redesign.css?v=2026101564`;
+            stagingStyles.href = `${redesignBasePath}/staging-redesign.css?v=2026101601`;
             stagingStyles.dataset.stagingRedesign = 'true';
             document.head.appendChild(stagingStyles);
         }
 
         if (!document.querySelector('script[data-staging-redesign]')) {
             const stagingScript = document.createElement('script');
-            stagingScript.src = `${redesignBasePath}/staging-redesign.js?v=2026101523`;
+            stagingScript.src = `${redesignBasePath}/staging-redesign.js?v=2026101601`;
             stagingScript.dataset.stagingRedesign = 'true';
             document.head.appendChild(stagingScript);
         }

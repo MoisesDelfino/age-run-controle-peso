@@ -23,6 +23,8 @@ staging-redesign.js
 staging-home-training.js
 grupos-treino.html
 grupos-treino.js
+historias.html
+historias.js
 home.html
 home.js
 monitoramento.html

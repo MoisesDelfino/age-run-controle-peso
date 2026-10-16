@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'age-run-pwa-v2-20260714';
+const CACHE_VERSION = 'age-run-pwa-v2-20261016';
 const CACHE_NAME = `age-run-pwa-${CACHE_VERSION}`;
 const STATIC_ASSETS = [
   './',
@@ -7,6 +7,7 @@ const STATIC_ASSETS = [
   './pesagem',
   './ranking',
   './grupos-treino',
+  './historias',
   './bioimpedancia',
   './treinador',
   './styles.css',
@@ -19,6 +20,7 @@ const STATIC_ASSETS = [
   './pesagem.js',
   './ranking.js',
   './grupos-treino.js',
+  './historias.js',
   './bioimpedancia.js',
   './bioimpedancia-scanner.js',
   './treinador.js',

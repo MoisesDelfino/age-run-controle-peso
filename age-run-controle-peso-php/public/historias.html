@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Histórias - Age Run</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="stylesheet" href="styles.css?v=2026101501">
+    <link rel="stylesheet" href="effects.css?v=2026052045">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <div class="container"><div class="header-content">
+            <div class="header-left"><button class="menu-toggle" aria-label="Menu"><span></span><span></span><span></span></button><img src="logo.png" alt="Age Run" class="logo"></div>
+            <div class="header-text"><h1><span class="title-desktop">Histórias que inspiram</span><span class="title-mobile">Histórias</span></h1></div>
+            <div class="header-actions">
+                <button class="btn-dark-mode" data-theme-toggle aria-label="Ativar modo escuro"><span class="material-icons">dark_mode</span></button>
+                <button id="btnLogout" class="btn-logout" aria-label="Sair"><span class="material-icons">logout</span></button>
+            </div>
+        </div></div>
+    </header>
+    <div class="menu-overlay"></div>
+    <nav class="nav-menu"><div class="container"><ul class="nav-list">
+        <li><a href="./home" class="nav-link">🏠 Home</a></li>
+        <li><a href="./pesagem" class="nav-link">📝 Pesagem</a></li>
+        <li><a href="./ranking" class="nav-link">🏆 Ranking</a></li>
+        <li><a href="./grupos-treino" class="nav-link">🤝 Grupos de Treino</a></li>
+        <li><a href="./historias" class="nav-link active">💬 Histórias</a></li>
+        <li><a href="./bioimpedancia" class="nav-link">📊 Bioimpedância</a></li>
+        <li class="trainer-only"><a href="./treinador" class="nav-link">🧑‍🏫 Treinador</a></li>
+    </ul></div></nav>
+
+    <main class="container home-content historias-page">
+        <section class="card historias-intro">
+            <div><span class="material-icons" aria-hidden="true">auto_stories</span><div><h2>Histórias que conectam</h2><p>Compartilhe sua jornada e inspire outras pessoas da comunidade.</p></div></div>
+            <button type="button" id="abrirHistoriaForm" class="btn btn-primary"><span class="material-icons">edit</span> Contar minha história</button>
+        </section>
+
+        <section id="historiaFormCard" class="card historia-form-card" hidden>
+            <div class="historias-section-heading"><div><h2>Nova história</h2><p>Você pode publicar quantas histórias quiser.</p></div><button type="button" id="fecharHistoriaForm" class="historias-icon-button" aria-label="Fechar"><span class="material-icons">close</span></button></div>
+            <form id="historiaForm" class="historia-form">
+                <label>Título <span>opcional</span><input id="historiaTitulo" maxlength="120" placeholder="Dê um título à sua história"></label>
+                <label>Sua história<textarea id="historiaConteudo" minlength="10" maxlength="5000" rows="7" required placeholder="Conte como a corrida transformou sua vida..."></textarea></label>
+                <label class="historia-identidade"><input id="historiaIdentificada" type="checkbox" checked><span><strong>Mostrar meu nome e foto</strong><small>Desmarque para publicar como história anônima.</small></span></label>
+                <div id="historiaMensagem" class="message" role="status"></div>
+                <button type="submit" class="btn btn-primary historia-publicar"><span class="material-icons">send</span> Publicar história</button>
+            </form>
+        </section>
+
+        <section class="historias-feed-section">
+            <div class="historias-section-heading"><div><h2>Mural da comunidade</h2><p>Experiências reais de quem vive a corrida.</p></div><button type="button" id="atualizarHistorias" class="historias-icon-button" aria-label="Atualizar histórias"><span class="material-icons">refresh</span></button></div>
+            <div id="historiasFeed" class="historias-feed" aria-live="polite"><div class="loading">Carregando histórias...</div></div>
+        </section>
+    </main>
+
+    <script src="theme.js?v=2026101601"></script>
+    <script src="menu.js?v=2026101505"></script>
+    <script src="historias.js?v=2026101601"></script>
+</body>
+</html>

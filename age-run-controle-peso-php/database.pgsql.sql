@@ -59,6 +59,15 @@ CREATE TABLE IF NOT EXISTS webauthn_credentials (
   ultimo_uso_em TIMESTAMP NULL
 );
 
+CREATE TABLE IF NOT EXISTS historias (
+  id BIGSERIAL PRIMARY KEY,
+  usuario_id BIGINT NOT NULL,
+  titulo VARCHAR(120) NULL,
+  conteudo TEXT NOT NULL,
+  identificado SMALLINT NOT NULL DEFAULT 1,
+  criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE INDEX IF NOT EXISTS idx_pesagens_usuario_id ON pesagens(usuario_id);
 CREATE INDEX IF NOT EXISTS idx_pesagens_data ON pesagens(data_pesagem);
 CREATE INDEX IF NOT EXISTS idx_pesagens_excluido ON pesagens(excluido);

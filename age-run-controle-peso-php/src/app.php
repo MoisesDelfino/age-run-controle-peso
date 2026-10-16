@@ -4589,6 +4589,58 @@ if ($method === 'GET' && preg_match('#^/api/pesagens/excluidas/(\d+)$#', $path, 
     jsonResponse(['pesagens' => $pesagens]);
 }
 
+function ensureHistoriasTable(): void
+{
+    $driver = strtolower((string) (appConfig()['db']['driver'] ?? 'mysql'));
+    if ($driver === 'sqlite') {
+        dbExecute('CREATE TABLE IF NOT EXISTS historias (id INTEGER PRIMARY KEY AUTOINCREMENT, usuario_id INTEGER NOT NULL, titulo TEXT NULL, conteudo TEXT NOT NULL, identificado INTEGER NOT NULL DEFAULT 1, criado_em DATETIME DEFAULT CURRENT_TIMESTAMP)');
+        return;
+    }
+    if (in_array($driver, ['pgsql', 'postgres', 'postgresql'], true)) {
+        dbExecute('CREATE TABLE IF NOT EXISTS historias (id BIGSERIAL PRIMARY KEY, usuario_id BIGINT NOT NULL, titulo VARCHAR(120) NULL, conteudo TEXT NOT NULL, identificado SMALLINT NOT NULL DEFAULT 1, criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP)');
+        return;
+    }
+    dbExecute('CREATE TABLE IF NOT EXISTS historias (id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, usuario_id BIGINT NOT NULL, titulo VARCHAR(120) NULL, conteudo TEXT NOT NULL, identificado TINYINT(1) NOT NULL DEFAULT 1, criado_em DATETIME DEFAULT CURRENT_TIMESTAMP, INDEX idx_historias_criado_em (criado_em), INDEX idx_historias_usuario (usuario_id))');
+}
+
+if ($method === 'GET' && $path === '/api/historias') {
+    requireAuth();
+    ensureHistoriasTable();
+    $rows = dbFetchAll('SELECT h.id, h.usuario_id, h.titulo, h.conteudo, h.identificado, h.criado_em, u.nome, u.foto_perfil FROM historias h LEFT JOIN usuarios u ON u.id = h.usuario_id ORDER BY h.criado_em DESC, h.id DESC LIMIT 100');
+    $historias = array_map(static function (array $row): array {
+        $identificado = (int) ($row['identificado'] ?? 0) === 1;
+        return [
+            'id' => (int) $row['id'],
+            'titulo' => trim((string) ($row['titulo'] ?? '')),
+            'conteudo' => (string) ($row['conteudo'] ?? ''),
+            'criado_em' => (string) ($row['criado_em'] ?? ''),
+            'autor' => $identificado ? (trim((string) ($row['nome'] ?? '')) ?: 'Atleta Age Run') : 'História anônima',
+            'foto_perfil' => $identificado ? ($row['foto_perfil'] ?? null) : null,
+            'identificado' => $identificado,
+        ];
+    }, $rows);
+    jsonResponse(['historias' => $historias]);
+}
+
+if ($method === 'POST' && $path === '/api/historias') {
+    $userId = requireAuth();
+    ensureHistoriasTable();
+    $input = jsonInput();
+    $titulo = trim((string) ($input['titulo'] ?? ''));
+    $conteudo = trim((string) ($input['conteudo'] ?? ''));
+    $identificado = !empty($input['identificado']) ? 1 : 0;
+    if (mb_strlen($titulo) > 120) jsonResponse(['error' => 'O título deve ter no máximo 120 caracteres.'], 422);
+    if (mb_strlen($conteudo) < 10) jsonResponse(['error' => 'Conte sua história com pelo menos 10 caracteres.'], 422);
+    if (mb_strlen($conteudo) > 5000) jsonResponse(['error' => 'A história deve ter no máximo 5.000 caracteres.'], 422);
+    dbExecute('INSERT INTO historias (usuario_id, titulo, conteudo, identificado) VALUES (:usuario_id, :titulo, :conteudo, :identificado)', [
+        ':usuario_id' => $userId,
+        ':titulo' => $titulo !== '' ? $titulo : null,
+        ':conteudo' => $conteudo,
+        ':identificado' => $identificado,
+    ]);
+    jsonResponse(['success' => true, 'message' => 'Sua história foi publicada.'], 201);
+}
+
 $pages = [
     '/login' => 'login.html',
     '/cadastro' => 'cadastro.html',
@@ -4603,6 +4655,7 @@ $pages = [
     '/monitoramento' => 'monitoramento.html',
     '/monitoramento-acessos' => 'monitoramento-acessos.html',
     '/perfil' => 'perfil.html',
+    '/historias' => 'historias.html',
 ];
 
 if ($path === '/' || $path === '') {
@@ -4613,7 +4666,7 @@ if ($path === '/' || $path === '') {
 }
 
 if (array_key_exists($path, $pages)) {
-    $protectedPages = ['/home', '/pesagem', '/ranking', '/bioimpedancia', '/grupos-treino', '/treinador', '/monitoramento', '/monitoramento-acessos', '/perfil'];
+    $protectedPages = ['/home', '/pesagem', '/ranking', '/bioimpedancia', '/grupos-treino', '/treinador', '/monitoramento', '/monitoramento-acessos', '/perfil', '/historias'];
     if (in_array($path, $protectedPages, true) && empty($_SESSION['userId'])) {
         redirectTo('/login');
     }
@@ -4637,7 +4690,7 @@ if (array_key_exists($path, $pages)) {
         }
     }
 
-    if (in_array($path, ['/home', '/pesagem', '/ranking', '/bioimpedancia', '/grupos-treino'], true)) {
+    if (in_array($path, ['/home', '/pesagem', '/ranking', '/bioimpedancia', '/grupos-treino', '/historias'], true)) {
         trackAlunoPageAccess($path);
     }
 

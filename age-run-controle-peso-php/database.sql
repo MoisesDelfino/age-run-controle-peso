@@ -62,6 +62,17 @@ CREATE TABLE IF NOT EXISTS webauthn_credentials (
     INDEX idx_webauthn_usuario (usuario_id)
 );
 
+CREATE TABLE IF NOT EXISTS historias (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    usuario_id BIGINT NOT NULL,
+    titulo VARCHAR(120) NULL,
+    conteudo TEXT NOT NULL,
+    identificado TINYINT(1) NOT NULL DEFAULT 1,
+    criado_em DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_historias_criado_em (criado_em),
+    INDEX idx_historias_usuario (usuario_id)
+);
+
 CREATE INDEX idx_pesagens_usuario_id ON pesagens(usuario_id);
 CREATE INDEX idx_pesagens_data ON pesagens(data_pesagem);
 CREATE INDEX idx_pesagens_excluido ON pesagens(excluido);

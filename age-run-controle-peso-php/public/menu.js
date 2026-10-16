@@ -24,6 +24,7 @@ function normalizarLinksMenu() {
         '/pesagem',
         '/ranking',
         '/grupos-treino',
+        '/historias',
         '/bioimpedancia',
         '/treinador',
         '/monitoramento',
@@ -194,6 +195,15 @@ function ensurePerfilLink() {
     // Mantida por compatibilidade — o perfil agora fica no dropdown de usuário
 }
 
+function ensureHistoriasLink() {
+    const navList = document.querySelector('.nav-list');
+    if (!navList || navList.querySelector('a[href$="/historias"], a[href="./historias"]')) return;
+    const item = document.createElement('li');
+    item.innerHTML = `<a href="${withBasePath('/historias')}" class="nav-link">💬 Histórias</a>`;
+    const trainerItem = navList.querySelector('.trainer-only');
+    navList.insertBefore(item, trainerItem || null);
+}
+
 function ocultarRankingParaMulher() {
     const hideRanking = () => {
         document.querySelectorAll('a[href$="/ranking"], a[href="./ranking"]').forEach((link) => {
@@ -286,6 +296,7 @@ async function aplicarPermissoesMenu() {
 
 document.addEventListener('DOMContentLoaded', function() {
     normalizarLinksMenu();
+    ensureHistoriasLink();
 
     const menuToggle = document.querySelector('.menu-toggle');
     const menuOverlay = document.querySelector('.menu-overlay');
