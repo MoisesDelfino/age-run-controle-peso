@@ -19,10 +19,11 @@
     const initPage = () => {
         document.body.classList.add('staging-redesign');
 
-        const pageSlug = document.querySelector('.historias-page') ? 'historias' : window.location.pathname
+        const routeSlug = window.location.pathname
             .replace(/^\/(?:dev|controle)\/?/, '')
             .replace(/\/$/, '')
             .replace(/[^a-z0-9-]/gi, '-') || 'index';
+        const pageSlug = document.querySelector('.historias-page') ? 'historias' : (routeSlug === 'evolucao' ? 'home' : routeSlug);
         document.body.classList.add(`staging-page-${pageSlug}`);
         document.body.classList.toggle('staging-auth-page', Boolean(document.querySelector('.auth-container')));
 
@@ -412,7 +413,7 @@
             }
         }
 
-        if (path.endsWith('/home')) {
+        if (path.endsWith('/home') || path.endsWith('/evolucao')) {
             main.classList.add('staging-home');
 
             const section = main.querySelector('.home-stats-section');
