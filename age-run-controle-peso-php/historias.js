@@ -125,11 +125,24 @@
         context.beginPath();
         context.arc(142, 285, 54, 0, Math.PI * 2);
         context.clip();
-        if (avatar) {
+        if (avatar && historia.identificado) {
             const scale = Math.max(108 / avatar.width, 108 / avatar.height);
             const width = avatar.width * scale;
             const height = avatar.height * scale;
             context.drawImage(avatar, 142 - width / 2, 285 - height / 2, width, height);
+        } else if (!historia.identificado) {
+            context.fillStyle = '#4b4f54';
+            context.fillRect(88, 231, 108, 108);
+            context.fillStyle = '#c7cacf';
+            context.beginPath();
+            context.arc(142, 270, 19, 0, Math.PI * 2);
+            context.fill();
+            context.beginPath();
+            context.arc(142, 326, 39, Math.PI, 0);
+            context.lineTo(181, 339);
+            context.lineTo(103, 339);
+            context.closePath();
+            context.fill();
         } else {
             context.fillStyle = '#34203d';
             context.fillRect(88, 231, 108, 108);
@@ -140,7 +153,7 @@
             context.textAlign = 'left';
         }
         context.restore();
-        context.strokeStyle = '#8bc34a';
+        context.strokeStyle = historia.identificado ? '#8bc34a' : '#858b91';
         context.lineWidth = 6;
         context.beginPath();
         context.arc(142, 285, 57, 0, Math.PI * 2);
@@ -210,7 +223,9 @@
             const likes = Number(historia.curtidas) || 0;
             const photo = historia.foto_perfil
                 ? `<img src="${escapeHtml(historia.foto_perfil)}" alt="">`
-                : `<span>${escapeHtml(historia.identificado ? initials(historia.autor) : '•')}</span>`;
+                : historia.identificado
+                    ? `<span>${escapeHtml(initials(historia.autor))}</span>`
+                    : '<span class="material-icons" aria-hidden="true">person</span>';
             return `<article id="historia-${escapeHtml(id)}" class="historia-card" data-historia-id="${escapeHtml(id)}">
                 <header class="historia-post-header">
                     <div class="historia-avatar${historia.identificado ? '' : ' is-anonymous'}">${photo}</div>

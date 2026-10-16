@@ -2953,9 +2953,13 @@ body.dark-mode.historia-compose-open::before {
 }
 
 .staging-redesign .historia-avatar.is-anonymous {
-    border-color: rgba(142, 32, 181, 0.4);
-    background: rgba(142, 32, 181, 0.12);
-    color: #c779dc;
+    border-color: #777d83;
+    background: #4b4f54;
+    color: #d2d5d8;
+}
+
+.staging-redesign .historia-avatar.is-anonymous .material-icons {
+    font-size: 27px;
 }
 
 .staging-redesign .historia-avatar img {
