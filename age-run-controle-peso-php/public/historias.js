@@ -56,37 +56,133 @@
         });
         return lines;
     };
+    const loadCanvasImage = (source) => new Promise((resolve) => {
+        if (!source) return resolve(null);
+        const image = new Image();
+        image.crossOrigin = 'anonymous';
+        image.onload = () => resolve(image);
+        image.onerror = () => resolve(null);
+        image.src = source;
+    });
+    const roundedRect = (context, x, y, width, height, radius) => {
+        const r = Math.min(radius, width / 2, height / 2);
+        context.beginPath();
+        context.moveTo(x + r, y);
+        context.arcTo(x + width, y, x + width, y + height, r);
+        context.arcTo(x + width, y + height, x, y + height, r);
+        context.arcTo(x, y + height, x, y, r);
+        context.arcTo(x, y, x + width, y, r);
+        context.closePath();
+    };
     const createStoryCard = async (historia) => {
         const canvas = document.createElement('canvas');
         canvas.width = 1080;
         canvas.height = 1350;
         const context = canvas.getContext('2d');
+        const [logo, avatar] = await Promise.all([
+            loadCanvasImage(new URL('logo.png', window.location.href).toString()),
+            historia.foto_perfil ? loadCanvasImage(new URL(historia.foto_perfil, window.location.origin).toString()) : Promise.resolve(null),
+        ]);
         const gradient = context.createLinearGradient(0, 0, 1080, 1350);
-        gradient.addColorStop(0, '#171717');
-        gradient.addColorStop(1, '#25142b');
+        gradient.addColorStop(0, '#121212');
+        gradient.addColorStop(0.58, '#1b151f');
+        gradient.addColorStop(1, '#28112f');
         context.fillStyle = gradient;
         context.fillRect(0, 0, 1080, 1350);
+
+        const glow = context.createRadialGradient(960, 120, 20, 960, 120, 520);
+        glow.addColorStop(0, 'rgba(142, 32, 181, 0.42)');
+        glow.addColorStop(1, 'rgba(142, 32, 181, 0)');
+        context.fillStyle = glow;
+        context.fillRect(0, 0, 1080, 700);
         context.fillStyle = '#8bc34a';
-        context.fillRect(0, 0, 1080, 18);
-        context.fillStyle = '#8bc34a';
-        context.font = '700 58px Poppins, sans-serif';
-        context.fillText('age', 76, 115);
-        context.fillStyle = '#ffffff';
-        context.font = '700 34px Poppins, sans-serif';
-        context.fillText('Histórias que inspiram', 76, 175);
+        context.fillRect(0, 0, 1080, 22);
+
+        if (logo) {
+            const logoWidth = 210;
+            const logoHeight = logo.height * (logoWidth / logo.width);
+            context.drawImage(logo, 72, 70, logoWidth, logoHeight);
+        } else {
+            context.font = '700 64px Poppins, sans-serif';
+            context.fillText('age run', 72, 128);
+        }
+
+        context.fillStyle = 'rgba(139, 195, 74, 0.14)';
+        roundedRect(context, 72, 176, 330, 54, 27);
+        context.fill();
+        context.fillStyle = '#bce881';
+        context.font = '700 23px Poppins, sans-serif';
+        context.fillText('HISTÓRIAS AGE RUN', 98, 212);
+
+        context.fillStyle = 'rgba(255, 255, 255, 0.055)';
+        roundedRect(context, 60, 270, 960, 870, 44);
+        context.fill();
+        context.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+        context.lineWidth = 2;
+        context.stroke();
+
+        context.save();
+        context.beginPath();
+        context.arc(142, 375, 54, 0, Math.PI * 2);
+        context.clip();
+        if (avatar) {
+            const scale = Math.max(108 / avatar.width, 108 / avatar.height);
+            const width = avatar.width * scale;
+            const height = avatar.height * scale;
+            context.drawImage(avatar, 142 - width / 2, 375 - height / 2, width, height);
+        } else {
+            context.fillStyle = '#34203d';
+            context.fillRect(88, 321, 108, 108);
+            context.fillStyle = '#c785da';
+            context.font = '700 36px Poppins, sans-serif';
+            context.textAlign = 'center';
+            context.fillText(initials(historia.autor), 142, 388);
+            context.textAlign = 'left';
+        }
+        context.restore();
+        context.strokeStyle = '#8bc34a';
+        context.lineWidth = 6;
+        context.beginPath();
+        context.arc(142, 375, 57, 0, Math.PI * 2);
+        context.stroke();
+
         context.fillStyle = '#d7f4af';
-        context.font = '700 36px Poppins, sans-serif';
-        context.fillText(historia.autor || 'História anônima', 76, 285);
+        context.font = '700 34px Poppins, sans-serif';
+        context.fillText(historia.autor || 'História anônima', 225, 368);
         context.fillStyle = '#bdb8c0';
-        context.font = '400 25px Poppins, sans-serif';
-        context.fillText(formatDate(historia.criado_em), 76, 330);
+        context.font = '400 23px Poppins, sans-serif';
+        context.fillText(formatDate(historia.criado_em), 225, 407);
+
+        context.fillStyle = 'rgba(139, 195, 74, 0.22)';
+        context.font = '700 100px Georgia, serif';
+        context.fillText('“', 92, 555);
         context.fillStyle = '#ffffff';
-        context.font = '500 38px Poppins, sans-serif';
-        const lines = wrapCanvasText(context, historia.conteudo, 928).slice(0, 18);
-        lines.forEach((line, index) => context.fillText(line, 76, 430 + (index * 58)));
+        context.font = '500 36px Poppins, sans-serif';
+        const lines = wrapCanvasText(context, historia.conteudo, 820).slice(0, 11);
+        if (wrapCanvasText(context, historia.conteudo, 820).length > 11 && lines.length) lines[10] = `${lines[10].replace(/[.,;:]?$/, '')}…`;
+        lines.forEach((line, index) => context.fillText(line, 130, 565 + (index * 57)));
+
+        context.strokeStyle = 'rgba(139, 195, 74, 0.35)';
+        context.lineWidth = 2;
+        context.beginPath();
+        context.moveTo(96, 1185);
+        context.lineTo(984, 1185);
+        context.stroke();
         context.fillStyle = '#8bc34a';
-        context.font = '600 25px Poppins, sans-serif';
-        context.fillText('Leia esta história na comunidade Age Run', 76, 1270);
+        context.font = '700 28px Poppins, sans-serif';
+        context.fillText('Leia a história completa', 72, 1250);
+        context.fillStyle = '#ffffff';
+        context.font = '500 23px Poppins, sans-serif';
+        context.fillText('agerun.com.br', 72, 1290);
+        context.fillStyle = '#8e20b5';
+        context.beginPath();
+        context.arc(968, 1255, 38, 0, Math.PI * 2);
+        context.fill();
+        context.fillStyle = '#ffffff';
+        context.font = '700 30px Poppins, sans-serif';
+        context.textAlign = 'center';
+        context.fillText('↗', 968, 1266);
+        context.textAlign = 'left';
         const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png', 0.95));
         return blob ? new File([blob], `historia-age-run-${historia.id}.png`, { type: 'image/png' }) : null;
     };
@@ -221,14 +317,14 @@
             if (button.disabled) return;
             button.disabled = true;
             const directUrl = storyUrl(id);
-            const shareData = { title: 'História Age Run', text: historia?.conteudo || '', url: directUrl };
+            const shareData = { text: directUrl };
             try {
                 const cardFile = await createStoryCard(historia);
                 if (navigator.share && cardFile && navigator.canShare?.({ files: [cardFile] })) {
                     await navigator.share({ ...shareData, files: [cardFile] });
                 } else if (navigator.share) await navigator.share(shareData);
                 else {
-                    await navigator.clipboard.writeText(`${shareData.title}\n\n${shareData.text}\n\n${shareData.url}`);
+                    await navigator.clipboard.writeText(directUrl);
                     const icon = button.querySelector('.material-icons');
                     icon.textContent = 'check';
                     window.setTimeout(() => { icon.textContent = 'send'; }, 1600);
